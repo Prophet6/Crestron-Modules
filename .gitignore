@@ -45,8 +45,9 @@ SPlsWork/
 *.pdb
 *.dll
 
-# TCP Server with Authentication ships its Simpl# CLZ next to the .usp
+# Modules that ship a compiled Simpl# CLZ next to the .usp
 !tcp-server-with-authentication/TCP_Server_Auth.clz
+!ssh-interface-v2/SSH_Interface_v2.clz
 
 devenv-build.log
 _clzpeek/
