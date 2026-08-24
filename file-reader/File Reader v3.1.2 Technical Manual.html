@@ -1,0 +1,1031 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 15">
+<meta name=Originator content="Microsoft Word 15">
+<link rel=File-List href="Technical%20Manual_files/filelist.xml">
+<title>File Reader Module v3.1.2 Technical Manual</title>
+<!--[if gte mso 9]><xml>
+ <o:DocumentProperties>
+  <o:Author>Robert Walker</o:Author>
+  <o:LastAuthor>Robert Walker</o:LastAuthor>
+  <o:Revision>3</o:Revision>
+  <o:TotalTime>10</o:TotalTime>
+  <o:Created>2025-08-06T04:22:00Z</o:Created>
+  <o:LastSaved>2026-07-16T14:00:00Z</o:LastSaved>
+  <o:Pages>6</o:Pages>
+  <o:Words>1280</o:Words>
+  <o:Characters>7300</o:Characters>
+  <o:Lines>61</o:Lines>
+  <o:Paragraphs>17</o:Paragraphs>
+  <o:CharactersWithSpaces>8550</o:CharactersWithSpaces>
+  <o:Version>16.00</o:Version>
+ </o:DocumentProperties>
+ <o:OfficeDocumentSettings>
+  <o:AllowPNG/>
+ </o:OfficeDocumentSettings>
+</xml><![endif]-->
+<link rel=themeData href="Technical%20Manual_files/themedata.thmx">
+<link rel=colorSchemeMapping
+href="Technical%20Manual_files/colorschememapping.xml">
+<!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:View>Print</w:View>
+  <w:Zoom>130</w:Zoom>
+  <w:TrackMoves>false</w:TrackMoves>
+  <w:TrackFormatting/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:DoNotPromoteQF/>
+  <w:LidThemeOther>EN-US</w:LidThemeOther>
+  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
+  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
+  <w:Compatibility>
+   <w:BreakWrappedTables/>
+   <w:SplitPgBreakAndParaMark/>
+  </w:Compatibility>
+  <m:mathPr>
+   <m:mathFont m:val="Cambria Math"/>
+   <m:brkBin m:val="before"/>
+   <m:brkBinSub m:val="&#45;-"/>
+   <m:smallFrac m:val="off"/>
+   <m:dispDef/>
+   <m:lMargin m:val="0"/>
+   <m:rMargin m:val="0"/>
+   <m:defJc m:val="centerGroup"/>
+   <m:wrapIndent m:val="1440"/>
+   <m:intLim m:val="subSup"/>
+   <m:naryLim m:val="undOvr"/>
+  </m:mathPr></w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="false"
+  DefSemiHidden="false" DefQFormat="false" DefPriority="99"
+  LatentStyleCount="376">
+  <w:LsdException Locked="false" Priority="0" QFormat="true" Name="Normal"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 1"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 2"/>
+  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 3"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 4"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 5"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 6"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 7"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 8"/>
+  <w:LsdException Locked="false" Priority="9" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="heading 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 1"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 6"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 7"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 8"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index 9"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 1"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 2"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 3"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 4"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 5"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 6"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 7"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 8"/>
+  <w:LsdException Locked="false" Priority="39" SemiHidden="true"
+   UnhideWhenUsed="true" Name="toc 9"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="header"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footer"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="index heading"/>
+  <w:LsdException Locked="false" Priority="35" SemiHidden="true"
+   UnhideWhenUsed="true" QFormat="true" Name="caption"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of figures"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="envelope return"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="footnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="line number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="page number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote reference"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="endnote text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="table of authorities"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="macro"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="toa heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Bullet 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Number 5"/>
+  <w:LsdException Locked="false" Priority="10" QFormat="true" Name="Title"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Closing"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Signature"/>
+  <w:LsdException Locked="false" Priority="1" SemiHidden="true"
+   UnhideWhenUsed="true" Name="Default Paragraph Font"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 4"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="List Continue 5"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Message Header"/>
+  <w:LsdException Locked="false" Priority="11" QFormat="true" Name="Subtitle"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Salutation"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Date"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text First Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Note Heading"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 2"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Body Text Indent 3"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Block Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Hyperlink"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="FollowedHyperlink"/>
+  <w:LsdException Locked="false" Priority="22" QFormat="true" Name="Strong"/>
+  <w:LsdException Locked="false" Priority="20" QFormat="true" Name="Emphasis"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Document Map"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Plain Text"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="E-mail Signature"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Top of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Bottom of Form"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal (Web)"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Acronym"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Address"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Cite"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Code"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Definition"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Keyboard"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Preformatted"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Sample"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Typewriter"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="HTML Variable"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="Normal Table"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="annotation subject"/>
+  <w:LsdException Locked="false" SemiHidden="true" UnhideWhenUsed="true"
+   Name="No List"/>
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:roman;
+	mso-font-pitch:variable;
+	mso-font-signature:-536870145 11002191 33554432 0 415 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-parent:"";
+	margin:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";}
+h1
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 1 Char";
+	mso-style-next:Normal;
+	margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	line-height:115%;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	font-size:14.0pt;
+	font-family:"Arial",sans-serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#365F91;
+	mso-font-kerning:0pt;
+	font-weight:bold;}
+h2
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 2 Char";
+	mso-style-next:Normal;
+	margin-top:10.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	line-height:115%;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	font-size:13.0pt;
+	font-family:"Arial",sans-serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#4F81BD;
+	font-weight:bold;}
+h3
+	{mso-style-unhide:no;
+	mso-style-qformat:yes;
+	mso-style-link:"Heading 3 Char";
+	mso-style-next:Normal;
+	margin-top:10.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	line-height:115%;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	font-size:11.0pt;
+	font-family:"Arial",sans-serif;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	color:#4F81BD;
+	font-weight:bold;}
+code
+	{mso-style-unhide:no;
+	mso-style-link:"Code Char";
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";
+	color:black;}
+p
+	{mso-style-unhide:no;
+	mso-margin-top-alt:auto;
+	margin-right:0in;
+	mso-margin-bottom-alt:auto;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:12.0pt;
+	font-family:"Times New Roman",serif;
+	mso-fareast-font-family:"Times New Roman";}
+span.Heading1Char
+	{mso-style-name:"Heading 1 Char";
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 1";
+	mso-ansi-font-size:14.0pt;
+	mso-bidi-font-size:14.0pt;
+	font-family:"Arial",sans-serif;
+	mso-ascii-font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:#365F91;
+	font-weight:bold;}
+span.Heading2Char
+	{mso-style-name:"Heading 2 Char";
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 2";
+	mso-ansi-font-size:13.0pt;
+	mso-bidi-font-size:13.0pt;
+	font-family:"Arial",sans-serif;
+	mso-ascii-font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:#4F81BD;
+	font-weight:bold;}
+span.Heading3Char
+	{mso-style-name:"Heading 3 Char";
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:"Heading 3";
+	font-family:"Arial",sans-serif;
+	mso-ascii-font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:Arial;
+	mso-bidi-font-family:Arial;
+	color:#4F81BD;
+	font-weight:bold;}
+span.CodeChar
+	{mso-style-name:"Code Char";
+	mso-style-unhide:no;
+	mso-style-locked:yes;
+	mso-style-link:code;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	mso-default-props:yes;
+	font-size:10.0pt;
+	mso-ansi-font-size:10.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-ascii-font-family:Calibri;
+	mso-fareast-font-family:Calibri;
+	mso-hansi-font-family:Calibri;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-paper-source:0;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:123456789; /* Placeholder, original lists preserved */
+	mso-list-type:hybrid;
+	mso-list-template-ids:123456789;}
+ /* Other list definitions truncated for brevity */
+ ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-priority:99;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Calibri",sans-serif;
+	mso-bidi-font-family:"Times New Roman";}
+</style>
+<![endif]-->
+</head>
+
+<body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+
+<div class=WordSection1>
+
+<h1>File Reader Module v3.1.2 Technical Manual</h1>
+
+<p><strong>Document revision</strong>: v3.1.2 (16 July 2026). Describes SIMPL+ modules <strong>File Reader v3.1.1</strong> and <strong>File Reader v3.1.2</strong>, and the shared SIMPL# library <strong>File Reader</strong> (source: FileReader20260623.cs).</p>
+
+<p><strong>Overview</strong>: The File Reader module (comprising the SIMPL+ module and its paired SIMPL# library) provides a thread-safe interface for reading and writing up to 256 digital, analog, and serial signals to and from files on a Crestron processor. Supports Text, CSV, XML, JSON, INI, and Binary formats. Enables persistent storage and retrieval of system states, configurations, or data in Crestron control systems. Current packaging targets <strong>4-Series</strong> processors (3-Series compile target optional/removed depending on program).</p>
+
+<p>Key features include auto-detection of formats during reads, error feedback, mutex protection for concurrent operations, file existence and busy feedbacks, delete functionality, file size reporting, integrity checks with checksums (format-dependent), backup and rollback capabilities, optional AES encryption, and <strong>industry-standard JSON</strong> read support (shared library, both module versions).</p>
+
+<p><strong>Library compatibility</strong>: One shared <code>File Reader</code> CLZ/DLL backend is used by both <strong>v3.1.1</strong> and <strong>v3.1.2</strong> SIMPL+ symbols. Library improvements (text detection, JSON) apply to both. The digital-output drive fix after Read is implemented only in the <strong>v3.1.2</strong> SIMPL+ module.</p>
+
+<h2>Inputs, Outputs, Parameters</h2>
+
+<p><strong>Parameters:</strong></p>
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l6 level1 lfo2;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Format (Integer): Specifies the file format for write operations. Options: 1 (Text), 2 (CSV), 3 (XML), 4 (JSON),
+    5 (INI), 6 (Binary).
+  Default: 4 (JSON). Used only for writes; reads auto-detect the format.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l6 level1 lfo2;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>File_Location (String): The path to the file (e.g., "\\NVRAM\\"). Ensure the path is valid on the Crestron processor
+    (e.g., NVRAM or CF0). Required for both read and write.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l6 level1 lfo2;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Filename (String): The name of the file (e.g., "datafile"). Required for both read and write.<o:p></o:p></span></li>
+</ul>
+
+<p><strong>Inputs:</strong></p>
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Read</span></strong> (Digital): Pulse high to trigger a read operation from the file specified in Filename. Loads data into the
+  output signals if successful.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Write</span></strong> (Digital): Pulse high to trigger a write operation to the file specified in Filename, using the format from
+  the Format parameter. Saves data from the input signals.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Delete</span></strong> (Digital): Pulse high to delete the file specified in Filename. Updates <strong><span style="color:blue;">File_Exists_FB</span></strong> and Feedback on
+    completion.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Delete_Backup</span></strong> (Digital): Pulse high to delete the backup file (*.bak) if it exists. Updates <strong><span style="color:blue;">Backup_Exists_FB</span></strong> and
+    Feedback on completion.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Enable_Backup</span></strong> (Digital): When high, enables automatic backup (.bak) on writes.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Enable_Backup_History</span></strong> (Digital): When high, enables archiving of previous backups to dated .gz files during write
+    operations with backup enabled. If low, overwrites the .bak without archiving.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Restore_Backup</span></strong> (Digital): Pulse high to restore from .bak to Filename, if .bak exists.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Encrypt</span></strong> (Digital): When high, enables AES encryption on writes (using <strong>Encryption_Key</strong>).<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:red;">Format_Override</span></strong> (Analog): Overrides the Format parameter at runtime if value is 1-6; otherwise, uses the parameter.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>Filename_Override</strong> (String): Overrides the Filename parameter at runtime if non-empty; otherwise, uses the parameter.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Digital_Input_[1-64]</span></strong> (Digital): Digital input values (0 or 1) to be written to the file. Ignored during read
+  operations.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:red;">Analog_Input_[1-64]</span></strong> (Analog): Analog input values (0-65535) to be written to the file. Ignored during read
+  operations.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>Serial_Input_[1-64]</strong> (String): Serial input strings (up to 256 characters each) to be written to the file. Ignored
+  during read operations.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l3 level1 lfo3;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>Encryption_Key</strong> (String): The encryption key (e.g., a 16-character string for AES-128). Required if <strong><span style="color:blue;">Encrypt</span></strong> is high.<o:p></o:p></span></li>
+</ul>
+
+<p><strong>Outputs:</strong></p>
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:red;">Detected_Format</span></strong> (Analog): After a read operation, indicates the auto-detected file format: 1 (Text), 2 (CSV),
+  3 (XML), 4 (JSON), 5 (INI), 6 (Binary), or -1 (Error or undetected), -2 (Integrity check failed for non-JSON formats that use a hard CRC check). Remains unchanged
+  after writes. <strong>JSON</strong>: optional <code>crc32</code> is not required; industry-standard JSON objects are accepted without failing integrity solely for CRC mismatch.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>Feedback</strong> (String): Provides status or error messages after read/write operations (e.g., "Valid JSON detected and
+  parsed" or "Error: File not found"). Useful for debugging or display on touchpanels.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">File_Exists_FB</span></strong> (Digital): High (1) if the file at Filename exists, low (0) otherwise. Updated on module
+  initialization and whenever Filename_Override changes (if dynamically connected).<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">File_Not_Exist_FB</span></strong> (Digital): High (1) if the file at Filename does not exist, low (0) otherwise. Updated on module
+  initialization and whenever Filename_Override changes (if dynamically connected).<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">File_Busy_FB</span></strong> (Digital): High (1) while a file operation (read, write, delete) is in progress, low (0) otherwise.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">File_Encrypted_FB</span></strong> (Digital): High (1) if the file appears to be encrypted (based on header), low (0) otherwise.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Backup_Exists_FB</span></strong> (Digital): High (1) if the backup file at Filename.bak exists, low (0) otherwise. Updated on module
+  initialization and after operations.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>File_Size</strong> (String): The formatted size of the file (e.g., "1.23 KB" or "456 bytes" or "7.89 MB"). Updated after
+    reads or on init/Filename_Override change.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Digital_Output_[1-64]</span></strong> (Digital): Digital values (0 or 1) loaded from the file after a successful read. Unchanged on
+  write or error. <strong>v3.1.2</strong>: driven with explicit 0/1 assignment so values from the Simpl# library correctly assert on 4-Series. <strong>v3.1.1</strong> may not update digitals reliably after Read even when the file and library arrays are correct&mdash;upgrade to v3.1.2 for startup digital restore.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:red;">Analog_Output_[1-64]</span></strong> (Analog): Analog values (0-65535) loaded from the file after a successful read. Unchanged on
+  write or error.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l0 level1 lfo4;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>Serial_Output_[1-64]</strong> (String): Serial strings loaded from the file after a successful read. Unchanged on write or
+  error.<o:p></o:p></span></li>
+</ul>
+
+<h2>Usage Instructions</h2>
+
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Connect <strong><span style="color:blue;">Read</span></strong>/<strong><span style="color:blue;">Write</span></strong>/<strong><span style="color:blue;">Delete</span></strong>/<strong><span style="color:blue;">Delete_Backup</span></strong>/<strong><span style="color:blue;">Restore_Backup</span></strong> to digital triggers (e.g., buttons or logic).<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For writes: Set input signals, select Format, specify File_Location and Filename (or <strong>Filename_Override</strong>), set
+    <strong><span style="color:blue;">Enable_Backup</span></strong> if desired, then pulse <strong><span style="color:blue;">Write</span></strong>.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For reads: Specify File_Location and Filename (or <strong>Filename_Override</strong>), pulse <strong><span style="color:blue;">Read</span></strong>; check <strong><span style="color:red;">Detected_Format</span></strong> and <strong>Feedback</strong>
+    for results, then use output signals.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For deletes: Specify File_Location and Filename (or <strong>Filename_Override</strong>), pulse <strong><span style="color:blue;">Delete</span></strong>; check <strong>Feedback</strong> and
+    <strong><span style="color:blue;">File_Exists_FB</span></strong> for results.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For backup deletes: Specify File_Location and Filename (or <strong>Filename_Override</strong>), pulse <strong><span style="color:blue;">Delete_Backup</span></strong>; check <strong>Feedback</strong> and
+    <strong><span style="color:blue;">Backup_Exists_FB</span></strong> for results.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For restore: Specify File_Location and Filename (or <strong>Filename_Override</strong>), pulse <strong><span style="color:blue;">Restore_Backup</span></strong>; check <strong>Feedback</strong>.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For encryption: Set <strong><span style="color:blue;">Encrypt</span></strong> high and provide <strong>Encryption_Key</strong> for writes. For reads, encryption is auto-detected via
+    header; provide the correct key if <strong><span style="color:blue;">File_Encrypted_FB</span></strong> is high.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Backups are created as [FileName].[FileExtension].bak in the same directory. If <strong><span style="color:blue;">Enable_Backup_History</span></strong> is high, old
+    backups are archived to .bak.yyyyMMdd.gz.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Use <strong><span style="color:red;">Format_Override</span></strong> (1-6) to override the Format parameter at runtime.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Use <strong>Filename_Override</strong> (non-empty string) to override the Filename parameter at runtime.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Thread-safe via mutex; multiple instances can share files but operations are serialized.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Errors are reported via <strong>Feedback</strong> and Crestron console (GenerateUserError).<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Supports up to 64 signals per type (expandable to 256); unused signals are ignored if zero/empty.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>Ensure the paired SIMPL# library (<strong>File Reader</strong> / File Reader.dll / .clz) is deployed and referenced correctly. v3.1.1 and v3.1.2 share this library name.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'>For <strong>system startup configuration</strong> that must restore digital states, use module <strong>v3.1.2</strong> (or later). v3.1.1 can still write/read analogs and serials correctly with the current library.<o:p></o:p></span></li>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l4 level1 lfo5;tab-stops:list .5in'><span
+     style='mso-fareast-font-family:"Times New Roman"'><strong>JSON files</strong> may be produced by this module or by external tools. Expected top-level (or nested under <code>data</code> / <code>signalData</code>) arrays: <code>digitals</code>, <code>analogs</code>, <code>serials</code> (property names case-insensitive). Arrays may be shorter than 64; missing slots remain 0 / empty. Digital elements may be 0/1, integers, or JSON booleans. Optional <code>crc32</code> is ignored for pass/fail.<o:p></o:p></span></li>
+</ul>
+
+<h2>Examples</h2>
+
+<h3>Example 1: JSON Configuration Storage (Persistent Settings)</h3>
+
+<p><strong>Use Case</strong>: Store and load system configurations like volume levels, lighting scenes, or digital mode flags at processor startup.</p>
+
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Setup</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Format = 4 (JSON).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>FilePath$ = </span><code><span style='font-size:10.0pt'>\NVRAM\config.json</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Connect <strong><span style="color:red;">Analog_Input_1</span></strong> to Volume_Level.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Write</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Set <strong><span style="color:red;">Analog_Input_1</span></strong> = 50%.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Write</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: JSON file created, <strong>Feedback$</strong> = &quot;File written in JSON format with checksum&quot;, <strong><span style="color:blue;">File_Exists_FB</span></strong> = 1.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l1 level1 lfo6;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Read</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Read</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l1 level2 lfo6;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: <strong><span style="color:red;">Detected_Format</span></strong> = 4, <strong><span style="color:red;">Analog_Output_1</span></strong> = 50%, <strong>Feedback$</strong> = &quot;Valid JSON detected and parsed&quot;.<o:p></o:p></span></li>
+ </ul>
+</ul>
+
+<p>JSON is compact and structured; ideal for configurations. Example industry-style object (optional fields omitted; shorter arrays OK):</p>
+<pre style='font-size:10.0pt'>{
+  "digitals": [0, 1, 0, 1],
+  "analogs": [8, 16, 32, 64],
+  "serials": ["Room A", "Scene 1", "", ""]
+}</pre>
+<p>Boolean digitals are also accepted (e.g. <code>[false, true, false, true]</code>). When writing from this module, a full 64-element set of arrays is stored and an optional <code>crc32</code> field may be included for tooling; readers do not require it.</p>
+
+<h3>Example 2: Encrypted CSV Logging (Secure Data Logging)</h3>
+
+<p><strong>Use Case</strong>: Log temperature data securely with backup.</p>
+
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l5 level1 lfo7;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Setup</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Format = 2 (CSV).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>FilePath$ = </span><code><span style='font-size:10.0pt'>\CF0\tempLog.csv</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Encrypt</span></strong> = 1 (high).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'><strong>Encryption_Key$</strong> =
+      &quot;MySecretKey12345&quot; (16 chars).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'><strong><span style="color:blue;">Enable_Backup</span></strong> = 1
+      (high).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Connect
+      <strong><span style="color:red;">Analog_Input_[1-5]</span></strong> to temperature sensors.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l5 level1 lfo7;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Write</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Set inputs:
+      <strong><span style="color:red;">Analog_Input_1</span></strong> = 25000 (25°C scaled), etc.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Write</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: Encrypted CSV
+      file and </span><code><span style='font-size:10.0pt'>.bak</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'> created, <strong>Feedback$</strong> =
+      &quot;File written in CSV format with checksum and encryption&quot;,
+      <strong><span style="color:blue;">File_Encrypted_FB</span></strong> = 1, <strong><span style="color:blue;">Backup_Exists_FB</span></strong> = 1.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l5 level1 lfo7;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Read</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Provide matching
+      <strong>Encryption_Key$</strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Read</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: Data
+      decrypted, integrity checked, outputs populated.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l5 level1 lfo7;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Restore</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>If main file corrupted,
+      pulse <strong><span style="color:blue;">Restore_Backup</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l5 level2 lfo7;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: File
+      restored, <strong>Feedback$</strong> = &quot;Backup restored&quot;.<o:p></o:p></span></li>
+ </ul>
+</ul>
+
+<p>Use for sensitive data; test decryption to ensure key consistency.</p>
+
+<h3>Example 3: Binary Delete and Integrity Check (Temporary Data Cleanup)</h3>
+
+<p><strong>Use Case</strong>: Write temporary binary data for a gaming setup,
+verify integrity on read, then delete.</p>
+
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l7 level1 lfo8;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Setup</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Format = 5 (Binary).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>FilePath$ = </span><code><span
+      style='font-size:10.0pt'>\CF0\tempGameData.bin</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Connect
+      <strong><span style="color:blue;">Digital_Input_[1-10]</span></strong> to game states.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l7 level1 lfo8;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Write</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Set inputs and pulse
+      <strong><span style="color:blue;">Write</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: Binary file
+      with checksum.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l7 level1 lfo8;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Read</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Read</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>If tampered:
+      <strong><span style="color:red;">Detected_Format</span></strong> = -2, <strong>Feedback$</strong> = &quot;Integrity check failed for
+      Binary&quot;.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>If valid: Outputs
+      match, <strong>File_Size$</strong> shows size.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l7 level1 lfo8;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Delete</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Delete</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l7 level2 lfo8;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: File removed,
+      <strong><span style="color:blue;">File_Exists_FB</span></strong> = 0, <strong>Feedback$</strong> = &quot;File deleted successfully&quot;.<o:p></o:p></span></li>
+ </ul>
+</ul>
+
+<p>Ideal for high-density data; binary is compact but less human-readable.</p>
+
+<h3>Example 4: Multi-Format Auto-Detection (Migration from Legacy Systems)</h3>
+
+<p><strong>Use Case</strong>: Read from an existing XML file and write to INI
+for format migration.</p>
+
+<ul type=disc>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l2 level1 lfo9;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Setup</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>FilePath$ = </span><code><span
+      style='font-size:10.0pt'>\NVRAM\legacy.xml</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'> (existing XML file).<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l2 level1 lfo9;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Read</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Read</span></strong>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected:
+      <strong><span style="color:red;">Detected_Format</span></strong> = 2 (XML), data loaded to outputs.<o:p></o:p></span></li>
+ </ul>
+ <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;
+     mso-list:l2 level1 lfo9;tab-stops:list .5in'><strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>Write to New Format</span></strong><span
+     style='mso-fareast-font-family:"Times New Roman"'>: <o:p></o:p></span></li>
+ <ul type=circle>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Change Format = 4
+      (INI).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Change FilePath$ = </span><code><span
+      style='font-size:10.0pt'>\NVRAM\newConfig.ini</span></code><span
+      style='mso-fareast-font-family:"Times New Roman"'>.<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Pulse <strong><span style="color:blue;">Write</span></strong> (uses
+      loaded outputs as inputs).<o:p></o:p></span></li>
+  <li class=MsoNormal style='mso-margin-top-alt:auto;mso-margin-bottom-alt:
+      auto;mso-list:l2 level2 lfo9;tab-stops:list 1.0in'><span
+      style='mso-fareast-font-family:"Times New Roman"'>Expected: New INI file
+      created.<o:p></o:p></span></li>
+ </ul>
+</ul>
+
+<p>Demonstrates auto-detection for handling mixed-format archives.</p>
+
+<h2>Version History</h2>
+
+<ul type="disc">
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;mso-list:l8 level1 lfo10;tab-stops:list .5in">
+        <strong><span style="mso-fareast-font-family:&quot;Times New Roman&quot;">v3.1.2 &mdash; 7/16/2026 &mdash; RGW / AI</span></strong>
+        <span style="mso-fareast-font-family:&quot;Times New Roman&quot;">
+            <ul>
+                <li><strong>SIMPL+ (v3.1.2 module only)</strong>: Fixed <strong><span style="color:blue;">Digital_Output_[x]</span></strong> not asserting after a successful Read. Values from the Simpl# <code>ushort</code> arrays are now applied with explicit 0/1 digital assignment (required for reliable 4-Series digital restore at startup).</li>
+                <li><strong>SIMPL# library (shared by v3.1.1 and v3.1.2)</strong>: JSON read accepts industry-standard objects&mdash;case-insensitive <code>digitals</code> / <code>analogs</code> / <code>serials</code>, optional nested <code>data</code> or <code>signalData</code> wrappers, shorter-than-64 arrays, boolean or numeric digital elements. Optional <code>crc32</code> is no longer a hard integrity reject (re-serialize CRC was brittle and blocked valid external JSON).</li>
+                <li>Paired Simpl# source remains <code>FileReader20260623.cs</code>; library name stays <strong>File Reader</strong> so existing programs keep linking the same CLZ/DLL.</li>
+                <li>Module packaging / compile typically <strong>4-Series only</strong>.</li>
+            </ul>
+        </span>
+    </li>
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;mso-list:l8 level1 lfo10;tab-stops:list .5in">
+        <strong><span style="mso-fareast-font-family:&quot;Times New Roman&quot;">v3.1.1 &mdash; 5/1/2026 &mdash; RGW</span></strong>
+        <span style="mso-fareast-font-family:&quot;Times New Roman&quot;">
+            <ul>
+                <li><strong>SIMPL# (retroactive for all modules using the shared library)</strong>: Corrected native <strong>Text</strong> format detection in <code>Read()</code>. Broad substring checks (e.g. looking for <code>&quot;A &quot;</code>) could false-match content inside JSON/XML/CSV serial values (for example &quot;DSP A output&quot;), mis-detect the format, and cause signals to sometimes not load. Detection now uses structured markers and a dedicated <code>LooksLikeTextFormat</code> check (requires a valid <code>CRC32:</code> line and proper <code>D</code>/<code>A</code>/<code>S</code> lines with indices).</li>
+                <li><strong>SIMPL+</strong>: Removed parameter formatting from the Simpl+ code in preparation for packaging inside a Simpl module wrapper.</li>
+                <li><em>Note:</em> With the current shared library, v3.1.1 programs gain the text-detection and industry-JSON library behavior automatically. Digital outputs after Read still require the v3.1.2 SIMPL+ module for the explicit 0/1 drive fix.</li>
+            </ul>
+        </span>
+    </li>
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;mso-list:l8 level1 lfo10;tab-stops:list .5in">
+        <strong><span style="mso-fareast-font-family:&quot;Times New Roman&quot;">v3.1 (02/25/2026)</span></strong>
+        <span style="mso-fareast-font-family:&quot;Times New Roman&quot;">: Added <strong><span style="color:blue;">File_Not_Exist_FB</span></strong> feedback (actual, rather than derivative of File_Exists_FB).</span>
+    </li>
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;mso-list:l8 level1 lfo10;tab-stops:list .5in">
+        <strong><span style="mso-fareast-font-family:&quot;Times New Roman&quot;">v3.0 (08/04/2025)</span></strong>
+        <span style="mso-fareast-font-family:&quot;Times New Roman&quot;">: Initial generation with JSON support.</span>
+    </li>
+    <li class="MsoNormal" style="mso-margin-top-alt:auto;mso-margin-bottom-alt:auto;mso-list:l8 level1 lfo10;tab-stops:list .5in">
+        <strong><span style="mso-fareast-font-family:&quot;Times New Roman&quot;">Updated (08/05/2025 &ndash; 08/06/2025)</span></strong>
+        <span style="mso-fareast-font-family:&quot;Times New Roman&quot;">: Added file existence feedback, delete functionality, busy feedback, file size and integrity checks, CSV/INI formats, backup/rollback, optional AES encryption with related feedbacks, backup history, Format_Override / Filename_Override, Delete_Backup; File_Location/Filename split with auto file extensions from Format.</span>
+    </li>
+</ul>
+
+<h2>Module vs Library Quick Reference</h2>
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Times New Roman;font-size:11pt;">
+ <tr style="background:#D9E2F3;">
+  <th align="left">Capability</th>
+  <th align="left">v3.1.1 SIMPL+</th>
+  <th align="left">v3.1.2 SIMPL+</th>
+  <th align="left">Shared File Reader library</th>
+ </tr>
+ <tr>
+  <td>Text format false-detect fix</td>
+  <td colspan="2" align="center">Uses library</td>
+  <td>Yes (v3.1.1-era + current)</td>
+ </tr>
+ <tr>
+  <td>Industry-standard JSON read</td>
+  <td colspan="2" align="center">Uses library</td>
+  <td>Yes (v3.1.2-era library)</td>
+ </tr>
+ <tr>
+  <td>Digital_Output correct after Read</td>
+  <td>No (known limitation)</td>
+  <td><strong>Yes</strong></td>
+  <td>N/A (SIMPL+ assignment)</td>
+ </tr>
+ <tr>
+  <td>Analog / Serial restore after Read</td>
+  <td>Yes</td>
+  <td>Yes</td>
+  <td>Yes</td>
+ </tr>
+ <tr>
+  <td>Write all input types to file</td>
+  <td>Yes</td>
+  <td>Yes</td>
+  <td>Yes</td>
+ </tr>
+</table>
+
+</div>
+
+</body>
+
+</html>

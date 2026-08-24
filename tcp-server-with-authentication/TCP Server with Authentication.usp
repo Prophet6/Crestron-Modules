@@ -1,0 +1,320 @@
+#HELP_BEGIN
+TCP Server with Authentication v1.0
+
+TCP listener on the Crestron processor. With Security and Authentication off
+(the defaults) this module matches the built-in SIMPL Windows TCP/IP Server
+symbol: plain TCP, no login, Enable / TX$ / RX$.
+
+OPTIONAL SECURITY (TLS)
+Hold Enable_Security high, or set the Security parameter to On. The listener
+uses Crestron SecureTCPServer and the processor certificate. Lab path:
+  ssl self
+Clients must skip certificate verification (self-signed). Firmware 1.500.0005+.
+If listen fails, Error$ tells you to enable SSL.
+
+OPTIONAL AUTHENTICATION
+Hold Enable_Authentication high, or set the Authentication parameter to On.
+After connect the server sends:
+  220 TCP Server with Authentication ready
+The client must send, within Auth_Timeout_s:
+  AUTH <username> <password>
+Success:
+  230 Authenticated
+Failure (then disconnect):
+  535 Authentication failed
+  535 Authentication timeout
+Credentials: Username$ / Password$ parameters (defaults "user" / "pass").
+Non-empty Username_Override$ / Password_Override$ win at runtime.
+Authentication without TLS puts the password on the wire; Error$ warns.
+
+DIGITAL OVERRIDES
+Enable_Security / Enable_Authentication: PUSH (or hold high) enables the
+feature; RELEASE (low) falls back to the matching parameter (default Off).
+Main() samples the digital level so a held 1 works at startup.
+
+TX$ is sent as-is (no extra delimiter). Client_Index 0 broadcasts to every
+authenticated client; 1..Max_Clients targets one socket.
+
+Keep TCP_Server_Auth.clz in this folder. Target series3 and series4.
+
+VERSION HISTORY
+v1.0  2026-08-24  RGW
+- Initial public module
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+#SYMBOL_NAME "TCP Server with Authentication"
+#CATEGORY "12,41,57"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "TCP_Server_Auth"
+
+#DEFINE_CONSTANT MaxTrackedClients 16
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				Enable, Enable_Security, Enable_Authentication,
+				_SKIP_,
+				Disconnect_All, Disconnect_Client;
+
+ANALOG_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				Port_Override, Client_Index;
+
+STRING_INPUT	TX$[255], Username_Override$[64], Password_Override$[64];
+
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				Listening_FB, Security_FB, Authentication_FB,
+				_SKIP_,
+				Has_Authenticated_Client_FB;
+
+ANALOG_OUTPUT	Client_Count, Authenticated_Count, Last_Client_Index;
+
+STRING_OUTPUT	RX$, Client_IP$, Status$, Error$;
+
+INTEGER_PARAMETER	Port, Max_Clients, Security, Authentication, Auth_Timeout_s;
+STRING_PARAMETER	Username$[64], Password$[64];
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		50001d;
+	propShortDescription =	"Listen port";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Max_Clients
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		4d;
+	propShortDescription =	"Maximum simultaneous clients (1-16)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Security
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "Off (plain TCP)"},
+							{1d, "On (TLS)"};
+	propShortDescription =	"TLS via SecureTCPServer (processor ssl self)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Authentication
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "Off"},
+							{1d, "On (username/password)"};
+	propShortDescription =	"Require AUTH after connect";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Username$
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"user";
+	propShortDescription =	"AUTH username (when Authentication is On)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Password$
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"pass";
+	propShortDescription =	"AUTH password (when Authentication is On)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Auth_Timeout_s
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		10d;
+	propShortDescription =	"Seconds to AUTH before disconnect";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+INTEGER InitDone;
+INTEGER ClientConnected[MaxTrackedClients];
+INTEGER ClientAuthed[MaxTrackedClients];
+STRING LineBuf$[255];
+STRING ErrBuf$[255];
+STRING StatBuf$[255];
+STRING IpBuf$[64];
+STRING UserBuf$[64];
+STRING PassBuf$[64];
+TcpAuthServer Core;
+
+/* FUNCTIONS */
+
+FUNCTION RecalcCounts() {
+	INTEGER i, c, a;
+	c = 0;
+	a = 0;
+	For (i = 1 to MaxTrackedClients) {
+		If (ClientConnected[i] = 1) c = c + 1;
+		If (ClientAuthed[i] = 1) a = a + 1;
+	}
+	Client_Count = c;
+	Authenticated_Count = a;
+	Has_Authenticated_Client_FB = (a > 0);
+}
+
+FUNCTION ApplyCredentials() {
+	If (len(Username_Override$) > 0) UserBuf$ = Username_Override$;
+	Else UserBuf$ = Username$;
+	If (len(Password_Override$) > 0) PassBuf$ = Password_Override$;
+	Else PassBuf$ = Password$;
+	Core.SetUsername(UserBuf$);
+	Core.SetPassword(PassBuf$);
+}
+
+FUNCTION ApplyPort() {
+	INTEGER p;
+	p = Port;
+	If (Port_Override > 0) p = Port_Override;
+	Core.SetPort(p);
+}
+
+FUNCTION RefreshSecurity() {
+	INTEGER isOn;
+	isOn = Security;
+	If (Enable_Security = 1) isOn = 1;
+	Core.SetSecurity(isOn);
+	Security_FB = isOn;
+}
+
+FUNCTION RefreshAuthentication() {
+	INTEGER isOn;
+	isOn = Authentication;
+	If (Enable_Authentication = 1) isOn = 1;
+	Core.SetAuthentication(isOn);
+	Authentication_FB = isOn;
+}
+
+FUNCTION ApplyAll() {
+	INTEGER n;
+	n = Max_Clients;
+	If (n < 1) n = 1;
+	If (n > MaxTrackedClients) n = MaxTrackedClients;
+	Core.SetMaxClients(n);
+	ApplyPort();
+	RefreshSecurity();
+	RefreshAuthentication();
+	ApplyCredentials();
+	Core.SetAuthTimeoutSeconds(Auth_Timeout_s);
+	Core.SetClientIndex(Client_Index);
+}
+
+FUNCTION MaybeRestart() {
+	If (InitDone = 1) {
+		If (Enable = 1) Core.Restart();
+	}
+}
+
+/* CALLBACKS */
+
+CALLBACK FUNCTION HandleServerState (Integer listening, String msg$) {
+	Listening_FB = listening;
+	StatBuf$ = msg$;
+	Status$ = StatBuf$;
+	If (listening = 1) Error$ = "";
+}
+
+CALLBACK FUNCTION HandleClientChanged (Integer clientIndex, Integer connected, Integer authenticated, String ip$) {
+	If ((clientIndex >= 1) && (clientIndex <= MaxTrackedClients)) {
+		ClientConnected[clientIndex] = connected;
+		ClientAuthed[clientIndex] = authenticated;
+	}
+	RecalcCounts();
+	Last_Client_Index = clientIndex;
+	IpBuf$ = ip$;
+	Client_IP$ = IpBuf$;
+}
+
+CALLBACK FUNCTION HandleLineReceived (Integer clientIndex, String line$) {
+	Last_Client_Index = clientIndex;
+	LineBuf$ = line$;
+	RX$ = LineBuf$;
+}
+
+CALLBACK FUNCTION HandleError (String msg$) {
+	ErrBuf$ = msg$;
+	Error$ = ErrBuf$;
+}
+
+/* EVENTS */
+
+CHANGE Enable {
+	If (Enable = 1) {
+		ApplyAll();
+		Core.Start();
+	}
+	Else {
+		Core.Stop();
+		Listening_FB = 0;
+	}
+}
+
+PUSH Enable_Security {
+	RefreshSecurity();
+	MaybeRestart();
+}
+
+RELEASE Enable_Security {
+	RefreshSecurity();
+	MaybeRestart();
+}
+
+PUSH Enable_Authentication {
+	RefreshAuthentication();
+}
+
+RELEASE Enable_Authentication {
+	RefreshAuthentication();
+}
+
+PUSH Disconnect_All {
+	Core.DisconnectAllClients();
+}
+
+PUSH Disconnect_Client {
+	Core.DisconnectClient(Client_Index);
+}
+
+CHANGE Port_Override {
+	ApplyPort();
+	MaybeRestart();
+}
+
+CHANGE Client_Index {
+	Core.SetClientIndex(Client_Index);
+}
+
+CHANGE TX$ {
+	Core.Send(TX$);
+}
+
+CHANGE Username_Override$ {
+	ApplyCredentials();
+}
+
+CHANGE Password_Override$ {
+	ApplyCredentials();
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	INTEGER i;
+	For (i = 1 to MaxTrackedClients) {
+		ClientConnected[i] = 0;
+		ClientAuthed[i] = 0;
+	}
+	RegisterDelegate(Core, OnServerStateChanged, HandleServerState);
+	RegisterDelegate(Core, OnClientChanged, HandleClientChanged);
+	RegisterDelegate(Core, OnLineReceived, HandleLineReceived);
+	RegisterDelegate(Core, OnError, HandleError);
+	WaitForInitializationComplete();
+	ApplyAll();
+	InitDone = 1;
+	If (Enable = 1) Core.Start();
+}

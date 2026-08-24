@@ -1,0 +1,106 @@
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+#CATEGORY "6,12,41,57" // Lighting, System Control, Remote System Interface, Remote Systems
+#SYMBOL_NAME "Crestron MQTT Client"
+
+#USER_SIMPLSHARP_LIBRARY "Crestron2Mqtt";
+
+CrestronMqttClient _client;
+
+DIGITAL_INPUT  Connect, Disconnect, PublishTrigger, SubscribeTrigger;
+STRING_INPUT   Broker$[128], ClientId$[64], Username$[64], Password$[64];
+ANALOG_INPUT   Port;
+DIGITAL_INPUT  UseTls;
+
+STRING_INPUT   PublishTopic$[256], PublishPayload$[1024];
+ANALOG_INPUT   PublishQoS;
+DIGITAL_INPUT  PublishRetain;
+
+STRING_INPUT   SubscribeTopic$[256];
+ANALOG_INPUT   SubscribeQoS;
+
+DIGITAL_OUTPUT Connected;
+STRING_OUTPUT  ReceivedTopic$, ReceivedPayload$;
+
+//==============================================================================
+// Event Handlers from SIMPL#
+//==============================================================================
+CALLBACK FUNCTION OnConnectionStateChanged(INTEGER state)
+{
+    Connected = state;
+}
+
+CALLBACK FUNCTION OnMessageReceived(STRING topic, STRING payload)
+{
+    ReceivedTopic$ = topic;
+    ReceivedPayload$ = payload;
+}
+
+//==============================================================================
+// Main
+//==============================================================================
+Function Main()
+{
+    WaitForInitializationComplete();
+
+    _client = new CrestronMqttClient();
+    _client.ConnectionStateChanged += OnConnectionStateChanged;
+    _client.MessageReceived += OnMessageReceived;
+
+    Print("Crestron MQTT Wrapper Initialized");
+}
+
+//==============================================================================
+// Connect
+//==============================================================================
+PUSH Connect
+{
+    if (Broker <> "")
+    {
+        _client.Initialize(Broker, Port, ClientId, Username, Password, UseTls);
+        _client.Connect(Username, Password);
+        Print("MQTT Connect requested to %s:%d", Broker, Port);
+    }
+    else
+    {
+        Print("MQTT Broker address is empty!");
+    }
+}
+
+//==============================================================================
+// Disconnect
+//==============================================================================
+PUSH Disconnect
+{
+    if (_client <> null)
+    {
+        _client.Disconnect();
+        Print("MQTT Disconnect requested");
+    }
+}
+
+//==============================================================================
+// Publish
+//==============================================================================
+PUSH PublishTrigger
+{
+    if (_client <> null)
+    {
+        _client.Publish(PublishTopic$, PublishPayload$, PublishQoS, PublishRetain);
+        Print("MQTT Publish to %s", PublishTopic$);
+    }
+}
+
+//==============================================================================
+// Subscribe
+//==============================================================================
+PUSH SubscribeTrigger
+{
+    if (_client <> null)
+    {
+        _client.Subscribe(SubscribeTopic$, SubscribeQoS);
+        Print("MQTT Subscribed to %s", SubscribeTopic$);
+    }
+}

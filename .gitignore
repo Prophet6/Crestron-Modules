@@ -1,0 +1,77 @@
+# Legacy duplicate MQTT work folder (canonical sources: Crestron_MQTT_Integration/)
+CrestronMqttWrapper/
+
+# Local archive / session junk
+_archive/
+**/_archive/
+*.paused-*
+*token*.txt
+compile-log*.txt
+
+# Archives / field packages
+*_archive.zip
+*_compiled.zip
+*.zip
+
+# SIMPL / VTPro outputs & autosave (Kiel / Crestron practice)
+*.ASV
+*.arcv
+*.bin
+*.cdm
+*.ch5z
+*.lpz
+*.sig
+*.sm2
+*.smft
+*.spz
+*.um2
+*.vtz
+*.hash
+
+# Smart Graphics sidecars
+*.ced
+*.sgd
+*.sgd_
+*.sgd2
+*.bak
+
+# SIMPL+ / SIMPL# build products
+SPlsWork/
+**/SPlsWork/
+**/bin/
+**/obj/
+**/packages/
+*.clz
+*.pdb
+*.dll
+
+# TCP Server with Authentication ships its Simpl# CLZ next to the .usp
+!tcp-server-with-authentication/TCP_Server_Auth.clz
+
+devenv-build.log
+_clzpeek/
+**/_clzstage/
+**/splus-compile.log
+tcp-server-with-authentication/*.h
+tcp-server-with-authentication/*.inf
+tcp-server-with-authentication/Version.ini
+tcp-server-with-authentication/Simpl#Config.xml
+*.user
+
+# Project databases
+ProjDabs.ldb
+ProjDabs.mdb
+
+# XPanel / C3
+*.xexe/
+*.xweb/
+*.prj/
+*.c3prj/
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
