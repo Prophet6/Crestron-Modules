@@ -1,0 +1,242 @@
+#HELP_BEGIN
+Power Shutdown Confirmation Page Manager
+For 4-Series (and 3-Series) processors.
+
+When an automatic shutdown sequence is initiated, this module asserts a warning
+page and runs a countdown (analog, serial, or both). The touchpanel page typically
+shows a "system is about to shut down" message plus Cancel and Confirm buttons.
+
+Typical flow:
+1. Pulse [D]Initiate when the auto-shutdown sequence begins.
+2. [D]Warning_Page_FB goes high — join this to your confirmation page / subpage.
+3. [S]Serial_Count_FB and/or [A]Analog_Count_FB drive the on-screen timer.
+4. User presses Cancel  ? page de-asserts, timer resets for next time, no shutdown.
+5. User presses Confirm ? [D]Shutdown_OS pulses, page de-asserts, timer resets.
+6. Timer reaches 0     ? same as Confirm (auto-shutdown).
+
+Inputs:
+[D]Initiate - starts the shutdown warning sequence (asserts page + countdown)
+[D]Cancel - de-asserts the warning page and resets the counter (no shutdown)
+[D]Confirm - pulses Shutdown_OS, de-asserts the warning page, resets the counter
+[A]Time_Override - optional; sets countdown length in seconds (1d..65535d)
+
+Outputs:
+[D]Warning_Page_FB - high while the confirmation page is shown (countdown is running)
+[D]Shutdown_OS - 1 ms pulse on Confirm or when the countdown expires
+[S]Serial_Count_FB - time remaining, format set by String_Format parameter
+[A]Analog_Count_FB - whole seconds remaining
+
+Parameters:
+[I]Countdown_Time - default countdown length in seconds (1s..600s;
+                    use [A]Time_Override for longer durations)
+[I]String_Format - serial time display format:
+    1d = Minimal length [42]
+    2d = Always show minutes [0:42]
+    3d = Always show hours and minutes [0:00:42]
+    4d = Always show minutes with leading zeros [00:42]
+    5d = Always show hours and minutes with leading zeros [00:00:42]
+
+SIMPL Windows tips:
+- Drive the confirmation page visibility from Warning_Page_FB.
+- Wire Cancel / Confirm button presses to Cancel / Confirm.
+- Wire Shutdown_OS into your actual power-down / system-off logic.
+- Put static warning text on the VTPro page (or a separate serial join).
+
+-- VERSION HISTORY --
+v1.0  2026-07-15
+- Repurposed from Serial/Analog Countdown v2.0 (Robert G Walker)
+- Geared specifically to power shutdown confirmation UX
+
+#HELP_END
+
+/* COMPILER DIRECTIVES ***************************************************************************************************************************************/
+
+#SYMBOL_NAME "Power Shutdown Confirmation v1.0"
+#CATEGORY "11,13" /* Counters, Timers */
+#DEFAULT_VOLATILE
+
+/* INPUTS & OUTPUTS ******************************************************************************************************************************************/
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, Initiate, _SKIP_, Cancel, Confirm;
+ANALOG_INPUT	_SKIP_, _SKIP_, Time_Override;
+
+DIGITAL_OUTPUT 	_SKIP_, _SKIP_, _SKIP_, Warning_Page_FB, _SKIP_, _SKIP_, Shutdown_OS;
+STRING_OUTPUT	_SKIP_, Serial_Count_FB;
+ANALOG_OUTPUT	Analog_Count_FB;
+
+INTEGER_PARAMETER	Countdown_Time, String_Format;
+
+/* PROPERTIES ************************************************************************************************************************************************/
+
+#BEGIN_PARAMETER_PROPERTIES Countdown_Time
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			1s, 600s;
+	propDefaultValue =		30s;
+	propShortDescription =	"Countdown before auto-shutdown (use [A]Time_Override for >600s)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES String_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Minimal length"},
+							{2d, "Always show minutes"},
+							{3d, "Always show hours and minutes"},
+							{4d, "Always show minutes with leading zeros"},
+							{5d, "Always show hours and minutes with leading zeros"};
+	propShortDescription =	"Serial countdown display format [HH:MM:SS]";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES ******************************************************************************************************************************************/
+
+INTEGER	DefaultTime, Count, Run;
+
+/* FUNCTIONS *************************************************************************************************************************************************/
+
+Function	UpdateOutputs () {
+	INTEGER	hourNum, minuteNum, secondNum;
+
+	hourNum = 0;
+	minuteNum = 0;
+	secondNum = 0;
+
+	/* parse remaining time */
+	If (Count >= 3600)
+		hourNum = Count / 3600;
+	If (Count >= 60)
+		minuteNum = (Count - (hourNum * 3600)) / 60;
+	secondNum = Count - (hourNum * 3600) - (minuteNum * 60);
+
+	Analog_Count_FB = Count;
+
+	CSwitch (String_Format) {
+		Case (1): { /* Minimal length */
+			If (hourNum > 0)
+				MAKESTRING (Serial_Count_FB, "%d:%02d:%02d", hourNum, minuteNum, secondNum);
+			Else If (minuteNum > 0)
+				MAKESTRING (Serial_Count_FB, "%d:%02d", minuteNum, secondNum);
+			Else
+				MAKESTRING (Serial_Count_FB, "%d", secondNum);
+			Break;
+		}
+		Case (2): { /* Always show minutes */
+			If (hourNum > 0)
+				MAKESTRING (Serial_Count_FB, "%d:%02d:%02d", hourNum, minuteNum, secondNum);
+			Else
+				MAKESTRING (Serial_Count_FB, "%01d:%02d", minuteNum, secondNum);
+			Break;
+		}
+		Case (3): { /* Always show hours and minutes */
+			MAKESTRING (Serial_Count_FB, "%01d:%02d:%02d", hourNum, minuteNum, secondNum);
+			Break;
+		}
+		Case (4): { /* Always show minutes with leading zeros */
+			If (hourNum > 0)
+				MAKESTRING (Serial_Count_FB, "%d:%02d:%02d", hourNum, minuteNum, secondNum);
+			Else
+				MAKESTRING (Serial_Count_FB, "%02d:%02d", minuteNum, secondNum);
+			Break;
+		}
+		Case (5): { /* Always show hours and minutes with leading zeros */
+			MAKESTRING (Serial_Count_FB, "%02d:%02d:%02d", hourNum, minuteNum, secondNum);
+			Break;
+		}
+	}
+}
+
+FUNCTION	ResetTimer () {
+	Count = DefaultTime;
+	UpdateOutputs();
+}
+
+FUNCTION	DismissPage () {
+	Warning_Page_FB = 0;
+	ResetTimer();
+}
+
+FUNCTION	StartCountdown () {
+
+	Warning_Page_FB = 1;
+
+	WHILE (Run = 1) {
+
+		UpdateOutputs();
+
+		/* auto-confirm when timer hits zero */
+		IF (Count = 0) {
+			Pulse (1, Shutdown_OS);
+			Run = 0;
+			Break;
+		}
+
+		If (Run = 0) Break;
+
+		Count = Count - 1;
+		DELAY (100);
+	}
+
+	/* always leave page down and timer ready for next sequence */
+	DismissPage();
+}
+
+
+/* EVENT HANDLERS ********************************************************************************************************************************************/
+
+Threadsafe PUSH	Initiate {
+	/* start or restart the warning sequence */
+	Count = DefaultTime;
+	If (Run = 0) {
+		Run = 1;
+		StartCountdown();
+	}
+	Else {
+		/* already counting — restart the displayed countdown only */
+		UpdateOutputs();
+	}
+}
+
+PUSH	Cancel {
+	/* abandon shutdown; clear page immediately and arm timer for next time */
+	Warning_Page_FB = 0;
+	Count = DefaultTime;
+	UpdateOutputs();
+	If (Run = 1) {
+		Run = 0;
+		/* StartCountdown exits; DismissPage is harmless if already cleared */
+	}
+}
+
+PUSH	Confirm {
+	/* user confirmed — fire shutdown, clear page, reset timer */
+	If ((Run = 1) || (Warning_Page_FB = 1)) {
+		Pulse (1, Shutdown_OS);
+		Warning_Page_FB = 0;
+		Count = DefaultTime;
+		UpdateOutputs();
+		Run = 0;
+		/* StartCountdown exits if it was running */
+	}
+}
+
+CHANGE	Time_Override {
+	If (Time_Override > 0) {
+		DefaultTime = Time_Override;
+		If (Run = 0) {
+			Count = DefaultTime;
+			UpdateOutputs();
+		}
+	}
+}
+
+/* MAIN ******************************************************************************************************************************************************/
+
+FUNCTION Main() {
+	WaitForInitializationComplete();
+	/* unitTime parameters are in hundredths of a second */
+	DefaultTime = Countdown_Time / 100;
+	If (DefaultTime = 0) DefaultTime = 30;
+	Count = DefaultTime;
+	Warning_Page_FB = 0;
+	UpdateOutputs();
+}

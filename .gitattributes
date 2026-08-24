@@ -1,0 +1,7 @@
+# SIMPL Windows / VTPro / user modules: treat as binary (no EOL conversion, no textual merge)
+*.smw binary
+*.vtp binary
+*.umc binary
+*.um2 binary
+*.lpz binary
+*.clz binary
