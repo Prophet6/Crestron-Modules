@@ -37,24 +37,25 @@ This is the outbound counterpart to [TCP Server with Authentication](../tcp-serv
 ## Pins
 
 ```
-Connect         | Port | Connect_FB
-Port_Override   |      | status
-Address$        |      |
-TX$             |      | RX$
+Connect         |              | Connect_FB
+Port_Override   | Port         |
+Address$        |              | Status
+                |              |
+TX$             |              | RX$
 ```
 
 | Pin | Role |
 |-----|------|
 | Connect | Hold high to open the socket; low closes it. Sampled at startup. |
 | Address$ | Runtime host. Empty = do not connect. Change while Connect is high reconnects. |
-| Port | Parameter, default 23. |
+| Port | Parameter, default 23. Shares a row with Port_Override. |
 | Port_Override | Analog. `> 0` replaces Port; `0` uses the parameter. |
 | TX$ | Bytes to send. Ignored unless connected. No extra CR/LF. |
 | Connect_FB | High while the socket is up (stock `Connect-F`). |
-| status | Stock TCP/IP Client status analog (0–8). |
+| Status | Stock TCP/IP Client status analog (0–8). Shares a row with Address$. |
 | RX$ | Incoming bytes, chunked at 250 characters. |
 
-### status
+### Status
 
 | Value | Meaning |
 |------:|---------|
