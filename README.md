@@ -15,6 +15,7 @@ This project is not affiliated with Crestron Electronics.
 | [crestron-mqtt-integration](crestron-mqtt-integration/) | Crestron MQTT (HA bridge) | **4-Series** | MQTT client (M2Mqtt / SSharp port) for Home Assistant publish and subscribe. |
 | [tcp-server-with-authentication](tcp-server-with-authentication/) | TCP Server with Authentication | 3-Series / 4-Series | TCP listener on the processor. Defaults match the built-in **TCP/IP Server** symbol. Optional TLS (`SecureTCPServer`, `ssl self`) and optional `AUTH` username/password. |
 | [ssh-interface-v2](ssh-interface-v2/) | SSH Interface Client v2.0 | **4-Series** | SSH **client** — the processor connects out to a device. Bench mock: [ssh-tcp-mock](https://github.com/Prophet6/ssh-tcp-mock). |
+| [dynamic-tcp-client](dynamic-tcp-client/) | TCP Client (Dynamic IP) | **4-Series** | TCP **client** with runtime `Address$` — stock Connect / Connect_FB / TX$ / RX$ / status, no IP table. |
 
 Compile SIMPL+ with SPlusCC — see [COMPILE_SIMPL_PLUS_CLI.md](COMPILE_SIMPL_PLUS_CLI.md).
 

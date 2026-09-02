@@ -1,0 +1,144 @@
+#HELP_BEGIN
+TCP Client (Dynamic IP) v1.0
+
+Simpl# TCP client that matches the built-in SIMPL Windows TCP/IP Client
+symbol (Connect, Connect_FB, TX$, RX$, status) except the remote host is
+a serial input, not an IP-table / Address parameter. No IP-ID required.
+
+Hold Connect high to open the socket. Release Connect to close it.
+Address$ is IPv4 or a hostname. Empty Address$ will not connect.
+A change to Address$ or Port_Override while Connect is high reconnects.
+Port_Override greater than 0 replaces the Port parameter; 0 uses Port.
+
+If the remote end drops while Connect is still high, the client waits
+100 ms then retries (same idea as the stock client on CUZ 3.029+).
+
+TX$ is sent as-is (no extra CR/LF) and only while connected. RX$ is a
+byte pipe, chunked at 250 characters.
+
+status (stock TCP/IP Client values):
+  0d  Not connected
+  1d  Waiting for connection
+  2d  Connected
+  3d  Connection failed
+  4d  Connection broken remotely
+  5d  Connection broken locally
+  6d  Performing DNS lookup
+  7d  DNS lookup failed
+  8d  DNS lookup resolved
+
+4-Series only. Keep Dynamic_TCP_Client.clz in this folder.
+
+VERSION HISTORY
+v1.0  2026-09-02  RGW
+- Initial public module
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+#SYMBOL_NAME "TCP Client (Dynamic IP)"
+#CATEGORY "12,41,57"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "Dynamic_TCP_Client"
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	Connect;
+ANALOG_INPUT	Port_Override;
+STRING_INPUT	Address$[64], TX$[255];
+
+DIGITAL_OUTPUT	Connect_FB;
+ANALOG_OUTPUT	status;
+STRING_OUTPUT	_SKIP_, RX$;
+
+INTEGER_PARAMETER	Port;
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			1d,65535d;
+	propDefaultValue =		23d;
+	propShortDescription =	"Remote TCP port";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+STRING			RxBuf$[255];
+STRING			Host$[64];
+INTEGER			EffectivePort;
+DynamicTcpClient	Core;
+
+/* FUNCTIONS */
+
+FUNCTION ApplyEndpoint() {
+	Host$ = Address$;
+	EffectivePort = Port;
+	If (Port_Override > 0) {
+		EffectivePort = Port_Override;
+	}
+}
+
+FUNCTION DoConnect() {
+	ApplyEndpoint();
+	If (Len(Host$) > 0) {
+		Core.Connect(Host$, EffectivePort);
+	}
+	Else {
+		Core.Disconnect();
+	}
+}
+
+/* CALLBACKS */
+
+CALLBACK FUNCTION HandleConnection (Integer connected, Integer stat) {
+	Connect_FB = connected;
+	status = stat;
+}
+
+CALLBACK FUNCTION HandleRx (String data$) {
+	RxBuf$ = data$;
+	RX$ = RxBuf$;
+}
+
+/* EVENTS */
+
+CHANGE Connect {
+	If (Connect = 1) {
+		DoConnect();
+	}
+	Else {
+		Core.Disconnect();
+	}
+}
+
+CHANGE Address$ {
+	If (Connect = 1) {
+		DoConnect();
+	}
+}
+
+CHANGE Port_Override {
+	If (Connect = 1) {
+		DoConnect();
+	}
+}
+
+CHANGE TX$ {
+	Core.Send(TX$);
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	RegisterDelegate(Core, OnConnectionChanged, HandleConnection);
+	RegisterDelegate(Core, OnDataReceived, HandleRx);
+	WaitForInitializationComplete();
+	If (Connect = 1) {
+		DoConnect();
+	}
+	Else {
+		Core.PublishStatus();
+	}
+}
