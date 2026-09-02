@@ -38,9 +38,9 @@ This is the outbound counterpart to [TCP Server with Authentication](../tcp-serv
 
 Use [Testing-Tools](https://github.com/Prophet6/Testing-Tools) — this PC **listens**, the processor **connects out**.
 
-1. Clone or download Testing-Tools. Double-click `install-dependencies.bat` if you have not already (SSH only; TCP server needs stock Python).
-2. Double-click **`start-tcp-server.bat`**. Note the **LAN IP** it prints (not `127.0.0.1`).
-3. Allow inbound **TCP 23** on the PC firewall if the processor cannot connect.
+1. Clone or download Testing-Tools. TCP server needs stock Python (no extra packages).
+2. **Right-click `allow-firewall.bat` → Run as administrator** (once). Windows Firewall blocks inbound TCP 23 until you do this; Python does not get an allow rule on its own.
+3. Double-click **`start-tcp-server.bat`**. Note the **LAN IP** it prints (not `127.0.0.1`, not a Hyper-V or Bluetooth address).
 4. On the symbol:
 
    | Pin / parameter | Value |

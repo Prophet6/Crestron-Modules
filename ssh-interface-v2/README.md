@@ -77,7 +77,7 @@ Full walkthrough: [Testing-Tools](https://github.com/Prophet6/Testing-Tools).
 1. Clone or download [Testing-Tools](https://github.com/Prophet6/Testing-Tools).
 2. Install Python 3.9+ with **Add to PATH**.
 3. Double-click `install-dependencies.bat` (once).
-4. Allow inbound **TCP 2222** on the PC firewall if the processor cannot connect.
+4. **Right-click `allow-firewall.bat` → Run as administrator** (once). That opens inbound TCP 23 / 2222 / 5000.
 
 ### Test the Crestron **Client** (processor → this PC)
 
