@@ -10,7 +10,7 @@ Crestron SIMPL+ / Simpl# **TCP client** for **4-Series** processors (RMC4, CP4, 
 | `Dynamic_TCP_Client.clz` | Compiled Simpl# library (required next to the `.usp`) |
 | `Dynamic TCP Client/` | Simpl# source (Visual Studio 2022) |
 
-This is the outbound counterpart to [TCP Server with Authentication](../tcp-server-with-authentication/). This project is not affiliated with Crestron Electronics.
+This is the outbound counterpart to [TCP Server with Authentication](../tcp-server-with-authentication/). Bench the client from a PC with [Testing-Tools](https://github.com/Prophet6/Testing-Tools) (`start-tcp-server.bat`). This project is not affiliated with Crestron Electronics.
 
 ---
 
@@ -31,6 +31,25 @@ This is the outbound counterpart to [TCP Server with Authentication](../tcp-serv
 4. Drive `Address$` with the host (IPv4 or hostname), set **Port** (default 23), hold **Connect** high.
 
 `.usp` files must be saved with **Windows (CRLF)** line endings or SIMPL+ reports Error 1700.
+
+---
+
+## Bench (PC mock)
+
+Use [Testing-Tools](https://github.com/Prophet6/Testing-Tools) — this PC **listens**, the processor **connects out**.
+
+1. Clone or download Testing-Tools. Double-click `install-dependencies.bat` if you have not already (SSH only; TCP server needs stock Python).
+2. Double-click **`start-tcp-server.bat`**. Note the **LAN IP** it prints (not `127.0.0.1`).
+3. Allow inbound **TCP 23** on the PC firewall if the processor cannot connect.
+4. On the symbol:
+
+   | Pin / parameter | Value |
+   |-----------------|--------|
+   | Address$ | PC LAN IP |
+   | Port | `23` |
+   | Connect | hold high |
+
+5. Type in the PC window to send to `RX$`. Data on `TX$` appears as `[RX]`.
 
 ---
 
