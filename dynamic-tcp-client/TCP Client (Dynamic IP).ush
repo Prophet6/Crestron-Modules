@@ -27,8 +27,11 @@
   Cmn14=for connection\\  2d  Connected\\  3d  Connection failed\\  4d||2
   Cmn15=Connection broken remotely\\  5d  Connection broken locally\\  6d||1
   Cmn16=||1Performing DNS lookup\\  7d  DNS lookup failed\\  8d  DNS lookup||1
-  Cmn17=resolved\\\\4-Series only. Keep Dynamic_TCP_Client.clz in this folder.
-  Cmn18=\\\\VERSION HISTORY\\v1.0  2026-09-02  RGW\\- Initial public module
+  Cmn17=resolved\\\\Bench: Testing-Tools start-tcp-server.bat (port 23).
+  Cmn18=||1Address$ is the\\PC LAN IP, not 127.0.0.1. Run allow-firewall.bat||1
+  Cmn19=as Administrator once\\or Windows Firewall will drop the processor.
+  Cmn20=\\\\4-Series only. Keep Dynamic_TCP_Client.clz in this folder.\\
+  Cmn21=\\VERSION HISTORY\\v1.0  2026-09-02  RGW\\- Initial public module
 [END]
 [BEGIN]
   ObjTp=Symbol

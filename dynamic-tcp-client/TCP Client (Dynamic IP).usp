@@ -27,6 +27,10 @@ status (stock TCP/IP Client values):
   7d  DNS lookup failed
   8d  DNS lookup resolved
 
+Bench: Testing-Tools start-tcp-server.bat (port 23). Address$ is the
+PC LAN IP, not 127.0.0.1. Run allow-firewall.bat as Administrator once
+or Windows Firewall will drop the processor.
+
 4-Series only. Keep Dynamic_TCP_Client.clz in this folder.
 
 VERSION HISTORY
