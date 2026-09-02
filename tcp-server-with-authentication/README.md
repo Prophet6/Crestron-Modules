@@ -7,7 +7,7 @@ Crestron SIMPL+ / Simpl# TCP **listener**. Defaults match the built-in SIMPL Win
 | `TCP Server with Authentication.usp` | SIMPL+ symbol |
 | `TCP_Server_Auth.clz` | Compiled Simpl# library (required next to the `.usp`) |
 | `TCP Server with Authentication/` | Simpl# source (Visual Studio 2008, Windows CE / .NET CF 3.5) |
-| `test-client/` | Python TLS/plain client for bench tests |
+| `test-client/` | Pointer to the canonical client in [Testing-Tools](https://github.com/Prophet6/Testing-Tools) |
 
 3-Series and 4-Series. Firmware **1.500.0005+** if you turn Security (TLS) on.
 
@@ -60,8 +60,9 @@ Authentication **without** TLS sends the password in the clear; `Error$` warns.
 
 ## Test client
 
+Canonical copy: [Testing-Tools](https://github.com/Prophet6/Testing-Tools) (`start-tcp-auth-client.bat`, or `tcp-auth-client/tcp_auth_client.py`). A local copy remains in `test-client/` for convenience.
+
 ```powershell
-cd test-client
 python tcp_auth_client.py --host <processor-ip> --port 50001
 python tcp_auth_client.py --host <processor-ip> --port 50001 --tls --user user --password pass
 ```
