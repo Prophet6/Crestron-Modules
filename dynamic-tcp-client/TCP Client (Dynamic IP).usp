@@ -36,7 +36,7 @@ v1.0  2026-09-02  RGW
 
 /* COMPILER DIRECTIVES */
 #SYMBOL_NAME "TCP Client (Dynamic IP)"
-#CATEGORY "12,41,57"
+#CATEGORY "12,41,57" // System Control, Remote System Interface, Remote Systems
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
 #USER_SIMPLSHARP_LIBRARY "Dynamic_TCP_Client"
@@ -45,13 +45,15 @@ v1.0  2026-09-02  RGW
 
 DIGITAL_INPUT	Connect;
 ANALOG_INPUT	Port_Override;
-STRING_INPUT	Address$[64], TX$[255];
+STRING_INPUT	Address$[64],
+				_SKIP_, TX$[255];
 
 DIGITAL_OUTPUT	Connect_FB;
-ANALOG_OUTPUT	status;
+ANALOG_OUTPUT	_SKIP_,
+				Status;
 STRING_OUTPUT	_SKIP_, RX$;
 
-INTEGER_PARAMETER	Port;
+INTEGER_PARAMETER	_SKIP_, Port;
 
 /* PROPERTIES */
 
@@ -65,9 +67,9 @@ INTEGER_PARAMETER	Port;
 
 /* GLOBAL VARIABLES */
 
-STRING			RxBuf$[255];
-STRING			Host$[64];
-INTEGER			EffectivePort;
+STRING	RxBuf$[255];
+STRING	Host$[64];
+INTEGER	EffectivePort;
 DynamicTcpClient	Core;
 
 /* FUNCTIONS */
@@ -94,7 +96,7 @@ FUNCTION DoConnect() {
 
 CALLBACK FUNCTION HandleConnection (Integer connected, Integer stat) {
 	Connect_FB = connected;
-	status = stat;
+	Status = stat;
 }
 
 CALLBACK FUNCTION HandleRx (String data$) {
