@@ -1,0 +1,445 @@
+#HELP_BEGIN
+UDP Broadcast and Receive v1.3
+
+Sends UDP broadcast packets containing MAC, UID, and Data to 255.255.255.255,
+and receives incoming UDP packets on the same port. Own broadcasts are always
+ignored (OS loopback). Uses a latched Enable input to open and close the socket.
+
+Wire format (no spaces): MAC,UID,Data
+Example: 00:00:00:00:00:00,123456789,[Type]value
+Maximum datagram 306 bytes (17 + 1 + 32 + 1 + 255).
+
+
+Signal Descriptions:
+
+  DIGITAL_INPUT Enable
+    Latched. High opens the UDP socket on UDP_Port for broadcast send and receive.
+    Low closes the socket.
+
+  DIGITAL_INPUT Retrigger
+    Pulse to re-send the current MAC, UID, and Data even if Data has not changed
+    (sends even when Data is empty). Ignored unless the socket is open.
+
+  STRING_INPUT Mac[17]
+    MAC address included in the broadcast packet. Formatted to colon separators
+    when the string is 12 hex digits (no separator) or 17 bytes with : or - separators.
+
+  STRING_INPUT UID[32]
+    Unique identifier included in the broadcast packet. Alphanumeric, up to 32 bytes.
+
+  STRING_INPUT Data[255]
+    Data to broadcast. A change on this input sends a packet when Data is non-empty.
+
+  DIGITAL_OUTPUT Enable_FB
+    High while the UDP socket is open. Low if Enable is low or SocketUDP_Enable failed.
+
+  STRING_OUTPUT Received_IP
+    IP address of the sender of the last accepted packet.
+
+  STRING_OUTPUT Received_MAC
+    MAC parsed from the last accepted packet (colon-separated when recognized).
+
+  STRING_OUTPUT Received_UID
+    UID parsed from the last accepted packet.
+
+  STRING_OUTPUT Received_Data
+    Data parsed from the last accepted packet, or the entire payload when the
+    packet is not a structured MAC,UID,Data datagram.
+
+
+  INTEGER_PARAMETER UDP_Port
+    UDP port for broadcasting and receiving (1024-65535, default 50001).
+
+  INTEGER_PARAMETER Enforce_Format
+    0d = No enforcement (default): clear outputs, then fill only fields that
+         matched. If nothing looks like a MAC or UID, Received_IP and
+         Received_Data get the sender IP and the entire payload.
+    1d = Enforce MAC,UID,Data: only a valid full packet updates the outputs;
+         any other datagram is ignored (last good values kept).
+
+
+Receive parsing (No enforcement):
+  1. Clear all four received outputs.
+  2. Write Received_IP when the sender IP is known.
+  3. If the payload is MAC,UID,Data (two commas, field 1 is a MAC, field 2 is a UID),
+     fill MAC, UID, and Data (Data may be empty).
+  4. If field 1 is a MAC but field 2 is not a UID, fill MAC and treat the remainder
+     as Data.
+  5. If no field looks like a MAC or UID, Received_Data is the entire payload.
+
+Own packets (MAC + UID match this module, or the payload equals what this module
+would send) never update the received outputs.
+
+MAC shape: 12 hex digits, or 17 bytes as six hex pairs separated by : or -.
+UID shape: 1-32 bytes, letters, digits, hyphen, or underscore.
+
+ _____
+ | ~~~ |
+ | O-O |
+ |/\/\/\/\|
+ |\/\/\/\/|
+ ---------
+
+-- VERSION HISTORY --
+v1.3  2026-09-09
+- Latched Enable / Enable_FB; SocketUDP_Disable on Enable low
+- Retrigger pulse to re-send current packet
+- Enforce_Format parameter (default: no enforcement)
+- Receive: clear then fill; unstructured payloads -> IP + Data only
+- Always ignore own broadcasts
+- Fix outgoing packet size (306), FormatMAC 12-byte length check,
+  SocketGetSenderIPAddress error test, Main() startup Enable
+
+v1.2
+- Broadcast MAC,UID,Data and parse incoming UDP on a configurable port
+
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#SYMBOL_NAME "UDP Broadcast and Receive v1.3"
+#CATEGORY "46" "TCP/IP" // Custom
+#DEFAULT_VOLATILE
+#DEFINE_CONSTANT BROADCAST_IP "255.255.255.255"
+//#ENABLE_TRACE
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, Enable, Retrigger;
+STRING_INPUT	_SKIP_, Mac[17], UID[32], Data[255];
+
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, Enable_FB, _SKIP_;
+STRING_OUTPUT	Received_IP, Received_MAC, Received_UID, Received_Data;
+
+INTEGER_PARAMETER	UDP_Port, Enforce_Format;
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES UDP_Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			1024d, 65535d;
+	propDefaultValue =		50001d;
+	propShortDescription =	"UDP Broadcast Port";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Enforce_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "No enforcement"},
+							{1d, "Enforce MAC,UID,Data"};
+	propShortDescription =	"Require incoming packets to be MAC,UID,Data";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+UDP_SOCKET	UDPSocket[306];
+INTEGER		SocketOpen;
+STRING		RxBuf[306];
+
+/* FUNCTIONS */
+
+INTEGER_FUNCTION IsHexChar(INTEGER c) {
+	If ((c >= 48) && (c <= 57)) Return (1);	/* 0-9 */
+	If ((c >= 65) && (c <= 70)) Return (1);	/* A-F */
+	If ((c >= 97) && (c <= 102)) Return (1);	/* a-f */
+	Return (0);
+}
+
+INTEGER_FUNCTION IsUidChar(INTEGER c) {
+	If ((c >= 48) && (c <= 57)) Return (1);	/* 0-9 */
+	If ((c >= 65) && (c <= 90)) Return (1);	/* A-Z */
+	If ((c >= 97) && (c <= 122)) Return (1);	/* a-z */
+	If (c = 45) Return (1);	/* hyphen */
+	If (c = 95) Return (1);	/* underscore */
+	Return (0);
+}
+
+INTEGER_FUNCTION LooksLikeMAC(STRING srcStr) {
+	INTEGER i, sep, ch, n;
+
+	n = LEN(srcStr);
+	If (n = 12) {
+		For (i = 1 to 12) {
+			ch = BYTE(srcStr, i);
+			If (IsHexChar(ch) = 0) Return (0);
+		}
+		Return (1);
+	}
+
+	If (n = 17) {
+		sep = BYTE(srcStr, 3);
+		If ((sep <> 58) && (sep <> 45)) Return (0);	/* : or - */
+		ch = BYTE(srcStr, 6);
+		If (ch <> sep) Return (0);
+		ch = BYTE(srcStr, 9);
+		If (ch <> sep) Return (0);
+		ch = BYTE(srcStr, 12);
+		If (ch <> sep) Return (0);
+		ch = BYTE(srcStr, 15);
+		If (ch <> sep) Return (0);
+		For (i = 1 to 17) {
+			If ((i <> 3) && (i <> 6) && (i <> 9) && (i <> 12) && (i <> 15)) {
+				ch = BYTE(srcStr, i);
+				If (IsHexChar(ch) = 0) Return (0);
+			}
+		}
+		Return (1);
+	}
+
+	Return (0);
+}
+
+INTEGER_FUNCTION LooksLikeUID(STRING srcStr) {
+	INTEGER i, ch, n;
+
+	n = LEN(srcStr);
+	If ((n = 0) || (n > 32)) Return (0);
+	For (i = 1 to n) {
+		ch = BYTE(srcStr, i);
+		If (IsUidChar(ch) = 0) Return (0);
+	}
+	Return (1);
+}
+
+STRING_FUNCTION FormatMAC(STRING tempMAC) {
+	STRING temp[17];
+
+	If (LEN(tempMAC) = 17) {
+		If (FIND(":", tempMAC))
+			Return (tempMAC);
+		Else {
+			MakeString(temp, "%s:%s:%s:%s:%s:%s", Mid(tempMAC, 1, 2), Mid(tempMAC, 4, 2), Mid(tempMAC, 7, 2), Mid(tempMAC, 10, 2), Mid(tempMAC, 13, 2), Mid(tempMAC, 16, 2));
+			Return (temp);
+		}
+	}
+
+	Else If (LEN(tempMAC) = 12) {
+		MakeString(temp, "%s:%s:%s:%s:%s:%s", Mid(tempMAC, 1, 2), Mid(tempMAC, 3, 2), Mid(tempMAC, 5, 2), Mid(tempMAC, 7, 2), Mid(tempMAC, 9, 2), Mid(tempMAC, 11, 2));
+		Return (temp);
+	}
+
+	Else {
+		TRACE("[UDP]: MAC address error, incorrect length (%u) for \x22%s\x22", LEN(tempMAC), tempMAC);
+		Return ("00:00:00:00:00:00");
+	}
+}
+
+INTEGER_FUNCTION PacketIsSelf(STRING srcMAC, STRING srcUID) {
+	STRING mine[306], localMAC[17], packetMAC[17];
+	INTEGER isMac;
+
+	localMAC = FormatMAC(Mac);
+	MakeString(mine, "%s,%s,%s", localMAC, UID, Data);
+	If (RxBuf = mine) Return (1);
+
+	If ((LEN(Mac) = 0) && (LEN(UID) = 0)) Return (0);
+
+	isMac = LooksLikeMAC(srcMAC);
+	packetMAC = FormatMAC(srcMAC);
+	If ((isMac = 1) && (packetMAC = localMAC) && (srcUID = UID))
+		Return (1);
+
+	Return (0);
+}
+
+FUNCTION OpenSocket() {
+	SIGNED_INTEGER status;
+
+	If (SocketOpen = 1) {
+		SocketUDP_Disable(UDPSocket);
+		SocketOpen = 0;
+		Enable_FB = 0;
+	}
+
+	status = SocketUDP_Enable(UDPSocket, BROADCAST_IP, UDP_Port);
+	If (status < 0) {
+		SocketOpen = 0;
+		Enable_FB = 0;
+		TRACE("[UDP]: Failed to open UDP socket (error %d)", status);
+	}
+	Else {
+		SocketOpen = 1;
+		Enable_FB = 1;
+		TRACE("[UDP]: Opened UDP Socket successfully");
+	}
+}
+
+FUNCTION CloseSocket() {
+	SIGNED_INTEGER status;
+
+	If (SocketOpen = 1) {
+		status = SocketUDP_Disable(UDPSocket);
+		If (status < 0) TRACE("[UDP]: Failed to close UDP socket (error %d)", status);
+		Else TRACE("[UDP]: Closed UDP Socket");
+	}
+	SocketOpen = 0;
+	Enable_FB = 0;
+}
+
+FUNCTION SendBroadcast(INTEGER allowEmptyData) {
+	STRING packet[306];
+	SIGNED_INTEGER status;
+
+	If (SocketOpen = 0) {
+		TRACE("[UDP]: Send ignored, socket is not open");
+		Return;
+	}
+
+	If ((allowEmptyData = 0) && (LEN(Data) = 0)) Return;
+
+	MakeString(packet, "%s,%s,%s", FormatMAC(Mac), UID, Data);
+	status = SocketSend(UDPSocket, packet);
+	If (status < 0) TRACE("[UDP]: SocketSend failed (error %d)", status);
+	Else TRACE("[UDP]: Sent: %s", packet);
+}
+
+FUNCTION ClearReceived() {
+	Received_IP = "";
+	Received_MAC = "";
+	Received_UID = "";
+	Received_Data = "";
+}
+
+/* EVENT HANDLERS */
+
+CHANGE Enable {
+	If (Enable = 1) OpenSocket();
+	Else CloseSocket();
+}
+
+PUSH Retrigger {
+	SendBroadcast(1);
+}
+
+CHANGE Data {
+	SendBroadcast(0);
+}
+
+SOCKETRECEIVE UDPSocket {
+	INTEGER pos1, pos2, gotMAC, gotUID, fullPacket;
+	SIGNED_INTEGER status;
+	STRING buffer[306], srcIP[15], srcMAC[17], srcUID[32], srcData[306];
+	STRING field1[306], field2[306], field3[306], formattedMAC[17];
+
+	buffer = UDPSocket.SocketRxBuf;
+	ClearBuffer(UDPSocket.SocketRxBuf);
+	RxBuf = buffer;
+
+	TRACE("[UDP]: Socket received raw: %s", buffer);
+
+	srcIP = "";
+	srcMAC = "";
+	srcUID = "";
+	srcData = "";
+	gotMAC = 0;
+	gotUID = 0;
+	fullPacket = 0;
+
+	status = SocketGetSenderIPAddress(UDPSocket, srcIP);
+	If (status <> 0) {
+		srcIP = "";
+		TRACE("[UDP]: Failed to retrieve sender's IP (error: %d)", status);
+	}
+
+	pos1 = FIND(",", buffer);
+	pos2 = 0;
+	If (pos1 > 0) pos2 = FIND(",", buffer, pos1 + 1);
+
+	If ((pos1 > 0) && (pos2 > 0)) {
+		field1 = LEFT(buffer, pos1 - 1);
+		field2 = MID(buffer, pos1 + 1, pos2 - (pos1 + 1));
+		field3 = MID(buffer, pos2 + 1, LEN(buffer));
+
+		If (LooksLikeMAC(field1) = 1) {
+			gotMAC = 1;
+			srcMAC = field1;
+			If (LooksLikeUID(field2) = 1) {
+				gotUID = 1;
+				srcUID = field2;
+				srcData = field3;
+				fullPacket = 1;
+			}
+			Else {
+				srcData = MID(buffer, pos1 + 1, LEN(buffer));
+			}
+		}
+		Else {
+			srcData = buffer;
+		}
+	}
+	Else If (pos1 > 0) {
+		field1 = LEFT(buffer, pos1 - 1);
+		field2 = MID(buffer, pos1 + 1, LEN(buffer));
+
+		If (LooksLikeMAC(field1) = 1) {
+			gotMAC = 1;
+			srcMAC = field1;
+			If (LooksLikeUID(field2) = 1) {
+				gotUID = 1;
+				srcUID = field2;
+			}
+			Else {
+				srcData = field2;
+			}
+		}
+		Else {
+			srcData = buffer;
+		}
+	}
+	Else {
+		If (LooksLikeMAC(buffer) = 1) {
+			gotMAC = 1;
+			srcMAC = buffer;
+		}
+		Else If (LooksLikeUID(buffer) = 1) {
+			gotUID = 1;
+			srcUID = buffer;
+		}
+		Else {
+			srcData = buffer;
+		}
+	}
+
+	If (PacketIsSelf(srcMAC, srcUID) = 1) {
+		TRACE("[UDP]: Ignored own packet");
+		TerminateEvent;
+	}
+
+	If ((Enforce_Format = 1) && (fullPacket = 0)) {
+		TRACE("[UDP]: Dropped non-conforming packet (Enforce MAC,UID,Data)");
+		TerminateEvent;
+	}
+
+	ClearReceived();
+
+	If (LEN(srcIP) > 0) Received_IP = srcIP;
+
+	If (gotMAC = 1) {
+		formattedMAC = FormatMAC(srcMAC);
+		Received_MAC = formattedMAC;
+		TRACE("[UDP]: Parsed Mac: %s", formattedMAC);
+	}
+	If (gotUID = 1) {
+		Received_UID = srcUID;
+		TRACE("[UDP]: Parsed UID: %s", srcUID);
+	}
+	If (LEN(srcData) > 0) {
+		Received_Data = srcData;
+		TRACE("[UDP]: Parsed Data: %s", srcData);
+	}
+	Else If ((gotMAC = 0) && (gotUID = 0) && (LEN(buffer) > 0)) {
+		Received_Data = buffer;
+		TRACE("[UDP]: Unstructured payload as Data: %s", buffer);
+	}
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	SocketOpen = 0;
+	Enable_FB = 0;
+	WaitForInitializationComplete();
+	If (Enable = 1) OpenSocket();
+}
