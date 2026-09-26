@@ -1,0 +1,128 @@
+#HELP_BEGIN
+EtherGate Channel v1.0
+
+One DMX load on the gateway selected by Controller.
+
+Port is 1 or 2. Channel is the DMX address, 1-512.
+Controller_Override is ignored until an analog value arrives.
+After that, 1-8 selects that slot.
+
+Level is percent. 0 is off and 65535 is DMX 255. Level_FB follows the
+live value, including while a preset is fading.
+
+This symbol subscribes only to its own port and channel. A level change
+on another load does not run this symbol.
+#HELP_END
+
+#HELP_PDF_FILE "EtherGate v1.html"
+#CATEGORY "12"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "EtherGate_v1"
+
+ANALOG_INPUT	_SKIP_, _SKIP_, Level, _SKIP_, Controller_Override;
+ANALOG_OUTPUT	_SKIP_, _SKIP_, Level_FB;
+
+INTEGER_PARAMETER	Port, Channel, _SKIP_, _SKIP_, Controller;
+
+#BEGIN_PARAMETER_PROPERTIES Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Port 1"},
+							{2d, "Port 2"};
+	propShortDescription =	"DMX port on the EtherGate";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Channel
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			1d, 512d;
+	propDefaultValue =		1d;
+	propShortDescription =	"DMX channel (1-512)";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Controller
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Controller 1"},
+							{2d, "Controller 2"},
+							{3d, "Controller 3"},
+							{4d, "Controller 4"},
+							{5d, "Controller 5"},
+							{6d, "Controller 6"},
+							{7d, "Controller 7"},
+							{8d, "Controller 8"};
+	propShortDescription =	"Which EtherGate this symbol uses";
+#END_PARAMETER_PROPERTIES
+
+INTEGER Ready;
+INTEGER SessionReady;
+INTEGER CurrentSlot;
+INTEGER Hooked;
+INTEGER ControllerLatch;
+EtherGateChannelBind Bind;
+
+INTEGER_FUNCTION ResolveSlot ()
+{
+	INTEGER s;
+
+	If (ControllerLatch = 1)
+		s = Controller_Override;
+	Else
+		s = Controller;
+
+	If (s < 1)
+		s = 1;
+	If (s > 8)
+		s = 8;
+	return (s);
+}
+
+FUNCTION OpenSession ()
+{
+	INTEGER s;
+
+	s = ResolveSlot();
+	If (Hooked = 0)
+	{
+		RegisterDelegate(Bind, OnLevelChanged, HandleLevel);
+		Hooked = 1;
+	}
+	If ((SessionReady = 0) || (s <> CurrentSlot))
+	{
+		CurrentSlot = s;
+		Bind.Use(s, Port, Channel);
+		SessionReady = 1;
+		Bind.Publish();
+	}
+	Bind.SetLevel(Level);
+}
+
+CALLBACK FUNCTION HandleLevel (INTEGER percent)
+{
+	Level_FB = percent;
+}
+
+CHANGE Controller_Override
+{
+	If (Ready = 1)
+	{
+		ControllerLatch = 1;
+		OpenSession();
+	}
+}
+
+CHANGE Level
+{
+	If (Ready = 1)
+		Bind.SetLevel(Level);
+}
+
+FUNCTION Main ()
+{
+	OpenSession();
+	WaitForInitializationComplete();
+	Ready = 1;
+}
