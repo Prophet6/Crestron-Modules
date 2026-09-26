@@ -1,0 +1,172 @@
+#HELP_BEGIN
+UDP Extract Data v1.0
+
+Companion to UDP Broadcast and Receive v1.3. One instance latches IP, MAC, UID,
+and raw Data from the last inbound packet that matches this instance's filter.
+
+Wire Received_IP / Received_MAC / Received_UID / Received_Data from the UDP
+module (same cue names). Do not wire Enable_FB.
+
+Filter: Match_IP, Match_MAC, and Match_UID (each with a serial override).
+Default for every match parameter is [SKIP] (do not use that field).
+Any combination of the three may be active; all active fields must match
+(AND). Exact, case-sensitive compare.
+
+At startup the locals take the parameters, then any override with length > 0.
+CHANGE on an override sets that local to the override string as-is; an empty
+string means [SKIP] from then on (does not fall back to the parameter).
+
+UDP v1.3 clears then fills Received_*; this module waits 0.01 s after the
+last CHANGE so the snapshot is complete before matching.
+A non-match does not clear already latched outputs.
+
+In the SIMPL program, pulse UDP Retrigger on CHANGE Received_IP so a new
+talker gets this processor's announce back.
+
+Peer_UID is Received_UID from the matching packet (when the filter is IP or MAC).
+Peer_Data is the raw Received_Data from the matching packet.
+
+Drop one copy of this symbol per peer.
+
+-- VERSION HISTORY --
+v1.0  2026-09-09
+- Initial companion latch / filter
+
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#CATEGORY "46" "TCP/IP" // Custom
+#DEFAULT_VOLATILE
+#DEFINE_CONSTANT SKIP_TOKEN "[SKIP]"
+
+/* INPUTS & OUTPUTS */
+
+STRING_INPUT	Match_IP_Override[16], Match_MAC_Override[17], Match_UID_Override[32],
+				_SKIP_,
+				Received_IP[16], Received_MAC[17], Received_UID[32], Received_Data[255];
+
+STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				Peer_IP, Peer_MAC, Peer_UID, Peer_Data;
+
+STRING_PARAMETER	Match_IP[16], Match_MAC[17], Match_UID[32];
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Match_IP
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"[SKIP]";
+	propShortDescription =	"Match IP, or [SKIP]";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Match_MAC
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"[SKIP]";
+	propShortDescription =	"Match MAC, or [SKIP]";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Match_UID
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"[SKIP]";
+	propShortDescription =	"Match UID, or [SKIP]";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+STRING	CurIP[16], CurMAC[17], CurUID[32];
+INTEGER	Pending;
+
+/* FUNCTIONS */
+
+FUNCTION ArmSettle() {
+	Pending = 1;
+}
+
+FUNCTION EvaluateMatch() {
+	INTEGER useIP, useMAC, useUID, ok;
+
+	useIP = 0;
+	useMAC = 0;
+	useUID = 0;
+	ok = 1;
+
+	If ((LEN(CurIP) > 0) && (CurIP <> SKIP_TOKEN)) useIP = 1;
+	If ((LEN(CurMAC) > 0) && (CurMAC <> SKIP_TOKEN)) useMAC = 1;
+	If ((LEN(CurUID) > 0) && (CurUID <> SKIP_TOKEN)) useUID = 1;
+
+	If ((useIP = 0) && (useMAC = 0) && (useUID = 0)) Return;
+
+	If (useIP = 1) {
+		If (Received_IP <> CurIP) ok = 0;
+	}
+	If (useMAC = 1) {
+		If (Received_MAC <> CurMAC) ok = 0;
+	}
+	If (useUID = 1) {
+		If (Received_UID <> CurUID) ok = 0;
+	}
+
+	If (ok = 1) {
+		Peer_IP = Received_IP;
+		Peer_MAC = Received_MAC;
+		Peer_UID = Received_UID;
+		Peer_Data = Received_Data;
+	}
+}
+
+/* EVENT HANDLERS */
+
+CHANGE Match_IP_Override {
+	CurIP = Match_IP_Override;
+	ArmSettle();
+}
+
+CHANGE Match_MAC_Override {
+	CurMAC = Match_MAC_Override;
+	ArmSettle();
+}
+
+CHANGE Match_UID_Override {
+	CurUID = Match_UID_Override;
+	ArmSettle();
+}
+
+CHANGE Received_IP {
+	ArmSettle();
+}
+
+CHANGE Received_MAC {
+	ArmSettle();
+}
+
+CHANGE Received_UID {
+	ArmSettle();
+}
+
+CHANGE Received_Data {
+	ArmSettle();
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	WaitForInitializationComplete();
+	CurIP = Match_IP;
+	CurMAC = Match_MAC;
+	CurUID = Match_UID;
+	If (LEN(Match_IP_Override) > 0) CurIP = Match_IP_Override;
+	If (LEN(Match_MAC_Override) > 0) CurMAC = Match_MAC_Override;
+	If (LEN(Match_UID_Override) > 0) CurUID = Match_UID_Override;
+	Pending = 0;
+	WHILE (1) {
+		If (Pending = 1) {
+			Pending = 0;
+			DELAY (1);
+			If (Pending = 0) EvaluateMatch();
+		}
+		Else DELAY (1);
+	}
+}

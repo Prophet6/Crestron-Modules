@@ -86,25 +86,13 @@ INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
 	propShortDescription =	"Which EtherGate this symbol uses";
 #END_PARAMETER_PROPERTIES
 
-INTEGER Ready;
-INTEGER WantConnect;
-INTEGER SessionReady;
-INTEGER CurrentSlot;
-STRING Addr$[64];
-STRING LastStatus$[200];
-STRING LastName$[64];
-STRING LastFirmware$[48];
-STRING LastMode1$[48];
-STRING LastMode2$[48];
-INTEGER Hooked;
-INTEGER IpLatch;
-INTEGER Universe1Latch;
-INTEGER Universe2Latch;
-INTEGER ControllerLatch;
+INTEGER Ready, WantConnect, SessionReady, CurrentSlot, Hooked, IpLatch,
+        Universe1Latch, Universe2Latch, ControllerLatch;
+STRING Addr$[64], LastStatus$[200], LastName$[64], LastFirmware$[48],
+       LastMode1$[48], LastMode2$[48];
 EtherGateControllerBind Session;
 
-INTEGER_FUNCTION ResolveSlot ()
-{
+INTEGER_FUNCTION ResolveSlot () {
 	INTEGER s;
 
 	If (ControllerLatch = 1)
@@ -119,8 +107,7 @@ INTEGER_FUNCTION ResolveSlot ()
 	return (s);
 }
 
-INTEGER_FUNCTION ResolveUniverse (INTEGER latched, INTEGER ov, INTEGER param)
-{
+INTEGER_FUNCTION ResolveUniverse (INTEGER latched, INTEGER ov, INTEGER param) {
 	INTEGER u;
 
 	If (latched = 1)
@@ -135,161 +122,131 @@ INTEGER_FUNCTION ResolveUniverse (INTEGER latched, INTEGER ov, INTEGER param)
 	return (u);
 }
 
-FUNCTION ResolveAddress ()
-{
+FUNCTION ResolveAddress () {
 	If (IpLatch = 1)
 		Addr$ = IP_Address_Override$;
 	Else
 		Addr$ = IP_Address;
 }
 
-FUNCTION PushUniverses ()
-{
+FUNCTION PushUniverses () {
 	Session.SetUniverse(1, ResolveUniverse(Universe1Latch, Port_1_Universe_Override, Port_1_Universe));
 	Session.SetUniverse(2, ResolveUniverse(Universe2Latch, Port_2_Universe_Override, Port_2_Universe));
 }
 
-FUNCTION OpenSession ()
-{
+FUNCTION OpenSession () {
 	INTEGER s;
 
 	s = ResolveSlot();
-	If (Hooked = 0)
-	{
+	If (Hooked = 0) {
 		RegisterDelegate(Session, OnConnectionChanged, HandleConnection);
 		RegisterDelegate(Session, OnConfigChanged, HandleConfig);
 		Hooked = 1;
 	}
 
-	If ((SessionReady = 0) || (s <> CurrentSlot))
-	{
+	If ((SessionReady = 0) || (s <> CurrentSlot)) {
 		CurrentSlot = s;
 		Session.UseSlot(s);
 		SessionReady = 1;
 	}
 	PushUniverses();
 
-	If (WantConnect = 1)
-	{
+	If (WantConnect = 1) {
 		ResolveAddress();
 		Session.Connect(Addr$);
 	}
 }
 
-CALLBACK FUNCTION HandleConnection (INTEGER up, STRING msg)
-{
+CALLBACK FUNCTION HandleConnection (INTEGER up, STRING msg) {
 	STRING text$[200];
 
 	Connected_FB = (up = 1);
-	If (msg <> LastStatus$)
-	{
+	If (msg <> LastStatus$) {
 		text$ = msg;
 		LastStatus$ = text$;
 		Status$ = text$;
 	}
 }
 
-CALLBACK FUNCTION HandleConfig (STRING name, STRING firmware, STRING mode1, STRING mode2, INTEGER uni1, INTEGER uni2)
-{
+CALLBACK FUNCTION HandleConfig (STRING name, STRING firmware, STRING mode1, STRING mode2, INTEGER uni1, INTEGER uni2) {
 	STRING text$[200];
 
-	If (name <> LastName$)
-	{
+	If (name <> LastName$) {
 		text$ = name;
 		LastName$ = text$;
 		Node_Name$ = text$;
 	}
-	If (firmware <> LastFirmware$)
-	{
+	If (firmware <> LastFirmware$) {
 		text$ = firmware;
 		LastFirmware$ = text$;
 		Firmware$ = text$;
 	}
-	If (mode1 <> LastMode1$)
-	{
+	If (mode1 <> LastMode1$) {
 		text$ = mode1;
 		LastMode1$ = text$;
 		Port_1_Mode$ = text$;
 	}
-	If (mode2 <> LastMode2$)
-	{
+	If (mode2 <> LastMode2$) {
 		text$ = mode2;
 		LastMode2$ = text$;
 		Port_2_Mode$ = text$;
 	}
 }
 
-CHANGE Connect
-{
-	If (Ready = 1)
-	{
-		If (Connect = 1)
-		{
+CHANGE Connect {
+	If (Ready = 1) {
+		If (Connect = 1) {
 			WantConnect = 1;
 			OpenSession();
 		}
-		Else
-		{
+		Else {
 			WantConnect = 0;
 			Session.Disconnect();
 		}
 	}
 }
 
-CHANGE Disconnect
-{
-	If (Ready = 1)
-	{
-		If (Disconnect = 1)
-		{
+CHANGE Disconnect {
+	If (Ready = 1) {
+		If (Disconnect = 1) {
 			WantConnect = 0;
 			Session.Disconnect();
 		}
 	}
 }
 
-CHANGE IP_Address_Override$
-{
-	If (Ready = 1)
-	{
+CHANGE IP_Address_Override$ {
+	If (Ready = 1) {
 		IpLatch = 1;
-		If (WantConnect = 1)
-		{
+		If (WantConnect = 1) {
 			ResolveAddress();
 			Session.Connect(Addr$);
 		}
 	}
 }
 
-CHANGE Port_1_Universe_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Port_1_Universe_Override {
+	If (Ready = 1) {
 		Universe1Latch = 1;
 		PushUniverses();
 	}
 }
 
-CHANGE Port_2_Universe_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Port_2_Universe_Override {
+	If (Ready = 1) {
 		Universe2Latch = 1;
 		PushUniverses();
 	}
 }
 
-CHANGE Controller_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Controller_Override {
+	If (Ready = 1) {
 		ControllerLatch = 1;
 		OpenSession();
 	}
 }
 
-FUNCTION Main ()
-{
+FUNCTION Main () {
 	Port_1_Mode$ = "poll pending";
 	Port_2_Mode$ = "poll pending";
 	LastMode1$ = "poll pending";

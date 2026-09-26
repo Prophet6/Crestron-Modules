@@ -1,5 +1,5 @@
 #HELP_BEGIN
-TCP Client (Dynamic IP) v1.0
+TCP Client Dynamic IP v1.0.usp
 
 Simpl# TCP client that matches the built-in SIMPL Windows TCP/IP Client
 symbol (Connect, Connect_FB, TX$, RX$, status) except the remote host is

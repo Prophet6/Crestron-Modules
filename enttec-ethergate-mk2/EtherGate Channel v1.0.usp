@@ -57,15 +57,10 @@ INTEGER_PARAMETER	Port, Channel, _SKIP_, _SKIP_, Controller;
 	propShortDescription =	"Which EtherGate this symbol uses";
 #END_PARAMETER_PROPERTIES
 
-INTEGER Ready;
-INTEGER SessionReady;
-INTEGER CurrentSlot;
-INTEGER Hooked;
-INTEGER ControllerLatch;
+INTEGER Ready, SessionReady, CurrentSlot, Hooked, ControllerLatch;
 EtherGateChannelBind Bind;
 
-INTEGER_FUNCTION ResolveSlot ()
-{
+INTEGER_FUNCTION ResolveSlot () {
 	INTEGER s;
 
 	If (ControllerLatch = 1)
@@ -80,18 +75,15 @@ INTEGER_FUNCTION ResolveSlot ()
 	return (s);
 }
 
-FUNCTION OpenSession ()
-{
+FUNCTION OpenSession () {
 	INTEGER s;
 
 	s = ResolveSlot();
-	If (Hooked = 0)
-	{
+	If (Hooked = 0) {
 		RegisterDelegate(Bind, OnLevelChanged, HandleLevel);
 		Hooked = 1;
 	}
-	If ((SessionReady = 0) || (s <> CurrentSlot))
-	{
+	If ((SessionReady = 0) || (s <> CurrentSlot)) {
 		CurrentSlot = s;
 		Bind.Use(s, Port, Channel);
 		SessionReady = 1;
@@ -100,28 +92,23 @@ FUNCTION OpenSession ()
 	Bind.SetLevel(Level);
 }
 
-CALLBACK FUNCTION HandleLevel (INTEGER percent)
-{
+CALLBACK FUNCTION HandleLevel (INTEGER percent) {
 	Level_FB = percent;
 }
 
-CHANGE Controller_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Controller_Override {
+	If (Ready = 1) {
 		ControllerLatch = 1;
 		OpenSession();
 	}
 }
 
-CHANGE Level
-{
+CHANGE Level {
 	If (Ready = 1)
 		Bind.SetLevel(Level);
 }
 
-FUNCTION Main ()
-{
+FUNCTION Main () {
 	OpenSession();
 	WaitForInitializationComplete();
 	Ready = 1;

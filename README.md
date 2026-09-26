@@ -15,9 +15,10 @@ This project is not affiliated with Crestron Electronics.
 | [crestron-mqtt-integration](crestron-mqtt-integration/) | Crestron MQTT (HA bridge) | **4-Series** | MQTT client (M2Mqtt / SSharp port) for Home Assistant publish and subscribe. |
 | [tcp-server-with-authentication](tcp-server-with-authentication/) | TCP Server with Authentication | 3-Series / 4-Series | TCP listener on the processor. Defaults match the built-in **TCP/IP Server** symbol. Optional TLS (`SecureTCPServer`, `ssl self`) and optional `AUTH` username/password. |
 | [ssh-interface-v2](ssh-interface-v2/) | SSH Interface Client v2.0 | **4-Series** | SSH **client** — the processor connects out to a device. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools). |
-| [dynamic-tcp-client](dynamic-tcp-client/) | TCP Client (Dynamic IP) | **4-Series** | TCP **client** with runtime `Address$` — stock Connect / Connect_FB / TX$ / RX$ / Status, no IP table. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools) `start-tcp-server.bat`. |
-| [udp-broadcast-receive](udp-broadcast-receive/) | UDP Broadcast and Receive v1.3 | 3-Series / 4-Series | UDP broadcast send/receive on a configurable port. Payload `MAC,UID,Data`; unstructured packets surface as IP + Data. Latched Enable / Enable_FB. Always ignores own broadcasts. |
+| [dynamic-tcp-client](dynamic-tcp-client/) | TCP Client Dynamic IP v1.0 | **4-Series** | TCP **client** with runtime `Address$` — stock Connect / Connect_FB / TX$ / RX$ / Status, no IP table. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools) `start-tcp-server.bat`. |
+| [udp-broadcast-receive](udp-broadcast-receive/) | UDP Broadcast and Receive v1.3 + UDP Extract Data v1.0 | 3-Series / 4-Series | UDP broadcast send/receive (`MAC,UID,Data`). Companion latch filters on IP/MAC/UID (`[SKIP]` = unused) and holds that peer's IP, MAC, UID, and raw Data. |
 | [enttec-ethergate-mk2](enttec-ethergate-mk2/) | EtherGate Controller, Channel, and Preset v1.0 | **4-Series** | Art-Net control of an Enttec DIN EtherGate (up to 8 gateways). Press F1 on a symbol for `EtherGate v1.html`. |
+| [lighting-preset-aram](lighting-preset-aram/) | Lighting Preset ARAM v1.0 | 3-Series / 4-Series | Stores/recalls 16 analog values for 6 presets in nonvolatile memory; save 2.5s, erase 10s. |
 
 Compile SIMPL+ with SPlusCC — see [COMPILE_SIMPL_PLUS_CLI.md](COMPILE_SIMPL_PLUS_CLI.md).
 
