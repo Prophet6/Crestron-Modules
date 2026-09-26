@@ -80,18 +80,11 @@ INTEGER_PARAMETER	_SKIP_, _SKIP_, Preset, Fade_Time, _SKIP_, Controller;
 	propShortDescription =	"Which EtherGate this symbol uses";
 #END_PARAMETER_PROPERTIES
 
-INTEGER Ready;
-INTEGER SessionReady;
-INTEGER CurrentSlot;
-INTEGER CurrentPreset;
-INTEGER Hooked;
-INTEGER PresetLatch;
-INTEGER FadeLatch;
-INTEGER ControllerLatch;
+INTEGER Ready, SessionReady, CurrentSlot, CurrentPreset, Hooked, PresetLatch,
+        FadeLatch, ControllerLatch;
 EtherGatePresetBind Bind;
 
-INTEGER_FUNCTION ResolveSlot ()
-{
+INTEGER_FUNCTION ResolveSlot () {
 	INTEGER s;
 
 	If (ControllerLatch = 1)
@@ -106,8 +99,7 @@ INTEGER_FUNCTION ResolveSlot ()
 	return (s);
 }
 
-INTEGER_FUNCTION ResolvePreset ()
-{
+INTEGER_FUNCTION ResolvePreset () {
 	INTEGER p;
 
 	If (PresetLatch = 1)
@@ -122,8 +114,7 @@ INTEGER_FUNCTION ResolvePreset ()
 	return (p);
 }
 
-INTEGER_FUNCTION ResolveFade ()
-{
+INTEGER_FUNCTION ResolveFade () {
 	INTEGER t;
 
 	If (FadeLatch = 1)
@@ -138,20 +129,16 @@ INTEGER_FUNCTION ResolveFade ()
 	return (t);
 }
 
-FUNCTION OpenSession ()
-{
-	INTEGER s;
-	INTEGER p;
+FUNCTION OpenSession () {
+	INTEGER s, p;
 
 	s = ResolveSlot();
 	p = ResolvePreset();
-	If (Hooked = 0)
-	{
+	If (Hooked = 0) {
 		RegisterDelegate(Bind, OnActiveChanged, HandleActive);
 		Hooked = 1;
 	}
-	If ((SessionReady = 0) || (s <> CurrentSlot) || (p <> CurrentPreset))
-	{
+	If ((SessionReady = 0) || (s <> CurrentSlot) || (p <> CurrentPreset)) {
 		CurrentSlot = s;
 		CurrentPreset = p;
 		Bind.Use(s, p);
@@ -160,49 +147,40 @@ FUNCTION OpenSession ()
 	}
 }
 
-CALLBACK FUNCTION HandleActive (INTEGER active)
-{
+CALLBACK FUNCTION HandleActive (INTEGER active) {
 	Active_FB = (active = 1);
 }
 
-CHANGE Recall
-{
+CHANGE Recall {
 	If ((Ready = 1) && (Recall = 1))
 		Bind.Recall(ResolveFade());
 }
 
-CHANGE Save
-{
+CHANGE Save {
 	If ((Ready = 1) && (Save = 1))
 		Bind.Save();
 }
 
-CHANGE Preset_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Preset_Override {
+	If (Ready = 1) {
 		PresetLatch = 1;
 		OpenSession();
 	}
 }
 
-CHANGE Fade_Time_Override
-{
+CHANGE Fade_Time_Override {
 	If (Ready = 1)
 		FadeLatch = 1;
 }
 
-CHANGE Controller_Override
-{
-	If (Ready = 1)
-	{
+CHANGE Controller_Override {
+	If (Ready = 1) {
 		ControllerLatch = 1;
 		OpenSession();
 	}
 }
 
-FUNCTION Main ()
-{
+FUNCTION Main () {
 	OpenSession();
 	WaitForInitializationComplete();
 	Ready = 1;

@@ -1,8 +1,13 @@
-# UDP Broadcast and Receive v1.3
+# UDP Broadcast and Receive
 
 Part of **[Crestron Modules](https://github.com/Prophet6/Crestron-Modules)**.
 
-Crestron **SIMPL+** UDP helper for **3-Series / 4-Series** processors. Broadcasts `MAC,UID,Data` to `255.255.255.255` and parses incoming datagrams on the same port. Pure SIMPL+ — no Simpl# / `.clz`.
+Crestron **SIMPL+** UDP helpers for **3-Series / 4-Series** processors. Pure SIMPL+ — no Simpl# / `.clz`.
+
+| File | Role |
+|------|------|
+| `UDP Broadcast and Receive v1.3.usp` | Broadcast `MAC,UID,Data` to `255.255.255.255` and parse inbound datagrams on the same port |
+| `UDP Extract Data v1.0.usp` | Latch one peer’s IP / MAC / UID / raw Data when the packet matches this instance’s IP and/or MAC and/or UID filter |
 
 This project is not affiliated with Crestron Electronics.
 
@@ -16,20 +21,26 @@ This project is not affiliated with Crestron Electronics.
    & "C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe" `
      \rebuild "UDP Broadcast and Receive v1.3.usp" `
      \target series3 series4
+
+   & "C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe" `
+     \rebuild "UDP Extract Data v1.0.usp" `
+     \target series3 series4
    ```
 
-2. In SIMPL Windows, add **UDP Broadcast and Receive v1.3**.
+2. In SIMPL Windows, add **UDP Broadcast and Receive v1.3**. Optionally add one **UDP Extract Data v1.0** per peer.
 3. Set **UDP_Port** (default 50001). Hold **Enable** high.
 
 `.usp` files must be saved with **Windows (CRLF)** line endings or SIMPL+ reports Error 1700.
 
 ---
 
-## Pins
+## Pins (UDP Broadcast and Receive v1.3)
 
 ```
-Enable          | UDP_Port        | Enable_FB
-Retrigger       | Enforce_Format  |
+                | UDP_Port        |
+                | Enforce_Format  |
+Enable          |                 | Enable_FB
+Retrigger       |                 |
                 |                 | Received_IP
 Mac             |                 | Received_MAC
 UID             |                 | Received_UID
@@ -77,7 +88,32 @@ Packets whose payload equals what this instance would send, or whose MAC + UID m
 
 ---
 
+## UDP Extract Data v1.0
+
+One instance per peer. Wire the UDP module’s `Received_*` outputs to the same cue names on this symbol. Do not wire `Enable_FB`.
+
+```
+Match_IP_Override   | Match_IP     |
+Match_MAC_Override  | Match_MAC    |
+Match_UID_Override  | Match_UID    |
+                    |              |
+Received_IP         |              | Peer_IP
+Received_MAC        |              | Peer_MAC
+Received_UID        |              | Peer_UID
+Received_Data       |              | Peer_Data
+```
+
+Match parameters default to `[SKIP]` (that field is not used). Any combination of IP / MAC / UID may be set; all **active** fields must match (AND). Exact, case-sensitive.
+
+At boot, locals take the parameters, then any override with length > 0. A `CHANGE` on an override sets that local to the override string; empty means `[SKIP]` from then on (does not fall back to the parameter).
+
+`Peer_UID` is `Received_UID` from the last match (when the filter is IP or MAC). `Peer_Data` is the raw `Received_Data`.
+
+In the **program**, pulse UDP `Retrigger` on `CHANGE Received_IP` so a new talker gets this processor’s announce. Use **50011 or higher** for processor-to-processor TCP. Leave UDP discovery on **50001**.
+
+---
+
 ## Notes
 
-- `#ENABLE_TRACE` is commented out in the `.usp`. Uncomment it to print send/receive lines to the console.
+- `#ENABLE_TRACE` is commented out in the UDP `.usp`. Uncomment it to print send/receive lines to the console.
 - Limited broadcast (`255.255.255.255`) stays on the local subnet. Directed subnet broadcast is not a parameter in this version.
