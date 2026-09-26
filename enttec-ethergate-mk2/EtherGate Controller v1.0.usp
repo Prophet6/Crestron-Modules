@@ -1,0 +1,302 @@
+#HELP_BEGIN
+EtherGate Controller v1.0
+
+Owns the connection for one DIN EtherGate. The address is static, or a
+DHCP reservation that does not move. Nothing connects until Connect is
+high. Releasing Connect stops the session. Connected_FB rises only after
+the gateway accepts a connection. Art-Net streams while that feedback is high.
+
+IP_Address is the commissioned address. IP_Address_Override$ is ignored
+until a string arrives. After that, the serial is the address, even if
+it is empty. 0.0.0.0 does not open a socket.
+
+Port universe parameters are the Art-Net universes this processor
+transmits. Each universe override is ignored until an analog value
+arrives. After that, the analog is the universe, and 0 is universe 0.
+
+Controller chooses which of 8 gateways this symbol uses. Controller_Override
+is ignored until an analog value arrives. After that, 1-8 selects that
+slot. One Controller symbol per slot.
+
+The mode strings come from the HTTP poll. Until a body is parsed
+they stay at "poll pending" / "unparsed". Streaming does not wait
+on that poll.
+#HELP_END
+
+#HELP_PDF_FILE "EtherGate v1.html"
+#CATEGORY "12"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "EtherGate_v1"
+
+DIGITAL_INPUT	Connect, Disconnect, _SKIP_;
+DIGITAL_OUTPUT	Connected_FB, _SKIP_, _SKIP_;
+
+STRING_INPUT	IP_Address_Override$[64],
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_;
+STRING_OUTPUT	_SKIP_,
+				Status$, Node_Name$, Firmware$,
+				Port_1_Mode$, Port_2_Mode$;
+ANALOG_INPUT	Port_1_Universe_Override, Port_2_Universe_Override,
+				_SKIP_,
+				Controller_Override;
+
+INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_;
+STRING_PARAMETER	IP_Address[64];
+INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					Port_1_Universe, Port_2_Universe,
+					_SKIP_,
+					Controller;
+
+#BEGIN_PARAMETER_PROPERTIES IP_Address
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"0.0.0.0";
+	propShortDescription =	"Static IP of this EtherGate";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Port_1_Universe
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			0d, 32767d;
+	propDefaultValue =		0d;
+	propShortDescription =	"Art-Net universe transmitted to port 1";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Port_2_Universe
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			0d, 32767d;
+	propDefaultValue =		1d;
+	propShortDescription =	"Art-Net universe transmitted to port 2";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Controller
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Controller 1"},
+							{2d, "Controller 2"},
+							{3d, "Controller 3"},
+							{4d, "Controller 4"},
+							{5d, "Controller 5"},
+							{6d, "Controller 6"},
+							{7d, "Controller 7"},
+							{8d, "Controller 8"};
+	propShortDescription =	"Which EtherGate this symbol uses";
+#END_PARAMETER_PROPERTIES
+
+INTEGER Ready;
+INTEGER WantConnect;
+INTEGER SessionReady;
+INTEGER CurrentSlot;
+STRING Addr$[64];
+STRING LastStatus$[200];
+STRING LastName$[64];
+STRING LastFirmware$[48];
+STRING LastMode1$[48];
+STRING LastMode2$[48];
+INTEGER Hooked;
+INTEGER IpLatch;
+INTEGER Universe1Latch;
+INTEGER Universe2Latch;
+INTEGER ControllerLatch;
+EtherGateControllerBind Session;
+
+INTEGER_FUNCTION ResolveSlot ()
+{
+	INTEGER s;
+
+	If (ControllerLatch = 1)
+		s = Controller_Override;
+	Else
+		s = Controller;
+
+	If (s < 1)
+		s = 1;
+	If (s > 8)
+		s = 8;
+	return (s);
+}
+
+INTEGER_FUNCTION ResolveUniverse (INTEGER latched, INTEGER ov, INTEGER param)
+{
+	INTEGER u;
+
+	If (latched = 1)
+		u = ov;
+	Else
+		u = param;
+
+	If (u < 0)
+		u = 0;
+	If (u > 32767)
+		u = 32767;
+	return (u);
+}
+
+FUNCTION ResolveAddress ()
+{
+	If (IpLatch = 1)
+		Addr$ = IP_Address_Override$;
+	Else
+		Addr$ = IP_Address;
+}
+
+FUNCTION PushUniverses ()
+{
+	Session.SetUniverse(1, ResolveUniverse(Universe1Latch, Port_1_Universe_Override, Port_1_Universe));
+	Session.SetUniverse(2, ResolveUniverse(Universe2Latch, Port_2_Universe_Override, Port_2_Universe));
+}
+
+FUNCTION OpenSession ()
+{
+	INTEGER s;
+
+	s = ResolveSlot();
+	If (Hooked = 0)
+	{
+		RegisterDelegate(Session, OnConnectionChanged, HandleConnection);
+		RegisterDelegate(Session, OnConfigChanged, HandleConfig);
+		Hooked = 1;
+	}
+
+	If ((SessionReady = 0) || (s <> CurrentSlot))
+	{
+		CurrentSlot = s;
+		Session.UseSlot(s);
+		SessionReady = 1;
+	}
+	PushUniverses();
+
+	If (WantConnect = 1)
+	{
+		ResolveAddress();
+		Session.Connect(Addr$);
+	}
+}
+
+CALLBACK FUNCTION HandleConnection (INTEGER up, STRING msg)
+{
+	STRING text$[200];
+
+	Connected_FB = (up = 1);
+	If (msg <> LastStatus$)
+	{
+		text$ = msg;
+		LastStatus$ = text$;
+		Status$ = text$;
+	}
+}
+
+CALLBACK FUNCTION HandleConfig (STRING name, STRING firmware, STRING mode1, STRING mode2, INTEGER uni1, INTEGER uni2)
+{
+	STRING text$[200];
+
+	If (name <> LastName$)
+	{
+		text$ = name;
+		LastName$ = text$;
+		Node_Name$ = text$;
+	}
+	If (firmware <> LastFirmware$)
+	{
+		text$ = firmware;
+		LastFirmware$ = text$;
+		Firmware$ = text$;
+	}
+	If (mode1 <> LastMode1$)
+	{
+		text$ = mode1;
+		LastMode1$ = text$;
+		Port_1_Mode$ = text$;
+	}
+	If (mode2 <> LastMode2$)
+	{
+		text$ = mode2;
+		LastMode2$ = text$;
+		Port_2_Mode$ = text$;
+	}
+}
+
+CHANGE Connect
+{
+	If (Ready = 1)
+	{
+		If (Connect = 1)
+		{
+			WantConnect = 1;
+			OpenSession();
+		}
+		Else
+		{
+			WantConnect = 0;
+			Session.Disconnect();
+		}
+	}
+}
+
+CHANGE Disconnect
+{
+	If (Ready = 1)
+	{
+		If (Disconnect = 1)
+		{
+			WantConnect = 0;
+			Session.Disconnect();
+		}
+	}
+}
+
+CHANGE IP_Address_Override$
+{
+	If (Ready = 1)
+	{
+		IpLatch = 1;
+		If (WantConnect = 1)
+		{
+			ResolveAddress();
+			Session.Connect(Addr$);
+		}
+	}
+}
+
+CHANGE Port_1_Universe_Override
+{
+	If (Ready = 1)
+	{
+		Universe1Latch = 1;
+		PushUniverses();
+	}
+}
+
+CHANGE Port_2_Universe_Override
+{
+	If (Ready = 1)
+	{
+		Universe2Latch = 1;
+		PushUniverses();
+	}
+}
+
+CHANGE Controller_Override
+{
+	If (Ready = 1)
+	{
+		ControllerLatch = 1;
+		OpenSession();
+	}
+}
+
+FUNCTION Main ()
+{
+	Port_1_Mode$ = "poll pending";
+	Port_2_Mode$ = "poll pending";
+	LastMode1$ = "poll pending";
+	LastMode2$ = "poll pending";
+	If (Connect = 1)
+		WantConnect = 1;
+	OpenSession();
+	WaitForInitializationComplete();
+	Ready = 1;
+}

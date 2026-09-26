@@ -1,0 +1,209 @@
+#HELP_BEGIN
+EtherGate Preset v1.0
+
+One preset for every Channel symbol on the selected EtherGate.
+The gateway does not store presets. This module does.
+
+Save stores the current percent of each Channel symbol on that slot.
+Recall fades those channels. Fade_Time is seconds on the symbol
+(0.5s is half a second, 0 is a cut). Fade_Time_Override is tenths
+of a second. It is ignored until an analog value arrives. After that,
+the analog is the fade, and 0 is a cut. 5 is 0.5 seconds. 50 is 5.0 seconds.
+
+Preset_Override is ignored until an analog value arrives. After that,
+1-16 selects that preset.
+
+Active_FB is high when this preset has been stored and every member
+channel is at its stored level. An empty preset does not recall.
+
+Controller_Override is ignored until an analog value arrives. After that,
+1-8 selects that slot.
+This symbol is notified only when this preset's active state changes.
+#HELP_END
+
+#HELP_PDF_FILE "EtherGate v1.html"
+#CATEGORY "12"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "EtherGate_v1"
+
+DIGITAL_INPUT	Recall, Save;
+DIGITAL_OUTPUT	Active_FB, _SKIP_;
+
+ANALOG_INPUT	Preset_Override, Fade_Time_Override, _SKIP_, Controller_Override;
+
+INTEGER_PARAMETER	_SKIP_, _SKIP_, Preset, Fade_Time, _SKIP_, Controller;
+
+#BEGIN_PARAMETER_PROPERTIES Preset
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Preset 1"},
+							{2d, "Preset 2"},
+							{3d, "Preset 3"},
+							{4d, "Preset 4"},
+							{5d, "Preset 5"},
+							{6d, "Preset 6"},
+							{7d, "Preset 7"},
+							{8d, "Preset 8"},
+							{9d, "Preset 9"},
+							{10d, "Preset 10"},
+							{11d, "Preset 11"},
+							{12d, "Preset 12"},
+							{13d, "Preset 13"},
+							{14d, "Preset 14"},
+							{15d, "Preset 15"},
+							{16d, "Preset 16"};
+	propShortDescription =	"Which preset this symbol saves and recalls";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Fade_Time
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0.0s, 600.0s;
+	propDefaultValue =		0.0s;
+	propShortDescription =	"Fade time in seconds. 0 is a cut";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Controller
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "Controller 1"},
+							{2d, "Controller 2"},
+							{3d, "Controller 3"},
+							{4d, "Controller 4"},
+							{5d, "Controller 5"},
+							{6d, "Controller 6"},
+							{7d, "Controller 7"},
+							{8d, "Controller 8"};
+	propShortDescription =	"Which EtherGate this symbol uses";
+#END_PARAMETER_PROPERTIES
+
+INTEGER Ready;
+INTEGER SessionReady;
+INTEGER CurrentSlot;
+INTEGER CurrentPreset;
+INTEGER Hooked;
+INTEGER PresetLatch;
+INTEGER FadeLatch;
+INTEGER ControllerLatch;
+EtherGatePresetBind Bind;
+
+INTEGER_FUNCTION ResolveSlot ()
+{
+	INTEGER s;
+
+	If (ControllerLatch = 1)
+		s = Controller_Override;
+	Else
+		s = Controller;
+
+	If (s < 1)
+		s = 1;
+	If (s > 8)
+		s = 8;
+	return (s);
+}
+
+INTEGER_FUNCTION ResolvePreset ()
+{
+	INTEGER p;
+
+	If (PresetLatch = 1)
+		p = Preset_Override;
+	Else
+		p = Preset;
+
+	If (p < 1)
+		p = 1;
+	If (p > 16)
+		p = 16;
+	return (p);
+}
+
+INTEGER_FUNCTION ResolveFade ()
+{
+	INTEGER t;
+
+	If (FadeLatch = 1)
+		t = Fade_Time_Override;
+	Else
+		t = Fade_Time / 10;
+
+	If (t < 0)
+		t = 0;
+	If (t > 6000)
+		t = 6000;
+	return (t);
+}
+
+FUNCTION OpenSession ()
+{
+	INTEGER s;
+	INTEGER p;
+
+	s = ResolveSlot();
+	p = ResolvePreset();
+	If (Hooked = 0)
+	{
+		RegisterDelegate(Bind, OnActiveChanged, HandleActive);
+		Hooked = 1;
+	}
+	If ((SessionReady = 0) || (s <> CurrentSlot) || (p <> CurrentPreset))
+	{
+		CurrentSlot = s;
+		CurrentPreset = p;
+		Bind.Use(s, p);
+		SessionReady = 1;
+		Bind.Publish();
+	}
+}
+
+CALLBACK FUNCTION HandleActive (INTEGER active)
+{
+	Active_FB = (active = 1);
+}
+
+CHANGE Recall
+{
+	If ((Ready = 1) && (Recall = 1))
+		Bind.Recall(ResolveFade());
+}
+
+CHANGE Save
+{
+	If ((Ready = 1) && (Save = 1))
+		Bind.Save();
+}
+
+CHANGE Preset_Override
+{
+	If (Ready = 1)
+	{
+		PresetLatch = 1;
+		OpenSession();
+	}
+}
+
+CHANGE Fade_Time_Override
+{
+	If (Ready = 1)
+		FadeLatch = 1;
+}
+
+CHANGE Controller_Override
+{
+	If (Ready = 1)
+	{
+		ControllerLatch = 1;
+		OpenSession();
+	}
+}
+
+FUNCTION Main ()
+{
+	OpenSession();
+	WaitForInitializationComplete();
+	Ready = 1;
+}

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EtherGate modules</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --muted: #5c564c;
+    --line: #e3d8c8;
+    --paper: #f6f1e8;
+    --card: #fffdf8;
+    --amber: #9a4b12;
+    --amber-soft: #f3e2d0;
+    --header: #241f1a;
+    --ok: #1f6b45;
+    --warn: #8a4b08;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background: var(--header);
+    color: #f6f1e8;
+    padding: 2.4rem 1.5rem 2rem;
+  }
+  header.banner .wrap, main, nav.toc {
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #e8b48a;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+  }
+  header.banner p { margin: 0; max-width: 40rem; color: #e7dfd4; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #fffdf8;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+  }
+  nav.toc a {
+    color: var(--amber);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 4rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.2rem 0 0.6rem;
+    padding-top: 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--amber); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--amber); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8ef; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: #f3ebe1;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.25rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  footer {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · 4-Series</p>
+    <h1>EtherGate modules</h1>
+    <p>Three symbols and one shared library for an Enttec DIN EtherGate. The processor sends Art-Net. The gateway turns that into DMX on two ports.</p>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#pieces">The three symbols</a>
+  <a href="#slot">Which gateway</a>
+  <a href="#controller">Controller</a>
+  <a href="#channel">Channel</a>
+  <a href="#preset">Preset</a>
+  <a href="#levels">Levels and fades</a>
+  <a href="#node">The gateway</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead">Drop one Controller for each physical gateway, one Channel for each lighting load, and one Preset for each preset you want to save and recall. All three must use the same controller number to talk to the same gateway.</p>
+  <ol class="steps">
+    <li>Keep <code>EtherGate_v1.clz</code> in the same folder as these modules. The program will not link without it.</li>
+    <li>On the gateway, set each port you drive to <strong>DMX Out</strong> (RDM is fine) and protocol <strong>Art-Net</strong>. Give the node a static address, or a DHCP reservation that never moves.</li>
+    <li>Add <span class="sig">EtherGate Controller v1.0</span>. Set <span class="sig">IP_Address</span> and <span class="sig">Controller</span> (1 through 8). Set <span class="sig">Port_1_Universe</span> and <span class="sig">Port_2_Universe</span> to the universes configured on the node. Hold <span class="sig">Connect</span> high.</li>
+    <li>Add one <span class="sig">EtherGate Channel v1.0</span> per load. Set <span class="sig">Port</span>, <span class="sig">Channel</span>, and the same <span class="sig">Controller</span>. Drive <span class="sig">Level</span> from a fader.</li>
+    <li>Add <span class="sig">EtherGate Preset v1.0</span> symbols for the presets. Same <span class="sig">Controller</span>. Pulse <span class="sig">Save</span> to capture the current faders. Pulse <span class="sig">Recall</span> to bring them back.</li>
+  </ol>
+  <div class="note">
+    Press F1 on any of these symbols in SIMPL Windows to open this page. Leave <code>EtherGate v1.html</code> next to the <code>.usp</code> files.
+  </div>
+
+  <h2 id="pieces">The three symbols</h2>
+  <div class="grid">
+    <article>
+      <h3>Controller</h3>
+      <p>Owns the socket for one gateway. Streams Art-Net while connected and reports the node name and port mode.</p>
+    </article>
+    <article>
+      <h3>Channel</h3>
+      <p>One DMX address. The analog is percent. Full scale, 65535, is DMX 255.</p>
+    </article>
+    <article>
+      <h3>Preset</h3>
+      <p>A preset made of every Channel symbol on that gateway. The gateway itself stores nothing.</p>
+    </article>
+  </div>
+  <p>The DIN EtherGate is a two-universe Ethernet-to-DMX gateway. It does not hold scenes, cues, or shows. Those live in the Crestron program. Up to eight gateways can run at once. Each one is a numbered slot.</p>
+
+  <h2 id="slot">Which gateway</h2>
+  <p>Every symbol has a <span class="sig">Controller</span> parameter at the bottom, with a list from Controller 1 to Controller 8. The default is 1.</p>
+  <p>Every override input uses its parameter until a value arrives on that input. After the first value, that input is in charge, and 0 is a real value. An input left unwired never takes over. Use one Controller symbol per slot. Two Controller symbols on the same number will fight over the address.</p>
+  <div class="card">
+    <strong>Same number, same gateway.</strong> A Channel or Preset only affects the gateway selected on that symbol. A preset saved on Controller 1 does not include channels that are pointed at Controller 2.
+  </div>
+
+  <h2 id="controller">Controller</h2>
+  <p><span class="sig">EtherGate Controller v1.0</span> opens the session and keeps Art-Net flowing. Hold <span class="sig">Connect</span> high to connect. Pulse <span class="sig">Disconnect</span> to stop the stream and close the session.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Connect</td><td>Digital in</td><td>High connects and starts the Art-Net stream.</td></tr>
+      <tr><td class="sig">Disconnect</td><td>Digital in</td><td>High stops the stream.</td></tr>
+      <tr><td class="sig">Connected_FB</td><td>Digital out</td><td>High only after the gateway accepts a connection on port 80. Stays low, with status <code>No response</code>, when that address does not answer. Art-Net starts after this goes high.</td></tr>
+      <tr><td class="sig">IP_Address</td><td>Parameter</td><td>Static address of the gateway. Default <code>0.0.0.0</code>, which refuses to connect.</td></tr>
+      <tr><td class="sig">IP_Address_Override$</td><td>Serial in</td><td>Ignored until a string arrives. After that, this serial is the address, even if a later string is empty. A change while connected opens the new address.</td></tr>
+      <tr><td class="sig">Status$</td><td>Serial out</td><td>Short reason: address not set, connecting, no response, online, disconnected.</td></tr>
+      <tr><td class="sig">Node_Name$</td><td>Serial out</td><td>Name from the gateway, after a config poll parses.</td></tr>
+      <tr><td class="sig">Firmware$</td><td>Serial out</td><td>Firmware string from that same poll, when the body contains one.</td></tr>
+      <tr><td class="sig">Port_1_Mode$</td><td>Serial out</td><td>Poll result for the node. <code>poll pending</code> until the first body, then a short description or <code>unparsed</code>.</td></tr>
+      <tr><td class="sig">Port_2_Mode$</td><td>Serial out</td><td>Same text as port 1 until a future parser can split the two ports.</td></tr>
+      <tr><td class="sig">Port_1_Universe</td><td>Parameter</td><td>Art-Net universe sent to port 1. Default 0. Range 0–32767.</td></tr>
+      <tr><td class="sig">Port_1_Universe_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, this analog is the universe, and 0 is universe 0.</td></tr>
+      <tr><td class="sig">Port_2_Universe</td><td>Parameter</td><td>Art-Net universe sent to port 2. Default 1.</td></tr>
+      <tr><td class="sig">Port_2_Universe_Override</td><td>Analog in</td><td>Same rule as port 1.</td></tr>
+      <tr><td class="sig">Controller</td><td>Parameter</td><td>Slot 1–8. Bottom parameter.</td></tr>
+      <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
+    </tbody>
+  </table>
+  <p>While connected, the library sends a full 512-channel Art-Net packet for each port about 20 times a second. The gateway refreshes the DMX jacks on its own. If the stream stops, fixtures drop out.</p>
+  <p>A separate poll reads the node’s web page so the name and mode strings can fill in. Lighting does not wait on that poll. The published command set is the DIN EtherGate (SKU 71030) API. The MK2 (SKU 71031) has a user manual and no separate API document, so the first poll from a live unit is what confirms the body format.</p>
+
+  <h2 id="channel">Channel</h2>
+  <p><span class="sig">EtherGate Channel v1.0</span> is one load. Place one symbol per DMX address you intend to control.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Port</td><td>Parameter</td><td>Port 1 or Port 2. Default Port 1.</td></tr>
+      <tr><td class="sig">Channel</td><td>Parameter</td><td>DMX address 1–512. Default 1. This is the fixture address, not a zero-based index.</td></tr>
+      <tr><td class="sig">Level</td><td>Analog in</td><td>Percent. 0 is off. 65535 is DMX 255.</td></tr>
+      <tr><td class="sig">Level_FB</td><td>Analog out</td><td>The live percent, including while a preset is fading.</td></tr>
+      <tr><td class="sig">Controller</td><td>Parameter</td><td>Which gateway. Bottom parameter.</td></tr>
+      <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
+    </tbody>
+  </table>
+  <p>A level change writes that one address. The next Art-Net packet carries it. This symbol only wakes for its own port and channel. A move on another load does not run it.</p>
+  <p>Writing <span class="sig">Level</span> while a fade is running on that address cancels the fade for that address only. The newest command wins.</p>
+
+  <h2 id="preset">Preset</h2>
+  <p><span class="sig">EtherGate Preset v1.0</span> is one preset. The preset is the set of Channel symbols on the same controller slot, frozen at the moment you save.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Recall</td><td>Digital in</td><td>Rising edge fades every stored member to its saved level.</td></tr>
+      <tr><td class="sig">Save</td><td>Digital in</td><td>Rising edge stores the live percent of every Channel symbol on this slot.</td></tr>
+      <tr><td class="sig">Active_FB</td><td>Digital out</td><td>High when this preset has been saved and every stored address matches it. A later fader move clears it. More than one preset can match. An empty preset stays low.</td></tr>
+      <tr><td class="sig">Preset</td><td>Parameter</td><td>Which of 16 presets this symbol uses. Default Preset 1.</td></tr>
+      <tr><td class="sig">Preset_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–16 selects that preset.</td></tr>
+      <tr><td class="sig">Fade_Time</td><td>Parameter</td><td>Seconds, typed on the symbol. Default 0, a cut. 0.5s is half a second. Maximum 600.0s.</td></tr>
+      <tr><td class="sig">Fade_Time_Override</td><td>Analog in</td><td>Tenths of a second. Ignored until a value arrives. After that, this analog is the fade, and 0 is a cut. 5 is 0.5 seconds. 50 is 5.0 seconds.</td></tr>
+      <tr><td class="sig">Controller</td><td>Parameter</td><td>Which gateway. Bottom parameter.</td></tr>
+      <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How a preset learns its channels</h3>
+  <p>The Preset symbol does not have a channel list of its own. Each Channel symbol registers itself with the core when the program starts, under its port and DMX address, on the slot it is pointed at.</p>
+  <p>Save walks that registration and stores one record per address that still has at least one Channel symbol: the port, the address, and the percent that is live right then. An address with no Channel symbol is not part of the preset and is not moved on recall.</p>
+  <p>Two Channel symbols on the same port and address count once. A Channel symbol you add after a save is not in that preset until you save again. A symbol you delete stays in a preset that was already saved, and recall will still drive that DMX address.</p>
+  <p>Presets are written to <code>\user\EtherGate\slotN.presets</code> on the processor. They come back after a reboot. If the file cannot be written, the Controller <span class="sig">Status$</span> reports that the preset did not persist. The live levels still run.</p>
+  <div class="note">
+    Recall only touches addresses that were stored. Other DMX channels on the universe stay where they are.
+  </div>
+
+  <h2 id="levels">Levels and fades</h2>
+  <p>Channel levels are Crestron analog percent.</p>
+  <table>
+    <thead><tr><th>Analog</th><th>DMX</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0</td></tr>
+      <tr><td>32768</td><td>about 50%</td></tr>
+      <tr><td>65535</td><td>255, full</td></tr>
+    </tbody>
+  </table>
+  <p>A fade steps from the live level to the stored level. <span class="sig">Level_FB</span> on each member channel follows the ramp, so a gauge moves during the recall. Time is in tenths of a second on the Preset symbol. Zero is a cut. The core will not fade longer than 10 minutes.</p>
+  <p>Active feedback compares the live DMX value with the value that was stored. It is high only for a preset that was saved and still matches. Moving any member channel drops that feedback. After the faders sit still, a preset that happens to match will light again.</p>
+
+  <h2 id="node">The gateway</h2>
+  <p>Before the Controller can drive fixtures, the node has to be commissioned for output.</p>
+  <ul>
+    <li>Address: static, or a reservation. Type that address on <span class="sig">IP_Address</span>. The module does not search the network.</li>
+    <li>Port direction: DMX Out. A port left as an input will not emit the levels you send.</li>
+    <li>Protocol: Art-Net. These modules transmit Art-Net only.</li>
+    <li>Universe: the number on the node must match <span class="sig">Port_1_Universe</span> and <span class="sig">Port_2_Universe</span>. Factory MK2 values are universe 0 on port 1 and universe 1 on port 2.</li>
+  </ul>
+  <div class="warn">
+    These modules do not change the node’s IP, DHCP, universe, protocol, or refresh rate, and they do not factory-reset or reboot it. Do that in the node’s web page.
+  </div>
+  <p>Art-Net is unicast to the gateway on UDP port 6454. The HTTP poll uses TCP port 80 and is only for the name, firmware, and mode text.</p>
+  <p>Target processor is 4-Series. Compile the SIMPL+ modules with <code>\target series4</code> after the <code>.clz</code> is in place.</p>
+</main>
+<footer>
+  EtherGate Controller v1.0 · EtherGate Channel v1.0 · EtherGate Preset v1.0 · library EtherGate_v1
+</footer>
+</body>
+</html>
