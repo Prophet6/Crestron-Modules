@@ -18,7 +18,6 @@ This project is not affiliated with Crestron Electronics.
 | [dynamic-tcp-client](dynamic-tcp-client/) | TCP Client Dynamic IP v1.0 | **4-Series** | TCP **client** with runtime `Address$` — stock Connect / Connect_FB / TX$ / RX$ / Status, no IP table. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools) `start-tcp-server.bat`. |
 | [udp-broadcast-receive](udp-broadcast-receive/) | UDP Broadcast and Receive v1.3 + UDP Extract Data v1.0 | 3-Series / 4-Series | UDP broadcast send/receive (`MAC,UID,Data`). Companion latch filters on IP/MAC/UID (`[SKIP]` = unused) and holds that peer's IP, MAC, UID, and raw Data. |
 | [enttec-ethergate-mk2](enttec-ethergate-mk2/) | EtherGate Controller, Channel, and Preset v1.0 | **4-Series** | Art-Net control of an Enttec DIN EtherGate (up to 8 gateways). Press F1 on a symbol for `EtherGate v1.html`. |
-| [lighting-preset-aram](lighting-preset-aram/) | Lighting Preset ARAM v1.0 | 3-Series / 4-Series | Stores/recalls 16 analog values for 6 presets in nonvolatile memory; save 2.5s, erase 10s. |
 
 Compile SIMPL+ with SPlusCC — see [COMPILE_SIMPL_PLUS_CLI.md](COMPILE_SIMPL_PLUS_CLI.md).
 
