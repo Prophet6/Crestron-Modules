@@ -22,6 +22,7 @@ namespace CrestronFileHandler
     public class FileDataHandler
     {
         public string FilePath { get; set; }
+        public string SelectedFileName { get; private set; }
         public ushort[] Digitals { get; private set; }
         public ushort[] Analogs { get; private set; }
         public string[] Serials { get; private set; }
@@ -46,6 +47,7 @@ namespace CrestronFileHandler
             }
             DetectedFormat = -1; // Default
             Feedback = ""; // Default
+            SelectedFileName = "";
             EncryptionKey = "";
             UseEncryption = 0;
             EnableBackupHistory = 0;
@@ -212,6 +214,111 @@ namespace CrestronFileHandler
                 Feedback = string.Format("Check error: {0}", e.Message);
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// Sets FilePath and SelectedFileName.
+        /// matchPartial 0 uses directory + fragment + extension.
+        /// matchPartial nonzero uses the alphabetically first file in that
+        /// directory whose name contains fragment and whose extension matches.
+        /// No match keeps the exact name. An empty fragment does not list the folder.
+        /// </summary>
+        public void ResolveMatch(string directory, string fragment, string extension, ushort matchPartial)
+        {
+            if (directory == null) directory = "";
+            if (fragment == null) fragment = "";
+            if (extension == null) extension = "";
+
+            string exactName = fragment + extension;
+            SelectedFileName = exactName;
+            FilePath = directory + exactName;
+
+            if (matchPartial == 0 || fragment.Length == 0 || extension.Length == 0)
+            {
+                return;
+            }
+
+            string[] files;
+            try
+            {
+                files = Crestron.SimplSharp.CrestronIO.Directory.GetFiles(directory, "*" + extension);
+            }
+            catch (Exception e)
+            {
+                CrestronConsole.PrintLine("Resolve match error: {0}", e.Message);
+                Feedback = string.Format("Folder not found: {0}", e.Message);
+                return;
+            }
+
+            if (files == null || files.Length == 0)
+            {
+                return;
+            }
+
+            string bestName = null;
+            string bestFull = null;
+            for (int i = 0; i < files.Length; i++)
+            {
+                string full = files[i];
+                if (string.IsNullOrEmpty(full))
+                {
+                    continue;
+                }
+
+                string name = FileNameFrom(full);
+                if (!EndsWithIgnoreCase(name, extension))
+                {
+                    continue;
+                }
+
+                string stem = name.Substring(0, name.Length - extension.Length);
+                if (stem.IndexOf(fragment, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    continue;
+                }
+
+                if (bestName == null || string.Compare(name, bestName, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    bestName = name;
+                    bestFull = full;
+                }
+            }
+
+            if (bestName == null)
+            {
+                return;
+            }
+
+            SelectedFileName = bestName;
+            if (bestFull.IndexOf('\\') < 0 && bestFull.IndexOf('/') < 0)
+            {
+                FilePath = directory + bestName;
+            }
+            else
+            {
+                FilePath = bestFull;
+            }
+        }
+
+        private static string FileNameFrom(string path)
+        {
+            int slash = path.LastIndexOf('\\');
+            int slash2 = path.LastIndexOf('/');
+            int cut = slash > slash2 ? slash : slash2;
+            if (cut < 0 || cut >= path.Length - 1)
+            {
+                return path;
+            }
+            return path.Substring(cut + 1);
+        }
+
+        private static bool EndsWithIgnoreCase(string text, string suffix)
+        {
+            if (text == null || suffix == null || text.Length < suffix.Length)
+            {
+                return false;
+            }
+            return string.Compare(text, text.Length - suffix.Length, suffix, 0, suffix.Length, StringComparison.OrdinalIgnoreCase) == 0;
         }
 
         /// <summary>

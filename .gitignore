@@ -50,7 +50,7 @@ SPlsWork/
 !ssh-interface-v2/SSH_Interface_v2.clz
 !dynamic-tcp-client/Dynamic_TCP_Client.clz
 !enttec-ethergate-mk2/EtherGate_v1.clz
-!file-reader/FileReader20260623.clz
+!file-reader/FileReader20261013.clz
 
 devenv-build.log
 _clzpeek/

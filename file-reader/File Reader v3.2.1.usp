@@ -1,112 +1,4 @@
 #HELP_BEGIN
-The primary purpose of the File Reader module (comprising the SIMPL+ module and its paired SIMPL# library) is to
-provide a thread-safe interface for reading and writing up to 256 digital, analog, and serial signals to and from files
-on a Crestron processor, supporting Text, CSV, XML, JSON, INI, and Binary formats. This enables persistent storage and
-retrieval of system states, configurations, or data in Crestron control systems, with auto-detection of formats during
-reads, error feedback, and mutex protection for concurrent operations.
-
-Optionally supports AES encryption of file contents.
-
-- INPUTS, OUTPUTS, PARAMETERS -------------------------------------------------------------
-
-Parameters:
-- Format (Integer): Specifies the file format for write operations. Options: 1 (Text), 2 (CSV), 3 (XML), 4 (JSON),
-    5 (INI), 6 (Binary).
-  Default: 4 (JSON). Used only for writes; reads auto-detect the format.
-- File_Location (String): The path to the file (e.g., "\\NVRAM\\"). Ensure the path is valid on the Crestron processor
-    (e.g., NVRAM or CF0). Required for both read and write.
-- Filename (String): The name of the file (e.g., "datafile"). Required for both read and write.
-- Default_Settle_Time (Time): After Set_Default_Values pulses (auto-create), wait this long before Write so external
-    logic can drive Digital/Analog/Serial inputs. Default 0.25s. DELAY units match SIMPL+ (0.01s ticks).
-
-Inputs:
-- Read (Digital): Pulse high to trigger a read operation from the file specified in Filename. Loads data into the
-  output signals if successful.
-- Write (Digital): Pulse high to trigger a write operation to the file specified in Filename, using the format from
-  the Format parameter. Saves data from the input signals. On success, copies all inputs to the corresponding
-  outputs (so the module state matches what was just written without requiring a Read).
-- Delete (Digital): Pulse high to delete the file specified in Filename. Updates File_Exists_FB and Feedback on
-    completion.
-- Delete_Backup (Digital): Pulse high to delete the backup file (*.bak) if it exists. Updates Backup_Exists_FB and
-    Feedback on completion.
-- Enable_Backup (Digital): When high, enables automatic backup (.bak) on writes.
-- Enable_Backup_History (Digital): When high, enables archiving of previous backups to dated .gz files during write
-    operations with backup enabled. If low, overwrites the .bak without archiving.
-- Restore_Backup (Digital): Pulse high to restore from .bak to Filename, if .bak exists.
-- Encrypt (Digital): When high, enables AES encryption on writes (using Encryption_Key).
-- Enable_Auto_Create (Digital): When high, manages the config file at startup / path change:
-    * File missing → pulse Set_Default_Values, wait Default_Settle_Time, Write (then I→O on success).
-    * File exists → automatic Read onto Digital/Analog/Serial outputs (program restart / path change restore).
-    Does not overwrite an existing file on create. One auto action per effective path until the path changes.
-- Format_Override (Analog): Overrides the Format parameter at runtime if value is 1-6; otherwise, uses the parameter.
-- Filename_Override (String): Overrides the Filename parameter at runtime if non-empty; otherwise, uses the parameter.
-- Digital_Input_[1-64] (Digital): Digital input values (0 or 1) to be written to the file. Ignored during read
-  operations. During auto-create, external logic should drive these after Set_Default_Values.
-- Analog_Input_[1-64] (Analog): Analog input values (0-65535) to be written to the file. Ignored during read
-  operations.
-- Serial_Input_[1-64] (String): Serial input strings (up to 256 characters each) to be written to the file. Ignored
-  during read operations.
-- Encryption_Key (String): The encryption key (e.g., a 16-character string for AES-128). Required if Encrypt is high.
-
-Outputs:
-- Detected_Format (Analog): After a read operation, indicates the auto-detected file format: 1 (Text), 2 (CSV),
-  3 (XML), 4 (JSON), 5 (INI), 6 (Binary), or -1 (Error or undetected), -2 (Integrity check failed). Remains unchanged
-  after writes. JSON: optional crc32 is not a hard integrity reject.
-- Feedback (String): Provides status or error messages after read/write operations (e.g., "Valid JSON detected and
-  parsed" or "Error: File not found"). Useful for debugging or display on touchpanels.
-- File_Exists_FB (Digital): High (1) if the file at Filename exists, low (0) otherwise. Updated on module
-  initialization and whenever Filename_Override changes (if dynamically connected).
-- File_Not_Exist_FB (Digital): High (1) if the file at Filename does not exist, low (0) otherwise. Updated on module
-  initialization and whenever Filename_Override changes (if dynamically connected).
-- File_Busy_FB (Digital): High (1) while a file operation (read, write, delete, auto-create) is in progress, low (0)
-  otherwise.
-- File_Encrypted_FB (Digital): High (1) if the file appears to be encrypted (based on header), low (0) otherwise.
-- Backup_Exists_FB (Digital): High (1) if the backup file at Filename.bak exists, low (0) otherwise. Updated on module
-  initialization and after operations.
-- Set_Default_Values (Digital): 1 ms pulse when auto-create needs defaults applied to the module inputs. Wire this to
-  your SIMPL logic that drives Digital/Analog/Serial inputs with default configuration values.
-- File_Size (String): The formatted size of the file (e.g., "1.23 KB" or "456 bytes" or "7.89 MB"). Updated after
-    reads or on init/Filename_Override change.
-- Digital_Output_[1-64] (Digital): Digital values (0 or 1) loaded from the file after a successful read, or copied
-  from Digital_Input_[1-64] after a successful write. Unchanged on error.
-- Analog_Output_[1-64] (Analog): Analog values (0-65535) loaded from the file after a successful read, or copied
-  from Analog_Input_[1-64] after a successful write. Unchanged on error.
-- Serial_Output_[1-64] (String): Serial strings loaded from the file after a successful read, or copied from
-  Serial_Input_[1-64] after a successful write. Unchanged on error.
-
-Usage Instructions:
-- Connect Read/Write/Delete/Delete_Backup/Restore_Backup to digital triggers (e.g., buttons or logic).
-- For writes: Set input signals, select Format, specify File_Location and Filename (or Filename_Override), set
-    Enable_Backup if desired, then pulse Write. On success, outputs mirror the inputs that were written.
-- For reads: Specify File_Location and Filename (or Filename_Override), pulse Read; check Detected_Format and Feedback
-    for results, then use output signals.
-- For deletes: Specify File_Location and Filename (or Filename_Override), pulse Delete; check Feedback and
-    File_Exists_FB for results.
-- For backup deletes: Specify File_Location and Filename (or Filename_Override), pulse Delete_Backup; check Feedback and
-    Backup_Exists_FB for results.
-- For restore: Specify File_Location and Filename (or Filename_Override), pulse Restore_Backup; check Feedback.
-- For encryption: Set Encrypt high and provide Encryption_Key for writes. For reads, encryption is auto-detected via
-    header; provide the correct key if File_Encrypted_FB is high.
-- For auto config (replace external Not_Exist → defaults → Write, and Exist → Read on restart):
-    1. Hold Enable_Auto_Create high.
-    2. Wire Set_Default_Values to logic that asserts default values on Digital/Analog/Serial inputs.
-    3. On init (or path change):
-         - File missing → Set_Default_Values → settle → Write → outputs mirror inputs.
-         - File exists → Read → outputs load from file (restart restore).
-    4. Existing files are never overwritten by auto-create. One auto action per effective path (retry after path change).
-- Backups are created as [FileName].[FileExtension].bak in the same directory. If Enable_Backup_History is high, old
-    backups are archived to .bak.yyyyMMdd.gz.
-- Use Format_Override (1-6) to override the Format parameter at runtime.
-- Use Filename_Override (non-empty string) to override the Filename parameter at runtime.
-- Thread-safe via mutex; multiple instances can share files but operations are serialized.
-- Errors are reported via Feedback and Crestron console (GenerateUserError).
-- Supports up to 64 signals per type (expandable to 256); unused signals are ignored if zero/empty.
-- Ensure the paired SIMPL# library (FileReader20260623.clz) is deployed and referenced correctly.
-- JSON reads accept industry-standard objects with digitals / analogs / serials arrays (case-insensitive
-  names, optional nested data/signalData, optional crc32, shorter arrays, boolean digitals). crc32 is
-  never required for a successful JSON read.
-- 4-Series focused packaging.
-
 - VERSION HISTORY ------------------------------------------------------------------
 
 v3.0  8/4/2025  Generated by AI at the instruction of RGW
@@ -154,10 +46,17 @@ v3.1.2  7/16/2026  RGW / AI
 v3.2.0  7/16/2026  RGW / AI
 - On successful Write, copy Digital/Analog/Serial inputs to the corresponding outputs (explicit 0/1 for digitals)
 - Enable_Auto_Create when high:
-    * File missing → Set_Default_Values → wait Default_Settle_Time → Write (then I→O copy on success)
-    * File exists → automatic Read onto outputs (startup / path change restore)
+    * File missing -> Set_Default_Values -> wait Default_Settle_Time -> Write (then I->O copy on success)
+    * File exists -> automatic Read onto outputs (startup / path change restore)
 - Does not overwrite existing files on auto-create; one auto action per effective path until path changes
-- Intended to replace external Not_Exist → defaults → Write and Exist → Read startup routines in SIMPL
+- Intended to replace external Not_Exist -> defaults -> Write and Exist -> Read startup routines in SIMPL
+
+v3.2.1  10/13/2026  RGW / AI
+- Match_Partial finds a file whose name contains Filename or Filename_Override
+- Several matches use the first name alphabetically
+- No match keeps the exact name, so auto-create can write config.json
+- Filename_FB reports the selected file name with its extension
+- Paired Simpl# source: FileReader20261013.cs
 
 #HELP_END
 
@@ -167,8 +66,8 @@ v3.2.0  7/16/2026  RGW / AI
 //#CATEGORY "9,12,33" // Memory, System Control, Program Formatting
 #CATEGORY "0" // Hidden
 
-#USER_SIMPLSHARP_LIBRARY "FileReader20260623"
-//#HELP_PDF_FILE "File Reader v3.2.0 Technical Manual.html"
+#USER_SIMPLSHARP_LIBRARY "FileReader20261013"
+//#HELP_PDF_FILE "File Reader v3.2.1 Technical Manual.html"
 
 #ENABLE_DYNAMIC #ENABLE_STACK_CHECKING
 #DIGITAL_EXPAND InputsWithOutputs
@@ -189,11 +88,11 @@ DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				Read, Write, Delete,
 				_SKIP_,
 				Encrypt, Enable_Backup, Enable_Backup_History, Restore_Backup, Delete_Backup,
-				Enable_Auto_Create, _SKIP_,
+				Enable_Auto_Create, Match_Partial,
 				Digital_Input_[MaxSignals];
 ANALOG_INPUT	_SKIP_,
 				Format_Override;
-STRING_INPUT	Filename_Override[MaxStringLength], Encryption_Key[256];
+STRING_INPUT	Filename_Override[MaxStringLength], _SKIP_, Encryption_Key[256];
 ANALOG_INPUT	_SKIP_,
 				Analog_Input_[MaxSignals];
 STRING_INPUT	_SKIP_,
@@ -207,7 +106,7 @@ DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				Digital_Output_[MaxSignals];
 ANALOG_OUTPUT	_SKIP_,
 				Detected_Format;
-STRING_OUTPUT	Feedback, File_Size;
+STRING_OUTPUT	Filename_FB, Feedback, File_Size;
 ANALOG_OUTPUT	_SKIP_,
 				Analog_Output_[MaxSignals];
 STRING_OUTPUT	_SKIP_,
@@ -328,17 +227,25 @@ FUNCTION UpdateFileExtension() {
 }
 
 FUNCTION BuildEffectivePath() {
+	STRING name$[MaxStringLength], selected$[255];
+	INTEGER partial;
+
 	UpdateFileExtension();
 	if (len(Filename_Override) > 0)
-		EffectivePath$ = File_Location + Filename_Override + FileExtension$;
+		name$ = Filename_Override;
 	else
-		EffectivePath$ = File_Location + Filename + FileExtension$;
+		name$ = Filename;
+
+	partial = Match_Partial;
+	DataFile.ResolveMatch(File_Location, name$, FileExtension$, partial);
+	selected$ = DataFile.SelectedFileName;
+	Filename_FB = selected$;
+	EffectivePath$ = selected$;
 }
 
 FUNCTION UpdateFileExists() {
 	BuildEffectivePath();
-	
-	DataFile.FilePath = EffectivePath$;
+
 	if (DataFile.CheckFileExists() = 1) {
 		File_Not_Exist_FB = 0;
 		File_Exists_FB = 1;
@@ -358,7 +265,6 @@ INTEGER_FUNCTION ProcessFile(INTEGER operation) {
 	
 	BuildEffectivePath();
 
-	DataFile.FilePath = EffectivePath$;
 	DataFile.UseEncryption = Encrypt;
 	DataFile.EncryptionKey = Encryption_Key;
 	
@@ -557,6 +463,12 @@ CHANGE Format_Override {
 }
 
 CHANGE Filename_Override {
+	AutoCreateAttempted = 0;
+	UpdateFileExists();
+	MaybeAutoCreateDefaultFile();
+}
+
+CHANGE Match_Partial {
 	AutoCreateAttempted = 0;
 	UpdateFileExists();
 	MaybeAutoCreateDefaultFile();

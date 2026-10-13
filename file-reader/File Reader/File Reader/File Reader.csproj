@@ -75,7 +75,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FileReader20260623.cs" />
+    <Compile Include="FileReader20261013.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <!-- The .clz is named after the single datecoded .cs file in this folder. -->

@@ -81,7 +81,7 @@ UID shape: 1-32 bytes, letters, digits, hyphen, or underscore.
  ---------
 
 -- VERSION HISTORY --
-v1.3  2026-09-09
+v1.3  2026-09-09  RGW
 - Latched Enable / Enable_FB; SocketUDP_Disable on Enable low
 - Retrigger pulse to re-send current packet
 - Enforce_Format parameter (default: no enforcement)
