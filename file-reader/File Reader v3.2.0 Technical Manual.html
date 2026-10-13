@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File Reader v3.2.0</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --muted: #5c564c;
+    --line: #e3d8c8;
+    --paper: #f6f1e8;
+    --card: #fffdf8;
+    --amber: #9a4b12;
+    --amber-soft: #f3e2d0;
+    --header: #241f1a;
+    --ok: #1f6b45;
+    --warn: #8a4b08;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background: var(--header);
+    color: #f6f1e8;
+    padding: 2.4rem 1.5rem 2rem;
+  }
+  header.banner .wrap, main, nav.toc {
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #e8b48a;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+  }
+  header.banner p { margin: 0; max-width: 40rem; color: #e7dfd4; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #fffdf8;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+  }
+  nav.toc a {
+    color: var(--amber);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 4rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.2rem 0 0.6rem;
+    padding-top: 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--amber); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--amber); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8ef; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: #f3ebe1;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.25rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  pre {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  footer {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · SIMPL# · 4-Series</p>
+    <h1>File Reader v3.2.0</h1>
+    <p>One user module and one shared library that store and restore digital, analog, and serial signals in a file on the processor.</p>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#formats">Formats</a>
+  <a href="#parameters">Parameters</a>
+  <a href="#inputs">Inputs</a>
+  <a href="#outputs">Outputs</a>
+  <a href="#auto">Auto-create</a>
+  <a href="#backup">Backup and encryption</a>
+  <a href="#examples">Examples</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead">File Reader v3.2.0 writes the signals on the symbol into a file, and reads that file back onto the outputs. Reads detect the format. Writes use the format you select. A successful write also copies the inputs onto the outputs.</p>
+  <div class="grid">
+    <article>
+      <h3>User module</h3>
+      <p><span class="sig">File Reader v3.2.0</span> is the symbol you drop in SIMPL Windows. F1 on that symbol opens this page.</p>
+    </article>
+    <article>
+      <h3>SIMPL+ symbol</h3>
+      <p>The paired SIMPL+ module is hidden. Its F1 help is the comment inside the <code>.usp</code>. Copy-after-write and auto-create live there.</p>
+    </article>
+    <article>
+      <h3>Library</h3>
+      <p>Library <span class="sig">FileReader20260623</span>, source <code>FileReader20260623.cs</code>, class <code>FileDataHandler</code>. Text detection, JSON, checksums, and encryption live in that library. A Visual Studio build names the <code>.clz</code> after that source file.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Keep <span class="sig">FileReader20260623.clz</span> next to the SIMPL+ module. v3.2.0 links that archive. v3.1.1 and v3.1.2 linked the library name File Reader.</li>
+    <li>Add <span class="sig">File Reader v3.2.0</span>. Set <span class="sig">File_Location</span> (for example <code>\\NVRAM\\</code> or <code>\\CF0\\</code>) and <span class="sig">Filename</span> with no extension. Set <span class="sig">Format</span>. The default is 4, JSON.</li>
+    <li>Expand the digital, analog, and serial pairs you need. The symbol ships with 64 of each type, and the arrays can be raised to 256. Empty or zero slots are ignored.</li>
+    <li>Drive the inputs, then pulse <span class="sig">Write</span>. On success the file is stored and every input is copied to the matching output. Digitals are driven as an explicit 0 or 1.</li>
+    <li>Pulse <span class="sig">Read</span> to load a file. <span class="sig">Detected_Format</span> and <span class="sig">Feedback</span> report what was found. Outputs stay where they were if the read fails.</li>
+    <li>For startup, hold <span class="sig">Enable_Auto_Create</span> high and wire <span class="sig">Set_Default_Values</span> to the logic that drives the default inputs. A missing file is created. An existing file is read. An existing file is not overwritten.</li>
+  </ol>
+  <div class="note">
+    Press F1 on the <span class="sig">File Reader v3.2.0</span> user module to open this page. Leave <code>File Reader v3.2.0 Technical Manual.html</code> next to the <code>.umc</code>. The hidden SIMPL+ symbol does not open this file.
+  </div>
+  <div class="card">
+    <strong>Path.</strong> The file is <span class="sig">File_Location</span> plus <span class="sig">Filename</span>, or <span class="sig">Filename_Override</span> when that string is not empty, plus the extension for the active format. Do not put the extension in the name.
+  </div>
+
+  <h2 id="formats">Formats</h2>
+  <p><span class="sig">Format</span> chooses the file written. Reads ignore it and detect the format from the file. <span class="sig">Format_Override</span> replaces the parameter when its value is 1 through 6.</p>
+  <table>
+    <thead><tr><th>Code</th><th>Format</th><th>Extension</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Text</td><td><code>.txt</code></td></tr>
+      <tr><td>2</td><td>CSV</td><td><code>.csv</code></td></tr>
+      <tr><td>3</td><td>XML</td><td><code>.xml</code></td></tr>
+      <tr><td>4</td><td>JSON</td><td><code>.json</code> (default)</td></tr>
+      <tr><td>5</td><td>INI</td><td><code>.ini</code></td></tr>
+      <tr><td>6</td><td>Binary</td><td><code>.bin</code></td></tr>
+    </tbody>
+  </table>
+  <p>After a read, <span class="sig">Detected_Format</span> is 1 through 6, <code>-1</code> when the format is undetected or the read errors, or <code>-2</code> when a non-JSON integrity check fails. A write does not change <span class="sig">Detected_Format</span>.</p>
+
+  <h3>JSON</h3>
+  <p>JSON may come from this module or from another tool. The reader looks for <code>digitals</code>, <code>analogs</code>, and <code>serials</code> arrays, at the top level or nested under <code>data</code> or <code>signalData</code>. Names are case-insensitive. Arrays may be shorter than 64; missing slots stay 0 or empty. Digital elements may be 0 or 1, integers, or JSON booleans. An optional <code>crc32</code> field is ignored for pass or fail.</p>
+  <pre>{
+  "digitals": [0, 1, 0, 1],
+  "analogs": [8, 16, 32, 64],
+  "serials": ["Room A", "Scene 1", "", ""]
+}</pre>
+  <p>Boolean digitals are accepted, for example <code>[false, true, false, true]</code>. A write from this module stores a full 64-element set and may include <code>crc32</code> for other tools. Readers do not require it.</p>
+  <div class="note">
+    Text detection looks for a valid <code>CRC32:</code> line and indexed <code>D</code>, <code>A</code>, and <code>S</code> lines. A loose text search used to mistake words inside JSON, XML, or CSV for the Text format. That check is in the shared library.
+  </div>
+
+  <h2 id="parameters">Parameters</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">File_Location</td><td>Parameter</td><td>Folder on the processor, such as <code>\\NVRAM\\</code> or <code>\\CF0\\</code>. Required for read and write.</td></tr>
+      <tr><td class="sig">Filename</td><td>Parameter</td><td>File name without the extension, such as <code>datafile</code>. The extension comes from <span class="sig">Format</span> or <span class="sig">Format_Override</span>.</td></tr>
+      <tr><td class="sig">Format</td><td>Parameter</td><td>Write format, 1 through 6. Default 4 (JSON). Reads detect the format themselves.</td></tr>
+      <tr><td class="sig">Default_Settle_Time</td><td>Parameter</td><td>Wait after <span class="sig">Set_Default_Values</span> before the auto-create write, so external logic can drive the inputs. Default 0.25s. Range 0.01s to 10s.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="inputs">Inputs</h2>
+  <p>Pulse <span class="sig">Read</span>, <span class="sig">Write</span>, <span class="sig">Delete</span>, <span class="sig">Delete_Backup</span>, and <span class="sig">Restore_Backup</span> from a button or from logic. Operations on one file are serialized. Several symbols may share a file. Errors go to <span class="sig">Feedback</span> and to the Crestron console.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Read</td><td>Digital in</td><td>Rising edge loads the file onto the outputs when the read succeeds.</td></tr>
+      <tr><td class="sig">Write</td><td>Digital in</td><td>Rising edge stores the inputs in the selected format. On success, every input is copied to the matching output. Digitals are driven as an explicit 0 or 1.</td></tr>
+      <tr><td class="sig">Delete</td><td>Digital in</td><td>Rising edge deletes the file. Updates <span class="sig">File_Exists_FB</span> and <span class="sig">Feedback</span>.</td></tr>
+      <tr><td class="sig">Delete_Backup</td><td>Digital in</td><td>Rising edge deletes the <code>.bak</code> file when it exists. Updates <span class="sig">Backup_Exists_FB</span> and <span class="sig">Feedback</span>.</td></tr>
+      <tr><td class="sig">Enable_Backup</td><td>Digital in</td><td>High makes a write keep a <code>.bak</code> beside the file.</td></tr>
+      <tr><td class="sig">Enable_Backup_History</td><td>Digital in</td><td>High, with backup enabled, archives the previous <code>.bak</code> to a dated <code>.gz</code>. Low overwrites the <code>.bak</code>.</td></tr>
+      <tr><td class="sig">Restore_Backup</td><td>Digital in</td><td>Rising edge restores the <code>.bak</code> over the file when the backup exists.</td></tr>
+      <tr><td class="sig">Encrypt</td><td>Digital in</td><td>High encrypts writes with AES, using <span class="sig">Encryption_Key</span>.</td></tr>
+      <tr><td class="sig">Enable_Auto_Create</td><td>Digital in</td><td>High runs one automatic action when the program starts and again when the path changes. A missing file pulses <span class="sig">Set_Default_Values</span>, waits <span class="sig">Default_Settle_Time</span>, then writes. An existing file is read onto the outputs. An existing file is not overwritten.</td></tr>
+      <tr><td class="sig">Format_Override</td><td>Analog in</td><td>1 through 6 replaces <span class="sig">Format</span>. Any other value leaves the parameter in charge.</td></tr>
+      <tr><td class="sig">Filename_Override</td><td>Serial in</td><td>A non-empty string replaces <span class="sig">Filename</span>. Empty leaves the parameter in charge. No extension.</td></tr>
+      <tr><td class="sig">Digital_Input_[1-64]</td><td>Digital in</td><td>Values written to the file. Ignored on read. During auto-create, drive these after <span class="sig">Set_Default_Values</span>.</td></tr>
+      <tr><td class="sig">Analog_Input_[1-64]</td><td>Analog in</td><td>Values 0 through 65535 written to the file. Ignored on read.</td></tr>
+      <tr><td class="sig">Serial_Input_[1-64]</td><td>Serial in</td><td>Strings, up to 256 characters each, written to the file. Ignored on read.</td></tr>
+      <tr><td class="sig">Encryption_Key</td><td>Serial in</td><td>AES key. A 16-character string is AES-128. Required while <span class="sig">Encrypt</span> is high, and required on read when <span class="sig">File_Encrypted_FB</span> is high.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="outputs">Outputs</h2>
+  <p>A successful read loads the file onto the outputs. A successful write copies the inputs onto the outputs. An error leaves the outputs unchanged.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">File_Exists_FB</td><td>Digital out</td><td>High when the file exists. Updated at startup and when <span class="sig">Filename_Override</span> changes.</td></tr>
+      <tr><td class="sig">File_Not_Exist_FB</td><td>Digital out</td><td>High when the file does not exist. Its own feedback, updated with <span class="sig">File_Exists_FB</span>.</td></tr>
+      <tr><td class="sig">File_Busy_FB</td><td>Digital out</td><td>High while a read, write, delete, or auto-create is in progress.</td></tr>
+      <tr><td class="sig">File_Encrypted_FB</td><td>Digital out</td><td>High when the file header says the file is encrypted.</td></tr>
+      <tr><td class="sig">Backup_Exists_FB</td><td>Digital out</td><td>High when <span class="sig">Filename</span><code>.bak</code> exists. Updated at startup and after backup operations.</td></tr>
+      <tr><td class="sig">Set_Default_Values</td><td>Digital out</td><td>A 1 ms pulse when auto-create needs defaults on the inputs. Wire it to the logic that drives those inputs.</td></tr>
+      <tr><td class="sig">Digital_Output_[1-64]</td><td>Digital out</td><td>Loaded from the file after a successful read, or copied from <span class="sig">Digital_Input_[1-64]</span> after a successful write. Explicit 0 or 1 so the value asserts on 4-Series. Unchanged on error.</td></tr>
+      <tr><td class="sig">Detected_Format</td><td>Analog out</td><td>1 Text, 2 CSV, 3 XML, 4 JSON, 5 INI, 6 Binary, <code>-1</code> undetected or error, <code>-2</code> integrity check failed. Unchanged after a write. JSON <code>crc32</code> is not a hard reject.</td></tr>
+      <tr><td class="sig">Analog_Output_[1-64]</td><td>Analog out</td><td>Loaded from the file after a successful read, or copied from <span class="sig">Analog_Input_[1-64]</span> after a successful write. Unchanged on error.</td></tr>
+      <tr><td class="sig">Feedback</td><td>Serial out</td><td>Status or error text, such as <code>Valid JSON detected and parsed</code> or <code>File not found</code>.</td></tr>
+      <tr><td class="sig">File_Size</td><td>Serial out</td><td>Size as text, such as <code>456 bytes</code>, <code>1.23 KB</code>, or <code>7.89 MB</code>. Updated after reads, at startup, and when <span class="sig">Filename_Override</span> changes.</td></tr>
+      <tr><td class="sig">Serial_Output_[1-64]</td><td>Serial out</td><td>Loaded from the file after a successful read, or copied from <span class="sig">Serial_Input_[1-64]</span> after a successful write. Unchanged on error.</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    Use v3.2.0 when digitals must come back at startup. v3.1.1 does not drive <span class="sig">Digital_Output</span> reliably after a read. v3.1.2 has that drive fix, and does not copy inputs to outputs after a write or offer <span class="sig">Enable_Auto_Create</span>.
+  </div>
+
+  <h2 id="auto">Auto-create</h2>
+  <p>Hold <span class="sig">Enable_Auto_Create</span> high to replace an external routine that wrote defaults when the file was missing and read the file when it already existed.</p>
+  <ol class="steps">
+    <li>Hold <span class="sig">Enable_Auto_Create</span> high.</li>
+    <li>Wire <span class="sig">Set_Default_Values</span> to logic that drives <span class="sig">Digital_Input_[1-64]</span>, <span class="sig">Analog_Input_[1-64]</span>, and <span class="sig">Serial_Input_[1-64]</span> with the default configuration.</li>
+    <li>On startup, or when the effective path changes, a missing file pulses <span class="sig">Set_Default_Values</span>, waits <span class="sig">Default_Settle_Time</span>, writes, then copies the inputs to the outputs.</li>
+    <li>An existing file is read onto the outputs. Auto-create does not overwrite it.</li>
+    <li>One automatic action runs for a path. Changing the path allows another.</li>
+  </ol>
+  <p><span class="sig">File_Busy_FB</span> stays high through that sequence, including the settle wait and the write or read.</p>
+
+  <h2 id="backup">Backup and encryption</h2>
+  <p>With <span class="sig">Enable_Backup</span> high, a write stores <code>[Filename].[extension].bak</code> in the same folder. With <span class="sig">Enable_Backup_History</span> also high, the previous backup is archived as <code>.bak.yyyyMMdd.gz</code> instead of being overwritten.</p>
+  <ul>
+    <li>Pulse <span class="sig">Restore_Backup</span> to put the <code>.bak</code> back. <span class="sig">Feedback</span> reports <code>Backup restored (swap)</code> when that succeeds.</li>
+    <li>Pulse <span class="sig">Delete_Backup</span> to remove the <code>.bak</code>. <span class="sig">Backup_Exists_FB</span> follows the result.</li>
+    <li>Pulse <span class="sig">Delete</span> to remove the main file. <span class="sig">Feedback</span> reports <code>File deleted successfully</code> when that succeeds.</li>
+  </ul>
+  <p>Set <span class="sig">Encrypt</span> high and provide <span class="sig">Encryption_Key</span> before a write that should be encrypted. A successful encrypted write reports <code>File written in CSV format with checksum (encrypted)</code>, with the format name in place of CSV. On read, the header sets <span class="sig">File_Encrypted_FB</span>. Provide the same key. A decrypted read reports <code>Valid CSV detected and parsed (decrypted)</code>, again with the detected format name.</p>
+  <div class="warn">
+    A write with <span class="sig">Encrypt</span> high and no key fails. A read of an encrypted file with no key fails. The key has to match the key that wrote the file.
+  </div>
+  <p>Non-JSON formats can fail the checksum. <span class="sig">Detected_Format</span> becomes <code>-2</code> and <span class="sig">Feedback</span> reports <code>Integrity check failed for Binary</code>, with the detected format name in place of Binary. JSON does not fail the read because <code>crc32</code> is missing or different.</p>
+
+  <h2 id="examples">Examples</h2>
+
+  <h3>JSON configuration</h3>
+  <p>Store a volume, or any other persistent settings, and load them again at startup.</p>
+  <ol class="steps">
+    <li>Set <span class="sig">Format</span> to 4. Set <span class="sig">File_Location</span> to <code>\\NVRAM\\</code> and <span class="sig">Filename</span> to <code>config</code>. Format 4 appends <code>.json</code>.</li>
+    <li>Connect <span class="sig">Analog_Input_1</span> to the volume level and set it to 50%.</li>
+    <li>Pulse <span class="sig">Write</span>. <span class="sig">Feedback</span> reports <code>File written in JSON format with checksum</code>. The outputs copy the inputs. <span class="sig">File_Exists_FB</span> goes high.</li>
+    <li>Pulse <span class="sig">Read</span>. <span class="sig">Detected_Format</span> is 4, <span class="sig">Analog_Output_1</span> is 50%, and <span class="sig">Feedback</span> reports <code>Valid JSON detected and parsed</code>.</li>
+  </ol>
+
+  <h3>Encrypted CSV log</h3>
+  <p>Log scaled analog readings with a backup.</p>
+  <ol class="steps">
+    <li>Set <span class="sig">Format</span> to 2. Set <span class="sig">File_Location</span> to <code>\\CF0\\</code> and <span class="sig">Filename</span> to <code>tempLog</code>. Format 2 appends <code>.csv</code>.</li>
+    <li>Hold <span class="sig">Encrypt</span> and <span class="sig">Enable_Backup</span> high. Set <span class="sig">Encryption_Key</span> to a 16-character key, such as <code>MySecretKey12345</code>.</li>
+    <li>Connect <span class="sig">Analog_Input_[1-5]</span> to the sensors. Set <span class="sig">Analog_Input_1</span> to 25000 for a scaled 25 degree reading, and set the rest.</li>
+    <li>Pulse <span class="sig">Write</span>. The encrypted CSV and the <code>.bak</code> are created. <span class="sig">Feedback</span> reports <code>File written in CSV format with checksum (encrypted)</code>. <span class="sig">File_Encrypted_FB</span> and <span class="sig">Backup_Exists_FB</span> go high.</li>
+    <li>Leave the same key in place and pulse <span class="sig">Read</span>. The outputs fill from the decrypted file and <span class="sig">Feedback</span> reports <code>Valid CSV detected and parsed (decrypted)</code>.</li>
+    <li>If the main file is unusable, pulse <span class="sig">Restore_Backup</span>. <span class="sig">Feedback</span> reports <code>Backup restored (swap)</code>.</li>
+  </ol>
+
+  <h3>Binary file, then delete</h3>
+  <p>Write a compact temporary file, check it, and remove it.</p>
+  <ol class="steps">
+    <li>Set <span class="sig">Format</span> to 6. Set <span class="sig">File_Location</span> to <code>\\CF0\\</code> and <span class="sig">Filename</span> to <code>tempGameData</code>. Format 6 appends <code>.bin</code>.</li>
+    <li>Connect <span class="sig">Digital_Input_[1-10]</span>, set them, and pulse <span class="sig">Write</span>. The file includes a checksum.</li>
+    <li>Pulse <span class="sig">Read</span>. A valid file fills the outputs and <span class="sig">File_Size</span> shows the size. A tampered file sets <span class="sig">Detected_Format</span> to <code>-2</code> and <span class="sig">Feedback</span> reports <code>Integrity check failed for Binary</code>.</li>
+    <li>Pulse <span class="sig">Delete</span>. <span class="sig">File_Exists_FB</span> goes low and <span class="sig">Feedback</span> reports <code>File deleted successfully</code>.</li>
+  </ol>
+
+  <h3>Read XML, write INI</h3>
+  <p>Load an existing file by detection, then store it in another format.</p>
+  <ol class="steps">
+    <li>Set <span class="sig">Format</span> to 3, <span class="sig">File_Location</span> to <code>\\NVRAM\\</code>, and <span class="sig">Filename</span> to <code>legacy</code>. Format 3 opens <code>legacy.xml</code>.</li>
+    <li>Pulse <span class="sig">Read</span>. The file content is detected as XML, so <span class="sig">Detected_Format</span> is 3 and the outputs load.</li>
+    <li>Copy those outputs onto the inputs. Set <span class="sig">Format</span> to 5 and <span class="sig">Filename</span> to <code>newConfig</code>. Format 5 appends <code>.ini</code>.</li>
+    <li>Pulse <span class="sig">Write</span>. The new INI file is created, and the outputs copy the inputs that were written.</li>
+  </ol>
+
+  <h2 id="versions">Versions</h2>
+  <p>Document revision v3.2.0, 16 July 2026. Current packaging targets 4-Series.</p>
+
+  <h3>v3.2.0 — 16 July 2026 — RGW / AI</h3>
+  <ul>
+    <li>A successful write copies digital, analog, and serial inputs to the matching outputs. Digitals use an explicit 0 or 1.</li>
+    <li><span class="sig">Enable_Auto_Create</span>, <span class="sig">Set_Default_Values</span>, and <span class="sig">Default_Settle_Time</span>. A missing file is written from the defaults. An existing file is read. An existing file is not overwritten. One automatic action runs per path until the path changes.</li>
+  </ul>
+
+  <h3>v3.1.2 — 16 July 2026 — RGW / AI</h3>
+  <ul>
+    <li>SIMPL+ only: <span class="sig">Digital_Output</span> asserts after a successful read. Values from the Simpl# arrays are applied with an explicit 0 or 1.</li>
+    <li>Shared library: JSON reads accept industry-standard objects. Optional <code>crc32</code> is no longer a hard reject.</li>
+    <li>Source stays <code>FileReader20260623.cs</code>. Library name stays <span class="sig">File Reader</span>.</li>
+  </ul>
+
+  <h3>v3.1.1 — 1 May 2026 — RGW</h3>
+  <ul>
+    <li>Shared library: Text detection uses structured markers, so a serial value such as a device name no longer makes a JSON, XML, or CSV file look like Text.</li>
+    <li>SIMPL+: parameter formatting was removed so the symbol could sit inside a user-module wrapper.</li>
+    <li>Programs still on v3.1.1 pick up the library fixes, and still need v3.1.2 or later for reliable digital outputs after a read.</li>
+  </ul>
+
+  <h3>Earlier</h3>
+  <ul>
+    <li><strong>v3.1 — 25 February 2026.</strong> Added <span class="sig">File_Not_Exist_FB</span> as its own feedback.</li>
+    <li><strong>v3.0 — 4 August 2025.</strong> First release, including JSON.</li>
+    <li><strong>5–6 August 2025.</strong> File existence, delete, busy, size, integrity, CSV, INI, backup and restore, AES encryption, backup history, <span class="sig">Format_Override</span>, <span class="sig">Filename_Override</span>, <span class="sig">Delete_Backup</span>, and the split of location and name with the extension taken from the format. Format codes became 1-based, Text through Binary.</li>
+  </ul>
+
+  <h3>Module and library</h3>
+  <table>
+    <thead><tr><th>Capability</th><th>v3.2.0 SIMPL+</th><th>FileReader20260623</th></tr></thead>
+    <tbody>
+      <tr><td>Text format false-detect fix</td><td>Uses library</td><td>Yes</td></tr>
+      <tr><td>Industry-standard JSON read</td><td>Uses library</td><td>Yes</td></tr>
+      <tr><td>Digital outputs correct after Read</td><td>Yes, explicit 0 or 1</td><td>Assigned in SIMPL+</td></tr>
+      <tr><td>Analog and serial restore after Read</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Write all input types to the file</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td>Copy inputs to outputs after a successful Write</td><td>Yes</td><td>Copied in SIMPL+</td></tr>
+      <tr><td>Enable_Auto_Create</td><td>Yes</td><td>Handled in SIMPL+</td></tr>
+    </tbody>
+  </table>
+  <p>v3.2.0 links <span class="sig">FileReader20260623</span>. v3.1.1 and v3.1.2 linked the library name File Reader. The v3.2.0 behaviors in the last two rows are in the SIMPL+ module.</p>
+</main>
+<footer>
+  File Reader v3.2.0 · library FileReader20260623 · 16 July 2026
+</footer>
+</body>
+</html>

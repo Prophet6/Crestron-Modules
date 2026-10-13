@@ -101,7 +101,7 @@ Usage Instructions:
 - Thread-safe via mutex; multiple instances can share files but operations are serialized.
 - Errors are reported via Feedback and Crestron console (GenerateUserError).
 - Supports up to 64 signals per type (expandable to 256); unused signals are ignored if zero/empty.
-- Ensure the paired SIMPL# DLL (File Reader.dll) is deployed and referenced correctly.
+- Ensure the paired SIMPL# library (FileReader20260623.clz) is deployed and referenced correctly.
 - JSON reads accept industry-standard objects with digitals / analogs / serials arrays (case-insensitive
   names, optional nested data/signalData, optional crc32, shorter arrays, boolean digitals). crc32 is
   never required for a successful JSON read.
@@ -149,7 +149,7 @@ v3.1.2  7/16/2026  RGW / AI
   Simpl# ushort values)
 - JSON read now accepts industry-standard JSON: optional crc32 (no hard integrity reject), case-insensitive
   property names, optional data/signalData wrappers, short arrays, boolean/numeric digital elements
-- Paired Simpl# source: FileReader20260623.cs (rebuild File Reader.clz / .dll after updating)
+- Paired Simpl# source: FileReader20260623.cs (rebuild FileReader20260623.clz after updating)
 
 v3.2.0  7/16/2026  RGW / AI
 - On successful Write, copy Digital/Analog/Serial inputs to the corresponding outputs (explicit 0/1 for digitals)
@@ -167,7 +167,7 @@ v3.2.0  7/16/2026  RGW / AI
 //#CATEGORY "9,12,33" // Memory, System Control, Program Formatting
 #CATEGORY "0" // Hidden
 
-#USER_SIMPLSHARP_LIBRARY "File Reader"
+#USER_SIMPLSHARP_LIBRARY "FileReader20260623"
 //#HELP_PDF_FILE "File Reader v3.2.0 Technical Manual.html"
 
 #ENABLE_DYNAMIC #ENABLE_STACK_CHECKING

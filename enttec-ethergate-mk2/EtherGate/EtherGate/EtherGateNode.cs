@@ -15,8 +15,8 @@ namespace EnttecEtherGate
         SimplSharpString port2Mode,
         ushort port1Universe,
         ushort port2Universe);
-    public delegate void EtherGateLevelHandler(ushort percent);
-    public delegate void EtherGatePresetHandler(ushort active);
+    public delegate void EtherGateLevelHandler(ushort index, ushort percent);
+    public delegate void EtherGatePresetHandler(ushort index, ushort active);
 
     public class EtherGateControllerBind
     {
@@ -85,6 +85,15 @@ namespace EnttecEtherGate
                 _owner.SetUniverse(port, universe);
         }
 
+        public void RecallPreset(ushort preset)
+        {
+            if (_owner == null)
+                return;
+            if (preset < 1 || preset > 64)
+                return;
+            _owner.RecallPreset(preset - 1, 0, EtherGateChannelFilter.All);
+        }
+
         internal void RaiseConnection(ushort connected, string status)
         {
             EtherGateConnectionHandler handler = _connection;
@@ -118,10 +127,16 @@ namespace EnttecEtherGate
         private EtherGateNode _owner;
         private int _port;
         private int _channel;
+        private ushort _index;
         private EtherGateLevelHandler _level;
 
         public EtherGateChannelBind()
         {
+        }
+
+        public void SetIndex(ushort index)
+        {
+            _index = index;
         }
 
         public void Use(ushort slot, ushort port, ushort channel)
@@ -179,7 +194,7 @@ namespace EnttecEtherGate
             EtherGateLevelHandler handler = _level;
             if (handler == null)
                 return;
-            try { handler(percent); }
+            try { handler(_index, percent); }
             catch (Exception ex) { ErrorLog.Error("EtherGate level callback: {0}", ex.Message); }
         }
 
@@ -187,23 +202,107 @@ namespace EnttecEtherGate
         internal int Channel { get { return _channel; } }
     }
 
+    internal sealed class EtherGateChannelFilter
+    {
+        private const int Addresses = 512;
+
+        internal static readonly EtherGateChannelFilter All = Parse(null);
+
+        internal readonly bool AllChannels;
+        private readonly HashSet<int> _specific;
+        private readonly HashSet<int> _anyPort;
+
+        private EtherGateChannelFilter(bool allChannels)
+        {
+            AllChannels = allChannels;
+            if (!allChannels)
+            {
+                _specific = new HashSet<int>();
+                _anyPort = new HashSet<int>();
+            }
+        }
+
+        internal static EtherGateChannelFilter Parse(string list)
+        {
+            string text = list == null ? "" : list.Trim();
+            if (text.Length == 0)
+                return new EtherGateChannelFilter(true);
+
+            EtherGateChannelFilter filter = new EtherGateChannelFilter(false);
+            string[] tokens = text.Split(',');
+            for (int i = 0; i < tokens.Length; i++)
+            {
+                string token = tokens[i].Trim();
+                if (token.Length == 0)
+                    continue;
+                int colon = token.IndexOf(':');
+                int slash = token.IndexOf('/');
+                int sep = colon >= 0 ? colon : slash;
+                if (sep >= 0)
+                {
+                    int port;
+                    int channel;
+                    if (!int.TryParse(token.Substring(0, sep).Trim(), out port))
+                        continue;
+                    if (!int.TryParse(token.Substring(sep + 1).Trim(), out channel))
+                        continue;
+                    if ((port != 1 && port != 2) || channel < 1 || channel > Addresses)
+                        continue;
+                    filter._specific.Add(((port - 1) * Addresses) + (channel - 1));
+                }
+                else
+                {
+                    int channel;
+                    if (!int.TryParse(token, out channel))
+                        continue;
+                    if (channel < 1 || channel > Addresses)
+                        continue;
+                    filter._anyPort.Add(channel - 1);
+                }
+            }
+            return filter;
+        }
+
+        internal bool Allows(int port, int channel)
+        {
+            if (AllChannels)
+                return true;
+            if (_anyPort.Contains(channel))
+                return true;
+            return _specific.Contains((port * Addresses) + channel);
+        }
+    }
+
     public class EtherGatePresetBind
     {
         private EtherGateNode _owner;
         private int _index;
+        private ushort _row;
         private EtherGatePresetHandler _active;
+        private EtherGateChannelFilter _channels = EtherGateChannelFilter.All;
+        internal ushort Reported;
+
+        internal EtherGateChannelFilter Channels
+        {
+            get { return _channels; }
+        }
 
         public EtherGatePresetBind()
         {
+        }
+
+        public void SetRow(ushort row)
+        {
+            _row = row;
         }
 
         public void Use(ushort slot, ushort preset)
         {
             int index = preset;
             if (index < 1)
-                index = 1;
-            if (index > 16)
-                index = 16;
+                return;
+            if (index > 64)
+                index = 64;
             index--;
 
             EtherGateNode node = EtherGateNode.Get(slot);
@@ -233,16 +332,27 @@ namespace EnttecEtherGate
                 _owner.DetachPreset(this);
         }
 
+        public void SetChannels(string list)
+        {
+            _channels = EtherGateChannelFilter.Parse(list);
+        }
+
         public void Save()
         {
             if (_owner != null)
-                _owner.SavePreset(_index);
+                _owner.SavePreset(_index, _channels);
         }
 
         public void Recall(ushort fadeTenths)
         {
             if (_owner != null)
-                _owner.RecallPreset(_index, fadeTenths);
+                _owner.RecallPreset(_index, fadeTenths, _channels);
+        }
+
+        public void Erase()
+        {
+            if (_owner != null)
+                _owner.ErasePreset(_index, _channels);
         }
 
         public void Publish()
@@ -256,7 +366,7 @@ namespace EnttecEtherGate
             EtherGatePresetHandler handler = _active;
             if (handler == null)
                 return;
-            try { handler(active); }
+            try { handler(_row, active); }
             catch (Exception ex) { ErrorLog.Error("EtherGate preset callback: {0}", ex.Message); }
         }
 
@@ -267,7 +377,7 @@ namespace EnttecEtherGate
     {
         private const int Ports = 2;
         private const int Channels = 512;
-        private const int Presets = 16;
+        private const int Presets = 64;
         private const int ArtNetPort = 6454;
         private const int TickMs = 50;
         private const int PollTicks = 600;
@@ -436,7 +546,8 @@ namespace EnttecEtherGate
             ushort active;
             lock (_sync)
             {
-                active = _presets[bind.Index].Active ? (ushort)1 : (ushort)0;
+                active = MatchFlagLocked(_presets[bind.Index], bind.Channels);
+                bind.Reported = active;
             }
             bind.Raise(active);
         }
@@ -527,58 +638,69 @@ namespace EnttecEtherGate
             RaisePresets(presetListeners, presetActive);
         }
 
-        internal void SavePreset(int index)
+        internal void SavePreset(int index, EtherGateChannelFilter filter)
         {
-            bool stored = false;
             bool ioFailed = false;
             EtherGatePresetBind[] listeners = null;
+            ushort[] flags = null;
+            if (filter == null)
+                filter = EtherGateChannelFilter.All;
 
             lock (_sync)
             {
                 StoredPreset preset = _presets[index];
-                preset.Members.Clear();
+                if (filter.AllChannels)
+                    preset.Members.Clear();
                 foreach (KeyValuePair<int, List<EtherGateChannelBind>> pair in _channels)
                 {
                     if (pair.Value == null || pair.Value.Count == 0)
                         continue;
                     int port = pair.Key / Channels;
                     int channel = pair.Key % Channels;
-                    PresetMember member = new PresetMember();
-                    member.Port = port;
-                    member.Channel = channel;
-                    member.Percent = _percent[port, channel];
-                    member.Dmx = _dmx[port, channel];
-                    preset.Members.Add(member);
+                    if (!filter.Allows(port, channel))
+                        continue;
+                    if (filter.AllChannels)
+                    {
+                        PresetMember member = new PresetMember();
+                        member.Port = port;
+                        member.Channel = channel;
+                        member.Percent = _percent[port, channel];
+                        member.Dmx = _dmx[port, channel];
+                        preset.Members.Add(member);
+                    }
+                    else
+                    {
+                        UpsertMember(preset, port, channel, _percent[port, channel], _dmx[port, channel]);
+                    }
                 }
                 preset.Stored = preset.Members.Count > 0;
-                preset.Active = preset.Stored;
-                stored = preset.Stored;
+                preset.Active = PresetMatchesLocked(preset);
                 listeners = CopyPresetsLocked(index);
+                flags = FlagsForLocked(listeners, preset);
             }
 
             if (!SavePresets())
                 ioFailed = true;
 
-            if (listeners != null)
-            {
-                for (int i = 0; i < listeners.Length; i++)
-                    listeners[i].Raise(stored ? (ushort)1 : (ushort)0);
-            }
+            RaisePresets(listeners, flags);
 
             if (ioFailed)
                 SetLink(_connected, "Preset did not persist");
         }
 
-        internal void RecallPreset(int index, ushort fadeTenths)
+        internal void RecallPreset(int index, ushort fadeTenths, EtherGateChannelFilter filter)
         {
             int fadeMs = fadeTenths;
             if (fadeMs > 6000)
                 fadeMs = 6000;
             fadeMs *= 100;
 
+            if (filter == null)
+                filter = EtherGateChannelFilter.All;
+
             List<LevelNote> notes = new List<LevelNote>();
             EtherGatePresetBind[] listeners = null;
-            ushort active = 0;
+            ushort[] flags = null;
 
             lock (_sync)
             {
@@ -587,6 +709,7 @@ namespace EnttecEtherGate
                 {
                     preset.Active = false;
                     listeners = CopyPresetsLocked(index);
+                    flags = FlagsForLocked(listeners, preset);
                 }
                 else
                 {
@@ -594,6 +717,8 @@ namespace EnttecEtherGate
                     for (int i = 0; i < preset.Members.Count; i++)
                     {
                         PresetMember member = preset.Members[i];
+                        if (!filter.Allows(member.Port, member.Channel))
+                            continue;
                         CancelFadeLocked(member.Port, member.Channel);
                         if (fadeMs <= 0 || _dmx[member.Port, member.Channel] == member.Dmx)
                         {
@@ -620,13 +745,52 @@ namespace EnttecEtherGate
                     }
                     preset.Active = fadeMs <= 0 && PresetMatchesLocked(preset);
                     listeners = CopyPresetsLocked(index);
-                    active = preset.Active ? (ushort)1 : (ushort)0;
+                    flags = FlagsForLocked(listeners, preset);
                 }
             }
 
             for (int i = 0; i < notes.Count; i++)
                 RaiseLevels(notes[i].Listeners, notes[i].Percent);
-            RaisePresets(listeners, active);
+            RaisePresets(listeners, flags);
+        }
+
+        internal void ErasePreset(int index, EtherGateChannelFilter filter)
+        {
+            bool ioFailed = false;
+            EtherGatePresetBind[] listeners = null;
+            ushort[] flags = null;
+            if (filter == null)
+                filter = EtherGateChannelFilter.All;
+
+            lock (_sync)
+            {
+                StoredPreset preset = _presets[index];
+                if (filter.AllChannels)
+                {
+                    preset.Members.Clear();
+                }
+                else
+                {
+                    for (int i = preset.Members.Count - 1; i >= 0; i--)
+                    {
+                        PresetMember member = preset.Members[i];
+                        if (filter.Allows(member.Port, member.Channel))
+                            preset.Members.RemoveAt(i);
+                    }
+                }
+                preset.Stored = preset.Members.Count > 0;
+                preset.Active = PresetMatchesLocked(preset);
+                listeners = CopyPresetsLocked(index);
+                flags = FlagsForLocked(listeners, preset);
+            }
+
+            if (!SavePresets())
+                ioFailed = true;
+
+            RaisePresets(listeners, flags);
+
+            if (ioFailed)
+                SetLink(_connected, "Preset did not persist");
         }
 
         private void OnProgramStatus(eProgramStatusEventType type)
@@ -1486,22 +1650,25 @@ namespace EnttecEtherGate
                 StoredPreset preset = _presets[i];
                 if (!preset.Stored || !PresetHasChannel(preset, port, channel))
                     continue;
-                bool now = PresetMatchesLocked(preset);
-                if (now == preset.Active)
-                    continue;
-                preset.Active = now;
+                preset.Active = PresetMatchesLocked(preset);
                 if (_presetBinds[i].Count == 0)
                     continue;
-                if (changed == null)
-                {
-                    changed = new List<EtherGatePresetBind>();
-                    flags = new List<ushort>();
-                }
                 EtherGatePresetBind[] binds = _presetBinds[i].ToArray();
-                ushort flag = now ? (ushort)1 : (ushort)0;
                 for (int b = 0; b < binds.Length; b++)
                 {
-                    changed.Add(binds[b]);
+                    EtherGatePresetBind bind = binds[b];
+                    if (!bind.Channels.Allows(port, channel))
+                        continue;
+                    ushort flag = MatchFlagLocked(preset, bind.Channels);
+                    if (flag == bind.Reported)
+                        continue;
+                    bind.Reported = flag;
+                    if (changed == null)
+                    {
+                        changed = new List<EtherGatePresetBind>();
+                        flags = new List<ushort>();
+                    }
+                    changed.Add(bind);
                     flags.Add(flag);
                 }
             }
@@ -1527,15 +1694,59 @@ namespace EnttecEtherGate
 
         private bool PresetMatchesLocked(StoredPreset preset)
         {
+            return MatchFlagLocked(preset, EtherGateChannelFilter.All) == 1;
+        }
+
+        private ushort MatchFlagLocked(StoredPreset preset, EtherGateChannelFilter filter)
+        {
+            if (filter == null)
+                filter = EtherGateChannelFilter.All;
             if (!preset.Stored || preset.Members.Count == 0)
-                return false;
+                return 0;
+            bool any = false;
             for (int i = 0; i < preset.Members.Count; i++)
             {
                 PresetMember member = preset.Members[i];
+                if (!filter.Allows(member.Port, member.Channel))
+                    continue;
+                any = true;
                 if (_dmx[member.Port, member.Channel] != member.Dmx)
-                    return false;
+                    return 0;
             }
-            return true;
+            return any ? (ushort)1 : (ushort)0;
+        }
+
+        private ushort[] FlagsForLocked(EtherGatePresetBind[] listeners, StoredPreset preset)
+        {
+            if (listeners == null)
+                return null;
+            ushort[] flags = new ushort[listeners.Length];
+            for (int i = 0; i < listeners.Length; i++)
+            {
+                ushort flag = MatchFlagLocked(preset, listeners[i].Channels);
+                listeners[i].Reported = flag;
+                flags[i] = flag;
+            }
+            return flags;
+        }
+
+        private static void UpsertMember(StoredPreset preset, int port, int channel, ushort percent, byte dmx)
+        {
+            for (int i = 0; i < preset.Members.Count; i++)
+            {
+                PresetMember member = preset.Members[i];
+                if (member.Port != port || member.Channel != channel)
+                    continue;
+                member.Percent = percent;
+                member.Dmx = dmx;
+                return;
+            }
+            PresetMember added = new PresetMember();
+            added.Port = port;
+            added.Channel = channel;
+            added.Percent = percent;
+            added.Dmx = dmx;
+            preset.Members.Add(added);
         }
 
         private void CancelFadeLocked(int port, int channel)

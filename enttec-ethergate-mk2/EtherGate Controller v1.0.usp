@@ -18,6 +18,11 @@ Controller chooses which of 8 gateways this symbol uses. Controller_Override
 is ignored until an analog value arrives. After that, 1-8 selects that
 slot. One Controller symbol per slot.
 
+Preset recalls a preset saved by the Preset symbols on this slot.
+1-64 recalls that preset as a cut. 0 does nothing. An empty preset
+does not move levels. Return the analog to 0 before sending the same
+number again.
+
 The mode strings come from the HTTP poll. Until a body is parsed
 they stay at "poll pending" / "unparsed". Streaming does not wait
 on that poll.
@@ -30,21 +35,24 @@ on that poll.
 #USER_SIMPLSHARP_LIBRARY "EtherGate_v1"
 
 DIGITAL_INPUT	Connect, Disconnect, _SKIP_;
-DIGITAL_OUTPUT	Connected_FB, _SKIP_, _SKIP_;
-
-STRING_INPUT	IP_Address_Override$[64],
-				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_;
-STRING_OUTPUT	_SKIP_,
-				Status$, Node_Name$, Firmware$,
-				Port_1_Mode$, Port_2_Mode$;
+STRING_INPUT	IP_Address_Override$[64];
 ANALOG_INPUT	Port_1_Universe_Override, Port_2_Universe_Override,
+				_SKIP_,
+				Preset, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				_SKIP_,
 				Controller_Override;
 
-INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_;
-STRING_PARAMETER	IP_Address[64];
-INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
-					Port_1_Universe, Port_2_Universe,
+DIGITAL_OUTPUT	Connected_FB, _SKIP_, _SKIP_;
+STRING_OUTPUT	_SKIP_,
+				_SKIP_, _SKIP_,
+				_SKIP_,
+				Status$, Node_Name$, Firmware$, Port_1_Mode$, Port_2_Mode$;
+
+STRING_PARAMETER	_SKIP_, _SKIP_, _SKIP_,
+					IP_Address[64];
+INTEGER_PARAMETER	Port_1_Universe, Port_2_Universe,
+					_SKIP_,
+					_SKIP_,	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 					_SKIP_,
 					Controller;
 
@@ -246,6 +254,15 @@ CHANGE Controller_Override {
 	}
 }
 
+CHANGE Preset {
+	If (Ready = 1) {
+		If (Preset >= 1) {
+			If (Preset <= 64)
+				Session.RecallPreset(Preset);
+		}
+	}
+}
+
 FUNCTION Main () {
 	Port_1_Mode$ = "poll pending";
 	Port_2_Mode$ = "poll pending";
@@ -256,4 +273,8 @@ FUNCTION Main () {
 	OpenSession();
 	WaitForInitializationComplete();
 	Ready = 1;
+	If (Preset >= 1) {
+		If (Preset <= 64)
+			Session.RecallPreset(Preset);
+	}
 }

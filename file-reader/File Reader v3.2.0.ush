@@ -135,8 +135,8 @@
   Cmn122=can share files but operations are serialized.\\- Errors are reported||1
   Cmn123=via Feedback and Crestron console (GenerateUserError).\\- Supports||1
   Cmn124=up to 64 signals per type (expandable to 256); unused signals are||1
-  Cmn125=ignored if zero/empty.\\- Ensure the paired SIMPL# DLL (File Reader.
-  Cmn126=dll) is deployed and referenced correctly.\\- JSON reads accept||1
+  Cmn125=ignored if zero/empty.\\- Ensure the paired SIMPL# library (FileReader20260623.
+  Cmn126=clz) is deployed and referenced correctly.\\- JSON reads accept||1
   Cmn127=industry-standard objects with digitals / analogs / serials arrays||1
   Cmn128=(case-insensitive\\  names, optional nested data/signalData, optional||1
   Cmn129=crc32, shorter arrays, boolean digitals). crc32 is\\  never required||1
@@ -177,18 +177,16 @@
   Cmn164=hard integrity reject), case-insensitive\\  property names, optional||1
   Cmn165=data/signalData wrappers, short arrays, boolean/numeric digital||1
   Cmn166=elements\\- Paired Simpl# source: FileReader20260623.cs (rebuild||1
-  Cmn167=File Reader.clz / .dll after updating)\\\\v3.2.0  7/16/2026  RGW||1
+  Cmn167=FileReader20260623.clz after updating)\\\\v3.2.0  7/16/2026  RGW||1
   Cmn168=/ AI\\- On successful Write, copy Digital/Analog/Serial inputs to||1
-  Cmn169=the corresponding outputs (explicit 0/1 for digitals)\\- Auto-create||1
-  Cmn170=when file is missing and Enable_Auto_Create is high:\\    pulse||1
-  Cmn171=Set_Default_Values → wait Default_Settle_Time → Write (then||1
-  Cmn172=I→O copy on success)\\- Does not overwrite existing files; one||1
-  Cmn173=auto-create attempt per effective path until path changes\\- Intended||1
-  Cmn174=to replace external Not_Exist_FB → load defaults → Write routines||1
-  Cmn175=in SIMPL\\\\v3.2.1  7/16/2026  RGW / AI\\- Enable_Auto_Create now||1
-  Cmn176=also auto-Reads when the file already exists (startup / path change||1
-  Cmn177=restore).\\  Previously only UpdateFileExists ran on restart (Exists_FB||1
-  Cmn178=+ size) with no Read onto outputs.\\
+  Cmn169=the corresponding outputs (explicit 0/1 for digitals)\\- Enable_Auto_Create||1
+  Cmn170=when high:\\    * File missing → Set_Default_Values → wait Default_Settle_Tim
+  Cmn171=e → Write (then I→O copy on success)\\    * File exists →||1
+  Cmn172=automatic Read onto outputs (startup / path change restore)\\- Does||1
+  Cmn173=not overwrite existing files on auto-create; one auto action per||1
+  Cmn174=effective path until path changes\\- Intended to replace external||1
+  Cmn175=Not_Exist → defaults → Write and Exist → Read startup routines||1
+  Cmn176=in SIMPL\\
 [END]
 [BEGIN]
   ObjTp=Symbol
@@ -596,7 +594,7 @@
   SymJam=NonExclusive
   FileName=File Reader v3.2.0.ush
   SIMPLPlusModuleEncoding=0
-  clz1=File Reader
+  clz1=FileReader20260623
 [END]
 [BEGIN]
   ObjTp=Dp

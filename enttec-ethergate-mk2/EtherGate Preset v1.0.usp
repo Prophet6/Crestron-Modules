@@ -1,60 +1,117 @@
 #HELP_BEGIN
 EtherGate Preset v1.0
 
-One preset for every Channel symbol on the selected EtherGate.
+Presets for the Channel rows registered on the selected EtherGate.
 The gateway does not store presets. This module does.
 
-Save stores the current percent of each Channel symbol on that slot.
-Recall fades those channels. Fade_Time is seconds on the symbol
-(0.5s is half a second, 0 is a cut). Fade_Time_Override is tenths
-of a second. It is ignored until an analog value arrives. After that,
-the analog is the fade, and 0 is a cut. 5 is 0.5 seconds. 50 is 5.0 seconds.
+Eight rows. Each row is one preset button.
+Preset, Preset_No, and Preset_FB share that row.
+AllWithAny keeps those three together.
 
-Preset_Override is ignored until an analog value arrives. After that,
-1-16 selects that preset.
+Preset replaces Recall and Save. From the rising edge, in 0.1s steps:
+  Press high                  Preset_FB high, until a blink
+  release before Hold_Time    recall
+  hold for Hold_Time          save, then blink Preset_FB
+  still held at 10s           erase
 
-Active_FB is high when this preset has been stored and every member
-channel is at its stored level. An empty preset does not recall.
+Hold_Time is how long the press must be held to save.
+Default 2.5s, range 0.5s to 9.0s. Time or ticks. 1t = 0.01s.
+Confirmation_Time is the total save blink, shared by every row.
+
+Preset_No on the row is which stored preset that button uses.
+0 is off, and that row does nothing. 1 through 64 select that preset.
+Preset_Trigger recalls any of those 64 by number, using this symbol's
+fade and channel list. 0 does nothing. It does not save or erase.
+Return it to 0 before sending the same number again.
+Preset_Save stores any of those 64 by number, using this symbol's
+channel list. 0 does nothing. It does not recall or erase.
+Return it to 0 before sending the same number again.
+A value present at startup waits until the analog changes.
+
+Fade_Time is seconds on the symbol (0.5s is half a second, 0 is
+a cut). Fade_Time_Override is tenths of a second. It is ignored
+until an analog value arrives. After that, the analog is the fade,
+and 0 is a cut. 5 is 0.5 seconds. 50 is 5.0 seconds.
+
+Channels is the comma-separated list this symbol controls.
+Empty means every defined channel. 12 is channel 12 on either
+port. 1:12 is port 1 channel 12, and 2:12 is port 2. Spaces
+around commas are ignored. A token that is not a channel is
+skipped. 255 characters.
+Channels_Override$ is ignored until a string arrives. After that,
+the serial is the list, and an empty serial means every channel.
+Save with a list writes those channels and leaves the others
+stored. Recall moves only stored channels in the list. A 10s
+hold removes those channels. An empty list saves every defined
+channel, replacing the preset, and a 10s hold clears it.
 
 Controller_Override is ignored until an analog value arrives. After that,
 1-8 selects that slot.
-This symbol is notified only when this preset's active state changes.
 #HELP_END
 
 #HELP_PDF_FILE "EtherGate v1.html"
 #CATEGORY "12"
 #DEFAULT_VOLATILE
+#ENABLE_DYNAMIC
 #ENABLE_STACK_CHECKING
+#DIGITAL_EXPAND AllWithAny
+#ANALOG_SERIAL_EXPAND AllWithAny
 #USER_SIMPLSHARP_LIBRARY "EtherGate_v1"
 
-DIGITAL_INPUT	Recall, Save;
-DIGITAL_OUTPUT	Active_FB, _SKIP_;
+#DEFINE_CONSTANT MaxPresets 8
+#DEFINE_CONSTANT MaxStored 64
+#DEFINE_CONSTANT EraseAt 100
+#DEFINE_CONSTANT BlinkSteps 6
 
-ANALOG_INPUT	Preset_Override, Fade_Time_Override, _SKIP_, Controller_Override;
+/* Rows 1-2   Hold_Time, Confirmation_Time
+ * Rows 3-10  Preset, Preset_No, Preset_FB
+ * Row 11     blank
+ * Row 12     Preset_Trigger
+ * Row 13     Preset_Save
+ * Row 14     blank
+ * Row 15     Fade_Time with Fade_Time_Override
+ * Row 16     Channels with Channels_Override$
+ * Row 17     blank
+ * Row 18     Controller with Controller_Override
+ */
 
-INTEGER_PARAMETER	_SKIP_, _SKIP_, Preset, Fade_Time, _SKIP_, Controller;
+DIGITAL_INPUT	_SKIP_, _SKIP_, Preset[MaxPresets,8];
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, Preset_FB[MaxPresets,8];
 
-#BEGIN_PARAMETER_PROPERTIES Preset
+ANALOG_INPUT	_SKIP_, Preset_Trigger, Preset_Save, _SKIP_, Fade_Time_Override;
+STRING_INPUT	Channels_Override$[255];
+ANALOG_INPUT	_SKIP_, Controller_Override;
+
+INTEGER_PARAMETER	Hold_Time, Confirmation_Time, Preset_No[MaxPresets,8], _SKIP_, _SKIP_, _SKIP_, _SKIP_, Fade_Time;
+STRING_PARAMETER	Channels[255];
+INTEGER_PARAMETER	_SKIP_, Controller;
+
+#BEGIN_PARAMETER_PROPERTIES Hold_Time
+	propValidUnits =		unitTime|unitTicks;
+	propDefaultUnit =		unitTime;
+	propBounds =			0.5s, 9.0s;
+	propDefaultValue =		2.5s;
+	propShortDescription =	"Hold before save";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Confirmation_Time
+	propValidUnits =		unitTime|unitTicks;
+	propDefaultUnit =		unitTime;
+	propDefaultValue =		1.2s;
+	propList =				{0.6s, "0.6s"},
+							{1.2s, "1.2s"},
+							{1.8s, "1.8s"},
+							{2.4s, "2.4s"},
+							{3.0s, "3.0s"};
+	propShortDescription =	"Total save-confirmation blink";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Preset_No
 	propValidUnits =		unitDecimal;
 	propDefaultUnit =		unitDecimal;
-	propDefaultValue =		1d;
-	propList =				{1d, "Preset 1"},
-							{2d, "Preset 2"},
-							{3d, "Preset 3"},
-							{4d, "Preset 4"},
-							{5d, "Preset 5"},
-							{6d, "Preset 6"},
-							{7d, "Preset 7"},
-							{8d, "Preset 8"},
-							{9d, "Preset 9"},
-							{10d, "Preset 10"},
-							{11d, "Preset 11"},
-							{12d, "Preset 12"},
-							{13d, "Preset 13"},
-							{14d, "Preset 14"},
-							{15d, "Preset 15"},
-							{16d, "Preset 16"};
-	propShortDescription =	"Which preset this symbol saves and recalls";
+	propBounds =			0d, 64d;
+	propDefaultValue =		0d;
+	propShortDescription =	"Preset number for this row. 0 is off";
 #END_PARAMETER_PROPERTIES
 
 #BEGIN_PARAMETER_PROPERTIES Fade_Time
@@ -63,6 +120,13 @@ INTEGER_PARAMETER	_SKIP_, _SKIP_, Preset, Fade_Time, _SKIP_, Controller;
 	propBounds =			0.0s, 600.0s;
 	propDefaultValue =		0.0s;
 	propShortDescription =	"Fade time in seconds. 0 is a cut";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Channels
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"";
+	propShortDescription =	"Channels to control. Empty is all";
 #END_PARAMETER_PROPERTIES
 
 #BEGIN_PARAMETER_PROPERTIES Controller
@@ -80,9 +144,11 @@ INTEGER_PARAMETER	_SKIP_, _SKIP_, Preset, Fade_Time, _SKIP_, Controller;
 	propShortDescription =	"Which EtherGate this symbol uses";
 #END_PARAMETER_PROPERTIES
 
-INTEGER Ready, SessionReady, CurrentSlot, CurrentPreset, Hooked, PresetLatch,
-        FadeLatch, ControllerLatch;
-EtherGatePresetBind Bind;
+INTEGER Ready, SessionReady, CurrentSlot, FadeLatch, ChannelsLatch, ControllerLatch,
+        KeepTick, Hooked[MaxPresets], Match[MaxPresets], Elapsed[MaxPresets],
+        DidSave[MaxPresets], BlinkEdges[MaxPresets], BlinkLevel[MaxPresets],
+        BlinkAccum[MaxPresets];
+EtherGatePresetBind Bind[MaxPresets], Trigger;
 
 INTEGER_FUNCTION ResolveSlot () {
 	INTEGER s;
@@ -99,18 +165,14 @@ INTEGER_FUNCTION ResolveSlot () {
 	return (s);
 }
 
-INTEGER_FUNCTION ResolvePreset () {
+INTEGER_FUNCTION ResolveRowPreset (INTEGER i) {
 	INTEGER p;
 
-	If (PresetLatch = 1)
-		p = Preset_Override;
-	Else
-		p = Preset;
-
-	If (p < 1)
-		p = 1;
-	If (p > 16)
-		p = 16;
+	p = Preset_No[i];
+	If (p < 0)
+		p = 0;
+	If (p > MaxStored)
+		p = MaxStored;
 	return (p);
 }
 
@@ -129,48 +191,284 @@ INTEGER_FUNCTION ResolveFade () {
 	return (t);
 }
 
+FUNCTION ApplyChannels () {
+	STRING list$[255];
+	INTEGER i;
+	EtherGatePresetBind row;
+
+	If (ChannelsLatch = 1)
+		list$ = Channels_Override$;
+	Else
+		list$ = Channels;
+	Trigger.SetChannels(list$);
+	For (i = 1 to MaxPresets) {
+		If (IsSignalDefined(Preset[i])) {
+			row = Bind[i];
+			row.SetChannels(list$);
+		}
+	}
+}
+
+FUNCTION ApplyFeedback (INTEGER i) {
+	If (BlinkEdges[i] > 0)
+		Preset_FB[i] = BlinkLevel[i];
+	Else If (Preset[i] = 1)
+		Preset_FB[i] = 1;
+	Else
+		Preset_FB[i] = (Match[i] = 1);
+}
+
+FUNCTION ClearBlink (INTEGER i) {
+	BlinkEdges[i] = 0;
+	BlinkLevel[i] = 0;
+	BlinkAccum[i] = 0;
+}
+
+FUNCTION BeginBlink (INTEGER i) {
+	BlinkEdges[i] = BlinkSteps;
+	BlinkLevel[i] = 0;
+	BlinkAccum[i] = 0;
+	Preset_FB[i] = 0;
+}
+
+FUNCTION AdvanceBlink (INTEGER i) {
+	INTEGER ticks;
+
+	If (BlinkEdges[i] = 0)
+		Return;
+	BlinkAccum[i] = BlinkAccum[i] + 1;
+	/* Hundredths, split across the steps, then counted in 0.1 s ticks */
+	ticks = Confirmation_Time / 10;
+	ticks = ticks / BlinkSteps;
+	If (ticks < 1)
+		ticks = 1;
+	If (BlinkAccum[i] < ticks)
+		Return;
+	BlinkAccum[i] = 0;
+	If (BlinkEdges[i] > 1) {
+		BlinkEdges[i] = BlinkEdges[i] - 1;
+		If (BlinkLevel[i] = 0)
+			BlinkLevel[i] = 1;
+		Else
+			BlinkLevel[i] = 0;
+		Preset_FB[i] = BlinkLevel[i];
+	}
+	Else {
+		BlinkEdges[i] = 0;
+		BlinkLevel[i] = 0;
+		ApplyFeedback(i);
+	}
+}
+
+FUNCTION TickRow (INTEGER i) {
+	INTEGER started;
+	EtherGatePresetBind row;
+
+	started = 0;
+	If (Preset_No[i] < 1)
+		Return;
+	If (Preset[i] = 1) {
+		Elapsed[i] = Elapsed[i] + 1;
+		/* Time and ticks are both hundredths; each step here is 0.1 s */
+		If ((DidSave[i] = 0) && (Elapsed[i] >= (Hold_Time / 10))) {
+			DidSave[i] = 1;
+			row = Bind[i];
+			row.Save();
+			BeginBlink(i);
+			started = 1;
+		}
+		If (Elapsed[i] = EraseAt) {
+			DidSave[i] = 1;
+			ClearBlink(i);
+			row = Bind[i];
+			row.Erase();
+		}
+		Else {
+			KeepTick = 1;
+		}
+	}
+	If ((BlinkEdges[i] > 0) && (started = 0)) {
+		AdvanceBlink(i);
+		KeepTick = 1;
+	}
+}
+
+FUNCTION OnTick () {
+	INTEGER i;
+
+	KeepTick = 0;
+	For (i = 1 to MaxPresets) {
+		If (IsSignalDefined(Preset[i]))
+			TickRow(i);
+	}
+}
+
+FUNCTION ArmTick () {
+	Wait (10, Tick) {
+		OnTick();
+		If (KeepTick = 1)
+			ArmTick();
+	}
+}
+
+FUNCTION BeginPress (INTEGER i) {
+	If (Preset_No[i] < 1)
+		Return;
+	Elapsed[i] = 0;
+	DidSave[i] = 0;
+	ClearBlink(i);
+	ApplyFeedback(i);
+	If (KeepTick = 0) {
+		KeepTick = 1;
+		ArmTick();
+	}
+}
+
+FUNCTION EndPress (INTEGER i) {
+	EtherGatePresetBind row;
+
+	If (Preset_No[i] < 1)
+		Return;
+	If (DidSave[i] = 0) {
+		row = Bind[i];
+		row.Recall(ResolveFade());
+	}
+	ApplyFeedback(i);
+}
+
 FUNCTION OpenSession () {
-	INTEGER s, p;
+	INTEGER s, i;
+	EtherGatePresetBind row;
 
 	s = ResolveSlot();
-	p = ResolvePreset();
-	If (Hooked = 0) {
-		RegisterDelegate(Bind, OnActiveChanged, HandleActive);
-		Hooked = 1;
+	ApplyChannels();
+	For (i = 1 to MaxPresets) {
+		If (IsSignalDefined(Preset[i])) {
+			row = Bind[i];
+			If (Hooked[i] = 0) {
+				row.SetRow(i);
+				RegisterDelegate(row, OnActiveChanged, HandleActive);
+				Hooked[i] = 1;
+			}
+			If (ResolveRowPreset(i) > 0) {
+				row.Use(s, ResolveRowPreset(i));
+				row.Publish();
+				If (Ready = 1) {
+					If (Preset[i] = 1)
+						BeginPress(i);
+					Else
+						ApplyFeedback(i);
+				}
+			}
+			Else {
+				Match[i] = 0;
+				ClearBlink(i);
+				Preset_FB[i] = 0;
+			}
+		}
 	}
-	If ((SessionReady = 0) || (s <> CurrentSlot) || (p <> CurrentPreset)) {
-		CurrentSlot = s;
-		CurrentPreset = p;
-		Bind.Use(s, p);
-		SessionReady = 1;
-		Bind.Publish();
+}
+
+FUNCTION FireTrigger () {
+	INTEGER p, s;
+	STRING list$[255];
+
+	p = Preset_Trigger;
+	If (p < 1)
+		Return;
+	If (p > MaxStored)
+		Return;
+	s = ResolveSlot();
+	If (ChannelsLatch = 1)
+		list$ = Channels_Override$;
+	Else
+		list$ = Channels;
+	Trigger.SetChannels(list$);
+	Trigger.Use(s, p);
+	Trigger.Recall(ResolveFade());
+}
+
+FUNCTION FireSave () {
+	INTEGER p, s;
+	STRING list$[255];
+
+	p = Preset_Save;
+	If (p < 1)
+		Return;
+	If (p > MaxStored)
+		Return;
+	s = ResolveSlot();
+	If (ChannelsLatch = 1)
+		list$ = Channels_Override$;
+	Else
+		list$ = Channels;
+	Trigger.SetChannels(list$);
+	Trigger.Use(s, p);
+	Trigger.Save();
+}
+
+CALLBACK FUNCTION HandleActive (INTEGER index, INTEGER active) {
+	If (index >= 1) {
+		If (index <= MaxPresets) {
+			Match[index] = active;
+			ApplyFeedback(index);
+		}
 	}
 }
 
-CALLBACK FUNCTION HandleActive (INTEGER active) {
-	Active_FB = (active = 1);
-}
+PUSH Preset {
+	INTEGER i;
 
-CHANGE Recall {
-	If ((Ready = 1) && (Recall = 1))
-		Bind.Recall(ResolveFade());
-}
-
-CHANGE Save {
-	If ((Ready = 1) && (Save = 1))
-		Bind.Save();
-}
-
-CHANGE Preset_Override {
 	If (Ready = 1) {
-		PresetLatch = 1;
-		OpenSession();
+		i = GetLastModifiedArrayIndex();
+		If (i >= 1) {
+			If (i <= MaxPresets)
+				BeginPress(i);
+		}
 	}
+}
+
+RELEASE Preset {
+	INTEGER i;
+
+	If (Ready = 1) {
+		i = GetLastModifiedArrayIndex();
+		If (i >= 1) {
+			If (i <= MaxPresets)
+				EndPress(i);
+		}
+	}
+}
+
+CHANGE Preset_Trigger {
+	If (Ready = 1)
+		FireTrigger();
+}
+
+CHANGE Preset_Save {
+	If (Ready = 1)
+		FireSave();
 }
 
 CHANGE Fade_Time_Override {
 	If (Ready = 1)
 		FadeLatch = 1;
+}
+
+CHANGE Channels_Override$ {
+	INTEGER i;
+	EtherGatePresetBind row;
+
+	If (Ready = 1) {
+		ChannelsLatch = 1;
+		ApplyChannels();
+		For (i = 1 to MaxPresets) {
+			If (IsSignalDefined(Preset[i])) {
+				row = Bind[i];
+				row.Publish();
+			}
+		}
+	}
 }
 
 CHANGE Controller_Override {
@@ -184,4 +482,5 @@ FUNCTION Main () {
 	OpenSession();
 	WaitForInitializationComplete();
 	Ready = 1;
+	FireTrigger();
 }

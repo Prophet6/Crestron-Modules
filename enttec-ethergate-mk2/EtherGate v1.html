@@ -158,13 +158,13 @@
 </nav>
 <main>
   <h2 id="start">Start here</h2>
-  <p class="lead">Drop one Controller for each physical gateway, one Channel for each lighting load, and one Preset for each preset you want to save and recall. All three must use the same controller number to talk to the same gateway.</p>
+  <p class="lead">Drop one Controller for each physical gateway, one Channel for the loads on a port, and one Preset for each preset you want to save and recall. All three must use the same controller number to talk to the same gateway.</p>
   <ol class="steps">
     <li>Keep <code>EtherGate_v1.clz</code> in the same folder as these modules. The program will not link without it.</li>
     <li>On the gateway, set each port you drive to <strong>DMX Out</strong> (RDM is fine) and protocol <strong>Art-Net</strong>. Give the node a static address, or a DHCP reservation that never moves.</li>
     <li>Add <span class="sig">EtherGate Controller v1.0</span>. Set <span class="sig">IP_Address</span> and <span class="sig">Controller</span> (1 through 8). Set <span class="sig">Port_1_Universe</span> and <span class="sig">Port_2_Universe</span> to the universes configured on the node. Hold <span class="sig">Connect</span> high.</li>
-    <li>Add one <span class="sig">EtherGate Channel v1.0</span> per load. Set <span class="sig">Port</span>, <span class="sig">Channel</span>, and the same <span class="sig">Controller</span>. Drive <span class="sig">Level</span> from a fader.</li>
-    <li>Add <span class="sig">EtherGate Preset v1.0</span> symbols for the presets. Same <span class="sig">Controller</span>. Pulse <span class="sig">Save</span> to capture the current faders. Pulse <span class="sig">Recall</span> to bring them back.</li>
+    <li>Add <span class="sig">EtherGate Channel v1.0</span>. Set <span class="sig">Port</span> and the same <span class="sig">Controller</span>. Expand a row for each load, set that row's <span class="sig">Channel_ID</span>, and drive <span class="sig">Channel</span> from a fader.</li>
+    <li>Add <span class="sig">EtherGate Preset v1.0</span> symbols for the presets. Same <span class="sig">Controller</span>. A short press of <span class="sig">Preset</span> recalls. Holding it saves, then <span class="sig">Preset_FB</span> blinks.</li>
   </ol>
   <div class="note">
     Press F1 on any of these symbols in SIMPL Windows to open this page. Leave <code>EtherGate v1.html</code> next to the <code>.usp</code> files.
@@ -178,17 +178,17 @@
     </article>
     <article>
       <h3>Channel</h3>
-      <p>One DMX address. The analog is percent. Full scale, 65535, is DMX 255.</p>
+      <p>Up to 64 DMX addresses on one port. Each row is percent. Full scale, 65535, is DMX 255.</p>
     </article>
     <article>
       <h3>Preset</h3>
-      <p>A preset made of every Channel symbol on that gateway. The gateway itself stores nothing.</p>
+      <p>One preset for that gateway. A short press recalls. A hold saves and blinks the button. The gateway itself stores nothing.</p>
     </article>
   </div>
   <p>The DIN EtherGate is a two-universe Ethernet-to-DMX gateway. It does not hold scenes, cues, or shows. Those live in the Crestron program. Up to eight gateways can run at once. Each one is a numbered slot.</p>
 
   <h2 id="slot">Which gateway</h2>
-  <p>Every symbol has a <span class="sig">Controller</span> parameter at the bottom, with a list from Controller 1 to Controller 8. The default is 1.</p>
+  <p>Every symbol has a <span class="sig">Controller</span> parameter, with a list from Controller 1 to Controller 8. The default is 1. On Channel it sits above the load rows.</p>
   <p>Every override input uses its parameter until a value arrives on that input. After the first value, that input is in charge, and 0 is a real value. An input left unwired never takes over. Use one Controller symbol per slot. Two Controller symbols on the same number will fight over the address.</p>
   <div class="card">
     <strong>Same number, same gateway.</strong> A Channel or Preset only affects the gateway selected on that symbol. A preset saved on Controller 1 does not include channels that are pointed at Controller 2.
@@ -215,51 +215,56 @@
       <tr><td class="sig">Port_2_Universe_Override</td><td>Analog in</td><td>Same rule as port 1.</td></tr>
       <tr><td class="sig">Controller</td><td>Parameter</td><td>Slot 1–8. Bottom parameter.</td></tr>
       <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
+      <tr><td class="sig">Preset</td><td>Analog in</td><td>Recalls a preset saved on this slot. 1–64 selects that preset and recalls it as a cut. 0 does nothing. An empty preset does not move levels. Return the analog to 0 before sending the same number again.</td></tr>
     </tbody>
   </table>
   <p>While connected, the library sends a full 512-channel Art-Net packet for each port about 20 times a second. The gateway refreshes the DMX jacks on its own. If the stream stops, fixtures drop out.</p>
   <p>A separate poll reads the node’s web page so the name and mode strings can fill in. Lighting does not wait on that poll. The published command set is the DIN EtherGate (SKU 71030) API. The MK2 (SKU 71031) has a user manual and no separate API document, so the first poll from a live unit is what confirms the body format.</p>
 
   <h2 id="channel">Channel</h2>
-  <p><span class="sig">EtherGate Channel v1.0</span> is one load. Place one symbol per DMX address you intend to control.</p>
+  <p><span class="sig">EtherGate Channel v1.0</span> is a run of loads on one port. It opens with one row. Expand that row for each additional load, up to 64.</p>
   <table>
     <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
     <tbody>
-      <tr><td class="sig">Port</td><td>Parameter</td><td>Port 1 or Port 2. Default Port 1.</td></tr>
-      <tr><td class="sig">Channel</td><td>Parameter</td><td>DMX address 1–512. Default 1. This is the fixture address, not a zero-based index.</td></tr>
-      <tr><td class="sig">Level</td><td>Analog in</td><td>Percent. 0 is off. 65535 is DMX 255.</td></tr>
-      <tr><td class="sig">Level_FB</td><td>Analog out</td><td>The live percent, including while a preset is fading.</td></tr>
-      <tr><td class="sig">Controller</td><td>Parameter</td><td>Which gateway. Bottom parameter.</td></tr>
-      <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
+      <tr><td class="sig">Port</td><td>Parameter</td><td>Port 1 or Port 2. Default Port 1. Shared by every row.</td></tr>
+      <tr><td class="sig">Controller</td><td>Parameter</td><td>Which gateway. Sits above the load rows.</td></tr>
+      <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot. Same row as Controller.</td></tr>
+      <tr><td class="sig">Channel</td><td>Analog in</td><td>Percent for this row. 0 is off. 65535 is DMX 255. Expand for another load.</td></tr>
+      <tr><td class="sig">Channel_ID</td><td>Parameter</td><td>DMX address 1–512 for this row. Default 1. Same row as Channel and Channel_FB.</td></tr>
+      <tr><td class="sig">Channel_FB</td><td>Analog out</td><td>The live percent for this row, including while a preset is fading. Same row as Channel.</td></tr>
     </tbody>
   </table>
-  <p>A level change writes that one address. The next Art-Net packet carries it. This symbol only wakes for its own port and channel. A move on another load does not run it.</p>
-  <p>Writing <span class="sig">Level</span> while a fade is running on that address cancels the fade for that address only. The newest command wins.</p>
+  <p>A change on <span class="sig">Channel</span> writes that row's <span class="sig">Channel_ID</span>. The next Art-Net packet carries it. This symbol only wakes for its own port and addresses. A move on another load does not run these rows.</p>
+  <p>Writing <span class="sig">Channel</span> while a fade is running on that address cancels the fade for that address only. The newest command wins.</p>
 
   <h2 id="preset">Preset</h2>
-  <p><span class="sig">EtherGate Preset v1.0</span> is one preset. The preset is the set of Channel symbols on the same controller slot, frozen at the moment you save.</p>
+  <p><span class="sig">EtherGate Preset v1.0</span> holds the presets for the Channel rows on the same controller slot. The gateway does not store them. This module does.</p>
+  <p>Eight rows follow <span class="sig">Hold_Time</span> and <span class="sig">Confirmation_Time</span>. Each of those rows is <span class="sig">Preset</span>, <span class="sig">Preset_No</span>, and <span class="sig">Preset_FB</span> together. A blank row follows those buttons. <span class="sig">Preset_Trigger</span> is the next row, and <span class="sig">Preset_Save</span> is the row under that. A blank row follows, then <span class="sig">Fade_Time</span> with <span class="sig">Fade_Time_Override</span>, <span class="sig">Channels</span> with <span class="sig">Channels_Override$</span>, another blank row, and <span class="sig">Controller</span> with <span class="sig">Controller_Override</span>.</p>
   <table>
     <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
     <tbody>
-      <tr><td class="sig">Recall</td><td>Digital in</td><td>Rising edge fades every stored member to its saved level.</td></tr>
-      <tr><td class="sig">Save</td><td>Digital in</td><td>Rising edge stores the live percent of every Channel symbol on this slot.</td></tr>
-      <tr><td class="sig">Active_FB</td><td>Digital out</td><td>High when this preset has been saved and every stored address matches it. A later fader move clears it. More than one preset can match. An empty preset stays low.</td></tr>
-      <tr><td class="sig">Preset</td><td>Parameter</td><td>Which of 16 presets this symbol uses. Default Preset 1.</td></tr>
-      <tr><td class="sig">Preset_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–16 selects that preset.</td></tr>
+      <tr><td class="sig">Preset</td><td>Digital in</td><td>The button for this row. Release before <span class="sig">Hold_Time</span> recalls. Hold for <span class="sig">Hold_Time</span> saves. Still holding at 10 seconds erases. Same row as Preset_No and Preset_FB.</td></tr>
+      <tr><td class="sig">Preset_No</td><td>Parameter</td><td>Which stored preset this row uses. 0 is off. 1–64 selects that preset. Default 0. Same row as Preset and Preset_FB.</td></tr>
+      <tr><td class="sig">Preset_FB</td><td>Digital out</td><td>High while this row's button is held. A save blinks it, then it stays high when every stored channel in this symbol's list still matches. Same row as Preset.</td></tr>
+      <tr><td class="sig">Preset_Trigger</td><td>Analog in</td><td>Recalls any stored preset 1–64, using this symbol's fade and channel list. 0 does nothing. It does not save or erase. Return the analog to 0 before sending the same number again.</td></tr>
+      <tr><td class="sig">Preset_Save</td><td>Analog in</td><td>Saves any stored preset 1–64, using this symbol's channel list. 0 does nothing. It does not recall or erase. Return the analog to 0 before sending the same number again. A value present at startup waits until the analog changes.</td></tr>
+      <tr><td class="sig">Hold_Time</td><td>Parameter</td><td>How long a press must be held to save. Default 2.5s. Range 0.5s to 9.0s. Shared by every row.</td></tr>
+      <tr><td class="sig">Confirmation_Time</td><td>Parameter</td><td>Total length of the save blink. Default 1.2s. Choices are 0.6s, 1.2s, 1.8s, 2.4s, and 3.0s. The blink is off, on, off, on, off, on across that time.</td></tr>
       <tr><td class="sig">Fade_Time</td><td>Parameter</td><td>Seconds, typed on the symbol. Default 0, a cut. 0.5s is half a second. Maximum 600.0s.</td></tr>
       <tr><td class="sig">Fade_Time_Override</td><td>Analog in</td><td>Tenths of a second. Ignored until a value arrives. After that, this analog is the fade, and 0 is a cut. 5 is 0.5 seconds. 50 is 5.0 seconds.</td></tr>
+      <tr><td class="sig">Channels</td><td>Parameter</td><td>Comma-separated channels this symbol controls. Empty means every defined channel. <code>12</code> is channel 12 on either port. <code>1:12</code> is port 1 channel 12, and <code>2:12</code> is port 2. 255 characters.</td></tr>
+      <tr><td class="sig">Channels_Override$</td><td>Serial in</td><td>Ignored until a string arrives. After that, this serial is the list, and an empty serial means every defined channel.</td></tr>
       <tr><td class="sig">Controller</td><td>Parameter</td><td>Which gateway. Bottom parameter.</td></tr>
       <tr><td class="sig">Controller_Override</td><td>Analog in</td><td>Ignored until a value arrives. After that, 1–8 selects that slot.</td></tr>
     </tbody>
   </table>
-
   <h3>How a preset learns its channels</h3>
-  <p>The Preset symbol does not have a channel list of its own. Each Channel symbol registers itself with the core when the program starts, under its port and DMX address, on the slot it is pointed at.</p>
-  <p>Save walks that registration and stores one record per address that still has at least one Channel symbol: the port, the address, and the percent that is live right then. An address with no Channel symbol is not part of the preset and is not moved on recall.</p>
+  <p>Each Channel symbol registers itself with the core when the program starts, under its port and DMX address, on the slot it is pointed at. <span class="sig">Channels</span> chooses which of those addresses this symbol controls.</p>
+  <p>An empty list saves every defined address and replaces the preset. A list writes only those addresses and leaves any other stored addresses in place. Recall moves only stored addresses that are in the list. Holding the button for 10 seconds removes the listed addresses; with an empty list, that hold clears the preset. An address with no Channel symbol is not written on save.</p>
   <p>Two Channel symbols on the same port and address count once. A Channel symbol you add after a save is not in that preset until you save again. A symbol you delete stays in a preset that was already saved, and recall will still drive that DMX address.</p>
   <p>Presets are written to <code>\user\EtherGate\slotN.presets</code> on the processor. They come back after a reboot. If the file cannot be written, the Controller <span class="sig">Status$</span> reports that the preset did not persist. The live levels still run.</p>
   <div class="note">
-    Recall only touches addresses that were stored. Other DMX channels on the universe stay where they are.
+    Recall only touches stored addresses that are in this symbol's list. Other DMX channels stay where they are.
   </div>
 
   <h2 id="levels">Levels and fades</h2>
@@ -272,8 +277,8 @@
       <tr><td>65535</td><td>255, full</td></tr>
     </tbody>
   </table>
-  <p>A fade steps from the live level to the stored level. <span class="sig">Level_FB</span> on each member channel follows the ramp, so a gauge moves during the recall. Time is in tenths of a second on the Preset symbol. Zero is a cut. The core will not fade longer than 10 minutes.</p>
-  <p>Active feedback compares the live DMX value with the value that was stored. It is high only for a preset that was saved and still matches. Moving any member channel drops that feedback. After the faders sit still, a preset that happens to match will light again.</p>
+  <p>A fade steps from the live level to the stored level. <span class="sig">Channel_FB</span> on each member channel follows the ramp, so a gauge moves during the recall. Time is in tenths of a second on the Preset symbol. Zero is a cut. The core will not fade longer than 10 minutes.</p>
+  <p><span class="sig">Preset_FB</span>, once the press is released and any save blink has finished, compares the live DMX value with the value that was stored. It is high only when the preset was saved and every stored channel in this symbol's list still matches. Moving one of those channels drops that feedback. A channel named in the list but never saved does not hold the feedback low. After the faders sit still, a preset that happens to match will light again.</p>
 
   <h2 id="node">The gateway</h2>
   <p>Before the Controller can drive fixtures, the node has to be commissioned for output.</p>
