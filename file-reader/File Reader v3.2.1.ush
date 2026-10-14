@@ -61,7 +61,7 @@
   Cmn48=the first name alphabetically\\- No match keeps the exact name,||1
   Cmn49=so auto-create can write config.json\\- Filename_FB reports the||1
   Cmn50=selected file name with its extension\\- Paired Simpl# source: FileReader20261013
-  Cmn51=.cs\\
+  Cmn51=.cs. Library FileReader_v3\\
 [END]
 [BEGIN]
   ObjTp=Symbol
@@ -473,7 +473,7 @@
   SymJam=NonExclusive
   FileName=File Reader v3.2.1.ush
   SIMPLPlusModuleEncoding=0
-  clz1=FileReader20261013
+  clz1=FileReader_v3
 [END]
 [BEGIN]
   ObjTp=Dp

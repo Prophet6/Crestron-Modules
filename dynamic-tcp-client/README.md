@@ -12,6 +12,12 @@ Crestron SIMPL+ / Simpl# **TCP client** for **4-Series** processors (RMC4, CP4, 
 
 This is the outbound counterpart to [TCP Server with Authentication](../tcp-server-with-authentication/). Bench the client from a PC with [Testing-Tools](https://github.com/Prophet6/Testing-Tools) (`start-tcp-server.bat`). This project is not affiliated with Crestron Electronics.
 
+<!-- screenshots -->
+## Screenshots
+
+![Screenshot 1](Screenshot%201.png)
+
+
 ---
 
 ## Load
@@ -106,6 +112,12 @@ copy "Dynamic TCP Client\bin\Release\Dynamic_TCP_Client.clz" ..
 Then recompile the `.usp` file (step 2 above).
 
 ---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.0 | 2026-09-02 | Initial public module |
 
 ## License / disclaimer
 

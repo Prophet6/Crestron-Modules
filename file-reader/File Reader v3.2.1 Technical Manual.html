@@ -181,11 +181,11 @@
     </article>
     <article>
       <h3>Library</h3>
-      <p>Library <span class="sig">FileReader20261013</span>, source <code>FileReader20261013.cs</code>, class <code>FileDataHandler</code>. Text detection, JSON, checksums, encryption, and partial name matching live in that library. A Visual Studio build names the <code>.clz</code> after that source file. Assembly version 3.2.1.0.</p>
+      <p>Library <span class="sig">FileReader_v3</span>, source <code>FileReader20261013.cs</code>, class <code>FileDataHandler</code>. Text detection, JSON, checksums, encryption, and partial name matching live in that library. The source file stays datecoded. The solution names the archive <code>FileReader_v3.clz</code>. Assembly version 3.2.1.0.</p>
     </article>
   </div>
   <ol class="steps">
-    <li>Keep <span class="sig">FileReader20261013.clz</span> next to the SIMPL+ module. v3.2.1 links that archive. v3.2.0 linked FileReader20260623. v3.1.1 and v3.1.2 linked the library name File Reader.</li>
+    <li>Keep <span class="sig">FileReader_v3.clz</span> next to the SIMPL+ module. v3.2.1 links that archive. The Simpl# source remains <code>FileReader20261013.cs</code>. v3.2.0 linked FileReader20260623. v3.1.1 and v3.1.2 linked the library name File Reader.</li>
     <li>Add <span class="sig">File Reader v3.2.1</span>. Set <span class="sig">File Location</span> (for example <code>\\NVRAM\\</code> or <code>\\CF0\\</code>) and <span class="sig">Filename</span> with no extension. Set <span class="sig">Format</span>. The default is 4, JSON.</li>
     <li>Expand the digital, analog, and serial pairs you need. The symbol ships with 64 of each type, and the arrays can be raised to 256. Empty or zero slots are ignored.</li>
     <li>Drive the inputs, then pulse <span class="sig">Write</span>. On success the file is stored and every input is copied to the matching output. Digitals are driven as an explicit 0 or 1.</li>
@@ -365,7 +365,7 @@
   <ul>
     <li><span class="sig">Match_Partial</span> selects a file whose name contains <span class="sig">Filename</span> or <span class="sig">FileName_Override</span>. Several matches use the first name alphabetically. No match keeps the exact name so auto-create can write it.</li>
     <li><span class="sig">FileName_FB</span> reports that file name with its extension.</li>
-    <li>Library <span class="sig">FileReader20261013</span>, assembly 3.2.1.0.</li>
+    <li>Source <code>FileReader20261013.cs</code>. Library <span class="sig">FileReader_v3</span>, assembly 3.2.1.0.</li>
   </ul>
 
   <h3>v3.2.0 — 16 July 2026 — RGW / AI</h3>
@@ -397,7 +397,7 @@
 
   <h3>Module and library</h3>
   <table>
-    <thead><tr><th>Capability</th><th>v3.2.1 SIMPL+</th><th>FileReader20261013</th></tr></thead>
+    <thead><tr><th>Capability</th><th>v3.2.1 SIMPL+</th><th>FileReader_v3</th></tr></thead>
     <tbody>
       <tr><td>Text format false-detect fix</td><td>Uses library</td><td>Yes</td></tr>
       <tr><td>Industry-standard JSON read</td><td>Uses library</td><td>Yes</td></tr>
@@ -410,10 +410,10 @@
       <tr><td>FileName_FB</td><td>Yes</td><td>SelectedFileName</td></tr>
     </tbody>
   </table>
-  <p>v3.2.1 links <span class="sig">FileReader20261013</span>. v3.2.0 linked FileReader20260623. v3.1.1 and v3.1.2 linked the library name File Reader. Auto-create and <span class="sig">FileName_FB</span> live in the SIMPL+ module. The file search lives in the library.</p>
+  <p>v3.2.1 links <span class="sig">FileReader_v3</span>. The source file is <code>FileReader20261013.cs</code>. v3.2.0 linked FileReader20260623. v3.1.1 and v3.1.2 linked the library name File Reader. Auto-create and <span class="sig">FileName_FB</span> live in the SIMPL+ module. The file search lives in the library.</p>
 </main>
 <footer>
-  File Reader v3.2.1 · library FileReader20261013 · 13 October 2026
+  File Reader v3.2.1 · library FileReader_v3 · source FileReader20261013.cs · 13 October 2026
 </footer>
 </body>
 </html>

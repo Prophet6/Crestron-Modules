@@ -78,9 +78,9 @@
     <Compile Include="FileReader20261013.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <!-- The .clz is named after the single datecoded .cs file in this folder. -->
+  <!-- Source stays datecoded. The archive name is the module version. -->
   <PropertyGroup>
-    <AssemblyName>$([System.IO.Path]::GetFileNameWithoutExtension($([System.IO.Directory]::GetFiles('$(MSBuildProjectDirectory)', '*.cs').GetValue(0))))</AssemblyName>
+    <AssemblyName>FileReader_v3</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -97,7 +97,7 @@
     <PropertyGroup>
       <_SourceCount>$([System.IO.Directory]::GetFiles('$(MSBuildProjectDirectory)', '*.cs').Length)</_SourceCount>
     </PropertyGroup>
-    <Error Condition="'$(_SourceCount)' != '1'" Text="Keep one datecoded .cs file in the project folder. The .clz is named after that file." />
+    <Error Condition="'$(_SourceCount)' != '1'" Text="Keep one datecoded .cs file in the project folder. The .clz name stays FileReader_v3." />
   </Target>
   <Target Name="CopyDatecodedClz" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(TargetName).clz" DestinationFiles="$(MSBuildProjectDirectory)\..\..\$(TargetName).clz" SkipUnchangedFiles="false" Condition="Exists('$(TargetDir)$(TargetName).clz')" />

@@ -16,8 +16,9 @@ This symbol subscribes only to its own port and addresses. A level
 change on another load does not run these rows.
 #HELP_END
 
+#SYMBOL_NAME "Enttec EtherGate Channel v1.0"
 #HELP_PDF_FILE "EtherGate v1.html"
-#CATEGORY "12"
+#CATEGORY "46" "DMX" // Custom
 #DEFAULT_VOLATILE
 #ENABLE_DYNAMIC
 #ENABLE_STACK_CHECKING

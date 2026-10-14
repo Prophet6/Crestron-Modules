@@ -11,6 +11,12 @@ Crestron **SIMPL+** UDP helpers for **3-Series / 4-Series** processors. Pure SIM
 
 This project is not affiliated with Crestron Electronics.
 
+<!-- screenshots -->
+## Screenshots
+
+![Screenshot 1](Screenshot%201.png)
+
+
 ---
 
 ## Load
@@ -117,3 +123,18 @@ In the **program**, pulse UDP `Retrigger` on `CHANGE Received_IP` so a new talke
 
 - `#ENABLE_TRACE` is commented out in the UDP `.usp`. Uncomment it to print send/receive lines to the console.
 - Limited broadcast (`255.255.255.255`) stays on the local subnet. Directed subnet broadcast is not a parameter in this version.
+
+## Version History
+
+**UDP Broadcast and Receive**
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.3 | 2026-09-09 | Latched `Enable` / `Enable_FB`. `Retrigger`. `Enforce_Format` parameter. Receive clears then fills. Always ignores own broadcasts. Fixes: packet size (306), MAC length check, sender-IP error test, startup Enable. |
+| v1.2 | | Broadcast `MAC,UID,Data` and parse incoming UDP on a configurable port |
+
+**UDP Extract Data**
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.0 | 2026-09-09 | Initial companion latch / filter |

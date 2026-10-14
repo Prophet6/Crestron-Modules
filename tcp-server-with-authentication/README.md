@@ -13,6 +13,8 @@ Crestron SIMPL+ / Simpl# TCP **listener**. Defaults match the built-in SIMPL Win
 
 The committed `TCP_Server_Auth.clz` is produced from a .NET Compact Framework 3.5 build and compiles with SPlusCC for **4-Series**. For a **3-Series** image, open `TCP Server with Authentication.sln` in Visual Studio **2008** with the Crestron Simpl# plugin and rebuild so the plugin packages the CLZ.
 
+<!-- screenshots -->
+
 ## Load
 
 1. Keep `TCP_Server_Auth.clz` in this folder.
@@ -68,3 +70,38 @@ python tcp_auth_client.py --host <processor-ip> --port 50001 --tls --user user -
 ```
 
 `--tls` uses an unverified TLS context (self-signed lab certs).
+
+## Signals
+
+| Input | Role |
+|-------|------|
+| Enable | Hold high to listen |
+| Enable_Security / Enable_Authentication | High turns TLS / AUTH on; low falls back to the parameter |
+| Disconnect_All / Disconnect_Client | Drop every client / the client at `Client_Index` |
+| Port_Override | Replaces `Port` |
+| Client_Index | 0 sends `TX$` to every authenticated client; 1..Max_Clients targets one |
+| TX$ | Sent as-is (no extra delimiter) |
+| Username_Override$ / Password_Override$ | Non-empty replaces the credential parameters |
+
+| Output | Role |
+|--------|------|
+| Listening_FB, Security_FB, Authentication_FB | Server state |
+| Has_Authenticated_Client_FB | At least one authenticated client |
+| Client_Count, Authenticated_Count, Last_Client_Index | Client counters |
+| RX$, Client_IP$ | Incoming data and the sender's IP |
+| Status$, Error$ | Status and error text |
+
+| Parameter | Default |
+|-----------|---------|
+| Port | 50001 |
+| Max_Clients | 4 |
+| Security | Off |
+| Authentication | Off |
+| Auth_Timeout_s | 10 |
+| Username$ / Password$ | `user` / `pass` |
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v1.0 | 2026-08-24 | Initial public module |

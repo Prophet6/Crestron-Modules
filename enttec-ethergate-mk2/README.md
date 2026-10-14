@@ -8,6 +8,8 @@ Press **F1** on any of the symbols in SIMPL Windows for the full guide: [`EtherG
 
 This project is not affiliated with Crestron Electronics or ENTTEC.
 
+<!-- screenshots -->
+
 ## Modules
 
 | Symbol | File | Role |
@@ -67,3 +69,9 @@ Checked on a CP4N against a DIN EtherGate MK2, with no DMX fixtures on the ports
 Confirmed: `Connect` gates the session, the gateway answers on port 80, Art-Net returns the node name and firmware (`DIN Ethergate MK2`, `1.1`), and the buffer read comes back as `rowN=` channel values. Channel levels and presets have not been checked against a fixture. The web page does not contain the node name; do not parse it for settings.
 
 Work is paused here.
+
+## Version History
+
+| Version | Changes |
+|---------|---------|
+| v1.0 | Initial release: Controller, 64-load Channel, and 8-row Preset symbols on library `EtherGate_v1`. Presets stored on the processor (up to 64 per slot, 8 gateways). Tested to connection, Art-Net poll, and buffer read; fixture levels and presets not yet verified. |

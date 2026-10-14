@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remote File Sync v1.0</title>
+<style>
+  :root {
+    --ink: #122028;
+    --muted: #4c6270;
+    --line: #c5d5df;
+    --paper: #e7f0f4;
+    --card: #f7fbfc;
+    --teal: #0c5f73;
+    --teal-soft: #d5ebf1;
+    --header: #0c2430;
+    --ok: #146b52;
+    --warn: #8a4b12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background: var(--header);
+    color: #e7f3f6;
+    padding: 2.4rem 1.5rem 2rem;
+  }
+  header.banner .wrap, main, nav.toc {
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #8fd0de;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+  }
+  header.banner p { margin: 0; max-width: 40rem; color: #d5e4ea; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #f7fbfc;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+  }
+  nav.toc a {
+    color: var(--teal);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 4rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.2rem 0 0.6rem;
+    padding-top: 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--teal); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--teal); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8f1; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--teal-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.25rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  pre {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  footer {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · SIMPL# · 4-Series</p>
+    <h1>Remote File Sync v1.0</h1>
+    <p>One symbol that checks a remote file, copies it onto the processor, or copies the processor file back over the remote one.</p>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#reach">What it can reach</a>
+  <a href="#symbol">Symbol</a>
+  <a href="#parameters">Parameters</a>
+  <a href="#inputs">Inputs</a>
+  <a href="#outputs">Outputs</a>
+  <a href="#operations">Check, retrieve, overwrite</a>
+  <a href="#pull">Pull and push</a>
+  <a href="#login">Login</a>
+  <a href="#https">HTTPS</a>
+  <a href="#reader">File Reader</a>
+  <a href="#limits">Limits</a>
+  <a href="#examples">Examples</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead">Remote File Sync v1.0 keeps one processor file matched to one remote file. <span class="sig">Check</span> asks whether the remote file exists. <span class="sig">Retrieve</span> downloads it and replaces the processor file. <span class="sig">Overwrite</span> uploads the processor file and replaces the remote file. <span class="sig">Enable_Pull</span> checks and retrieves on a timer. It never uploads. <span class="sig">Enable_Push</span> uploads on a timer. It never downloads.</p>
+  <div class="grid">
+    <article>
+      <h3>SIMPL+ symbol</h3>
+      <p><span class="sig">Remote File Sync v1.0</span> is the symbol you drop in SIMPL Windows. F1 on that symbol opens this page when this HTML file sits beside the <code>.usp</code>.</p>
+    </article>
+    <article>
+      <h3>Library</h3>
+      <p>Library <span class="sig">RemoteFileSync_v1</span>, source <code>RemoteFileSync10142026.cs</code>, class <code>RemoteFileSync</code>. The source file stays datecoded. The solution names the archive <code>RemoteFileSync_v1.clz</code>. Keep that <code>.clz</code> next to the <code>.usp</code>.</p>
+    </article>
+    <article>
+      <h3>Processor</h3>
+      <p>4-Series only. The module does not parse the file. File Reader still owns formats, encryption, and backups.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Keep <span class="sig">RemoteFileSync_v1.clz</span> and this HTML file next to <code>Remote File Sync v1.0.usp</code>. The Simpl# source remains <code>RemoteFileSync10142026.cs</code>.</li>
+    <li>Set <span class="sig">Local_Path</span> to the full processor path, extension included. Example: <code>/user/boardroom.json</code>.</li>
+    <li>Set <span class="sig">Remote_URL</span> to one file. The scheme is <code>http://</code>, <code>https://</code>, or <code>ftp://</code>. Put the port in the URL when it is not the default.</li>
+    <li>Leave <span class="sig">Remote_User</span> and <span class="sig">Remote_Password</span> empty for anonymous access, or fill both.</li>
+    <li>Pulse <span class="sig">Check</span>, then <span class="sig">Retrieve</span> or <span class="sig">Overwrite</span>. Read <span class="sig">Feedback</span> after each pulse.</li>
+  </ol>
+  <div class="note">
+    Press F1 on the SIMPL+ symbol to open this page. The comment inside the <code>.usp</code> is version history only.
+  </div>
+
+  <h2 id="reach">What it can reach</h2>
+  <p>The remote location is a URL. The processor copies that one file onto a path it can already open. It does not mount a folder.</p>
+  <table>
+    <thead><tr><th>URL</th><th>Check</th><th>Retrieve and overwrite</th></tr></thead>
+    <tbody>
+      <tr><td><code>http://</code></td><td>HEAD. A server that rejects HEAD is checked by a download that is then deleted.</td><td>GET and PUT</td></tr>
+      <tr><td><code>https://</code></td><td>HEAD, with the same fallback.</td><td>GET and PUT over TLS</td></tr>
+      <tr><td><code>ftp://</code></td><td>The file is downloaded to a temporary probe and the probe is deleted.</td><td>RETR and STOR</td></tr>
+    </tbody>
+  </table>
+  <div class="warn">
+    A Windows share (<code>\\server\share\file.json</code>) and a cloud folder (OneDrive, SharePoint, Google Drive, Dropbox) are not paths this symbol can open. Publish that folder over HTTP, HTTPS, or FTP first.
+  </div>
+  <p>Accepted processor paths are <code>/user/file.json</code>, <code>\user\file.json</code>, and <code>\\user\\file.json</code>. The transfer uses a path that starts with <code>/</code>. 4-Series paths are case-sensitive. <code>/user/Boardroom.json</code> and <code>/user/boardroom.json</code> are different files.</p>
+
+  <h2 id="symbol">Symbol</h2>
+  <p>Rows run top to bottom. A blank row has no signal. <span class="sig">Feedback</span> is alone on the last row.</p>
+  <table>
+    <thead><tr><th>Row</th><th>Input</th><th>Parameter</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td class="sig">Check</td><td></td><td class="sig">Remote_Exists_FB</td></tr>
+      <tr><td>2</td><td class="sig">Retrieve</td><td></td><td class="sig">Local_Exists_FB</td></tr>
+      <tr><td>3</td><td class="sig">Overwrite</td><td></td><td class="sig">Busy_FB</td></tr>
+      <tr><td>4</td><td></td><td></td><td></td></tr>
+      <tr><td>5</td><td class="sig">Allow_Insecure_TLS</td><td></td><td class="sig">Retrieved</td></tr>
+      <tr><td>6</td><td class="sig">Enable_Pull</td><td></td><td class="sig">Overwritten</td></tr>
+      <tr><td>7</td><td class="sig">Enable_Push</td><td></td><td></td></tr>
+      <tr><td>8</td><td class="sig">Pull_Interval_Override</td><td class="sig">Pull_Interval</td><td></td></tr>
+      <tr><td>9</td><td class="sig">Push_Interval_Override</td><td class="sig">Push_Interval</td><td></td></tr>
+      <tr><td>10</td><td></td><td></td><td></td></tr>
+      <tr><td>11</td><td class="sig">Remote_URL_Override</td><td class="sig">Remote_URL</td><td></td></tr>
+      <tr><td>12</td><td class="sig">Local_Path_Override</td><td class="sig">Local_Path</td><td></td></tr>
+      <tr><td>13</td><td></td><td></td><td></td></tr>
+      <tr><td>14</td><td class="sig">Remote_User_Override</td><td class="sig">Remote_User</td><td></td></tr>
+      <tr><td>15</td><td class="sig">Remote_Password_Override</td><td class="sig">Remote_Password</td><td></td></tr>
+      <tr><td>16</td><td></td><td></td><td class="sig">Feedback</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="parameters">Parameters</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Pull_Interval</td><td>Time</td><td>Time between pulls while <span class="sig">Enable_Pull</span> is high. Range 0s to 3600s. Default 0s. 0s pulls once. The value is stored in hundredths of a second, so a setting above 655.35s wraps.</td></tr>
+      <tr><td class="sig">Push_Interval</td><td>Time</td><td>Time between pushes while <span class="sig">Enable_Push</span> is high. Range 0s to 3600s. Default 0s. 0s pushes once. The same 655.35s storage limit applies.</td></tr>
+      <tr><td class="sig">Remote_URL</td><td>String, 255</td><td>Full URL of the one remote file, including the extension and any non-default port. Example: <code>https://192.168.1.20:8443/boardroom.json</code>.</td></tr>
+      <tr><td class="sig">Local_Path</td><td>String, 255</td><td>Full processor path, extension included. Example: <code>/user/boardroom.json</code>.</td></tr>
+      <tr><td class="sig">Remote_User</td><td>String, 64</td><td>Login. Empty is anonymous. The password is sent only when this field is not empty.</td></tr>
+      <tr><td class="sig">Remote_Password</td><td>String, 64</td><td>Password. It is never copied to <span class="sig">Feedback</span>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="inputs">Inputs</h2>
+  <p>One operation runs at a time. A pulse while <span class="sig">Busy_FB</span> is high is ignored. A non-empty serial replaces the parameter across from it. An empty serial leaves that parameter in charge.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Check</td><td>Digital in</td><td>Rising edge asks whether the remote file exists. The processor file is not changed. Across from <span class="sig">Remote_Exists_FB</span>.</td></tr>
+      <tr><td class="sig">Retrieve</td><td>Digital in</td><td>Rising edge downloads the remote file and replaces the processor file. The previous processor file is kept when the download fails. Across from <span class="sig">Local_Exists_FB</span>.</td></tr>
+      <tr><td class="sig">Overwrite</td><td>Digital in</td><td>Rising edge uploads the processor file and replaces the remote file. The processor file is kept when the upload fails. Across from <span class="sig">Busy_FB</span>.</td></tr>
+      <tr><td class="sig">Allow_Insecure_TLS</td><td>Digital in</td><td>High skips HTTPS host and peer checks. Required for a self-signed certificate. Low keeps those checks on. FTP and HTTP ignore it. Across from <span class="sig">Retrieved</span>.</td></tr>
+      <tr><td class="sig">Enable_Pull</td><td>Digital in</td><td>While high, checks and retrieves. It never uploads. 0s on the effective interval pulls once. A greater time repeats. Across from <span class="sig">Overwritten</span>.</td></tr>
+      <tr><td class="sig">Enable_Push</td><td>Digital in</td><td>On the row under <span class="sig">Enable_Pull</span>. While high, uploads the processor file. It never downloads. 0s pushes once. A greater time repeats. A missing processor file does not change the remote file.</td></tr>
+      <tr><td class="sig">Pull_Interval_Override</td><td>Analog in</td><td>Whole seconds. 0 uses <span class="sig">Pull_Interval</span>. Any other value replaces it. Changing it while <span class="sig">Enable_Pull</span> is high restarts the timer and does not pull immediately. On the same row as <span class="sig">Pull_Interval</span>.</td></tr>
+      <tr><td class="sig">Push_Interval_Override</td><td>Analog in</td><td>Whole seconds. 0 uses <span class="sig">Push_Interval</span>. Any other value replaces it. Changing it while <span class="sig">Enable_Push</span> is high restarts the timer and does not push immediately. On the same row as <span class="sig">Push_Interval</span>.</td></tr>
+      <tr><td class="sig">Remote_URL_Override</td><td>Serial in</td><td>Non-empty replaces <span class="sig">Remote_URL</span>. On the same row as that parameter.</td></tr>
+      <tr><td class="sig">Local_Path_Override</td><td>Serial in</td><td>Non-empty replaces <span class="sig">Local_Path</span>. On the same row as that parameter. <span class="sig">Local_Exists_FB</span> refreshes when this serial changes.</td></tr>
+      <tr><td class="sig">Remote_User_Override</td><td>Serial in</td><td>Non-empty replaces <span class="sig">Remote_User</span>.</td></tr>
+      <tr><td class="sig">Remote_Password_Override</td><td>Serial in</td><td>Non-empty replaces <span class="sig">Remote_Password</span>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="outputs">Outputs</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Remote_Exists_FB</td><td>Digital out</td><td>High only after the remote file is confirmed. A missing file, a login failure, and other errors leave it low. A successful retrieve or overwrite drives it high.</td></tr>
+      <tr><td class="sig">Local_Exists_FB</td><td>Digital out</td><td>High when the processor file exists. Updated at startup, when <span class="sig">Local_Path_Override</span> changes, and after every finished operation.</td></tr>
+      <tr><td class="sig">Busy_FB</td><td>Digital out</td><td>High from the pulse until the operation finishes.</td></tr>
+      <tr><td class="sig">Retrieved</td><td>Digital out</td><td>One-tick pulse after a retrieve replaces the processor file. Wire this to File Reader <span class="sig">Read</span> when the file is a config.</td></tr>
+      <tr><td class="sig">Overwritten</td><td>Digital out</td><td>One-tick pulse after an overwrite, or a successful push, replaces the remote file.</td></tr>
+      <tr><td class="sig">Feedback</td><td>Serial out</td><td>Short status. Alone on the last row. The password is never included.</td></tr>
+    </tbody>
+  </table>
+  <h3>Feedback text</h3>
+  <table>
+    <thead><tr><th>Text</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>Remote file found</code></td><td>Check succeeded. The remote file exists.</td></tr>
+      <tr><td><code>Remote file not found</code></td><td>The server reported that the file is absent. HTTP 404, or FTP 550.</td></tr>
+      <tr><td><code>Retrieved</code></td><td>The processor file was replaced.</td></tr>
+      <tr><td><code>Remote file replaced</code></td><td>The remote file was replaced. A missing remote file may be created when the server allows it.</td></tr>
+      <tr><td><code>Login was rejected</code></td><td>HTTP or HTTPS returned 401 or 403.</td></tr>
+      <tr><td><code>File is larger than 256 KB</code></td><td>The download was discarded. The processor file was not replaced.</td></tr>
+      <tr><td><code>Local file was not found</code></td><td>Overwrite had no processor file to send.</td></tr>
+      <tr><td><code>HTTPS certificate checks are on</code></td><td><span class="sig">Allow_Insecure_TLS</span> is low and the certificate was not accepted.</td></tr>
+      <tr><td><code>HTTPS handshake failed</code></td><td>The processor and the server did not agree on TLS. A TLS 1.3-only server causes this.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="operations">Check, retrieve, overwrite</h2>
+  <h3>Check</h3>
+  <p>HTTP and HTTPS send HEAD. A 2xx response means the file exists. 404 or 410 means it is absent. 401 or 403 means the login was rejected. A server that rejects HEAD, or that closes the connection before the status can be read, is checked by downloading the file to a temporary name and deleting that temporary file. The real processor file is not touched.</p>
+  <p>FTP check downloads to a sibling <code>.probe</code> file and deletes the probe. A missing file is reported from the server's 550 reply. The processor file stays as it was.</p>
+  <h3>Retrieve</h3>
+  <p>The download is written to <span class="sig">Local_Path</span> plus <code>.part</code>. On success the existing processor file is deleted and the part file is moved into its place. On failure the part file is deleted and the previous processor file remains. A file larger than 256 KB is discarded the same way.</p>
+  <div class="note">
+    Close the file in Toolbox before a retrieve that must replace it. An open view can deny the delete.
+  </div>
+  <h3>Overwrite</h3>
+  <p>The processor file is uploaded to the same URL. Failure leaves that local file in place. Success pulses <span class="sig">Overwritten</span>. If the remote file is missing, the server may create it. That still counts as success when the upload returns success.</p>
+
+  <h2 id="pull">Pull and push</h2>
+  <p>Hold <span class="sig">Enable_Pull</span> high to refresh the processor file from the remote file. Each cycle checks, and retrieves when the remote file exists. A missing remote file does not delete or rewrite the processor file. Dropping <span class="sig">Enable_Pull</span> stops the timer. A transfer that has already started is allowed to finish.</p>
+  <ul>
+    <li><span class="sig">Pull_Interval</span> at 0s pulls once when the level rises, and once after startup if the level is already high.</li>
+    <li>A greater time repeats while the level stays high. The wait is the parameter, unless <span class="sig">Pull_Interval_Override</span> is not 0.</li>
+    <li>The override is whole seconds. 10 is 10 seconds. 0 uses the parameter.</li>
+  </ul>
+  <p>Hold <span class="sig">Enable_Push</span> high to refresh the remote file from the processor file. Each cycle uploads when the processor file exists. A missing processor file does not change the remote file. Dropping <span class="sig">Enable_Push</span> stops that timer. <span class="sig">Push_Interval</span> and <span class="sig">Push_Interval_Override</span> follow the same 0s and seconds rules as the pull interval.</p>
+  <div class="warn">
+    Pull never uploads. Push never downloads. One transfer runs at a time, so a pull and a push that come due together take turns.
+  </div>
+
+  <h2 id="login">Login</h2>
+  <p>Leave <span class="sig">Remote_User</span> empty for anonymous access. The password is ignored while the user is empty. Fill both fields when the server requires a login. A non-empty override replaces the matching parameter.</p>
+  <p>HTTP and HTTPS send Basic authentication on the first request. A wrong password is rejected. <span class="sig">Feedback</span> says <code>Login was rejected</code> and <span class="sig">Remote_Exists_FB</span> stays low. FTP sends <code>USER</code> and <code>PASS</code>. A wrong password is rejected before the file is transferred.</p>
+  <div class="note">
+    The password is stored in the SIMPL program. It is not written to <span class="sig">Feedback</span> or the error log.
+  </div>
+
+  <h2 id="https">HTTPS</h2>
+  <div class="warn">
+    A 4-Series processor does not speak TLS 1.3. The remote server must offer TLS 1.2. A server that offers only TLS 1.3 fails the handshake. <span class="sig">Feedback</span> may say <code>HTTPS handshake failed</code>, or <code>No error</code> on a program that has not been uploaded since that message was added. Some firmware still begins the handshake at TLS 1.0, so a server that accepts TLS 1.0 through 1.2 will meet more processors than one that accepts only TLS 1.2.
+  </div>
+  <p>Host and peer checks stay on while <span class="sig">Allow_Insecure_TLS</span> is low. A self-signed certificate, including a bench certificate, needs that signal high. Low is the right setting when the processor already trusts the server certificate.</p>
+  <p>Put a non-default port in the URL: <code>https://192.168.1.20:8443/boardroom.json</code>.</p>
+
+  <h2 id="reader">File Reader</h2>
+  <p>This module does not parse JSON, CSV, or any other format. When the file is a config that File Reader already understands, point both symbols at the same processor file and let File Reader read it after each download.</p>
+  <ol class="steps">
+    <li>Set <span class="sig">Local_Path</span> to the full path, for example <code>/user/boardroom.json</code>.</li>
+    <li>Set File Reader's folder, name, and extension so they land on that same path.</li>
+    <li>Wire <span class="sig">Retrieved</span> to File Reader <span class="sig">Read</span>.</li>
+  </ol>
+  <p>An overwrite updates the remote copy of whatever is already on the processor. File Reader's write stays local until you pulse <span class="sig">Overwrite</span>.</p>
+
+  <h2 id="limits">Limits</h2>
+  <ul>
+    <li>4-Series only. One operation at a time.</li>
+    <li>Downloads larger than 256 KB are discarded. The processor file is not replaced.</li>
+    <li>String parameters and overrides are 255 characters for the URL and the path, and 64 characters for the user and the password.</li>
+    <li><span class="sig">Pull_Interval</span> and <span class="sig">Push_Interval</span> above 655.35s wrap, because each time is stored in a 16-bit count of hundredths of a second. The symbol still shows an upper bound of 3600s.</li>
+    <li><span class="sig">Pull_Interval_Override</span> and <span class="sig">Push_Interval_Override</span> are analogs, so the largest value is 65535 seconds.</li>
+    <li>The transfer gives up after the client timeout. That timeout is passed as 15.</li>
+  </ul>
+
+  <h2 id="examples">Examples</h2>
+
+  <h3>Refresh a JSON config</h3>
+  <ol class="steps">
+    <li>Set <span class="sig">Remote_URL</span> to <code>http://192.168.1.20/configs/boardroom.json</code>.</li>
+    <li>Set <span class="sig">Local_Path</span> to <code>/user/boardroom.json</code>.</li>
+    <li>Pulse <span class="sig">Check</span>. <span class="sig">Remote_Exists_FB</span> goes high and <span class="sig">Feedback</span> says <code>Remote file found</code>.</li>
+    <li>Pulse <span class="sig">Retrieve</span>. <span class="sig">Retrieved</span> pulses. Wire that pulse to File Reader <span class="sig">Read</span>.</li>
+    <li>Hold <span class="sig">Enable_Pull</span> high and set <span class="sig">Pull_Interval</span> to 60s, or set <span class="sig">Pull_Interval_Override</span> to 60. The processor file refreshes about once a minute. The remote file is not uploaded.</li>
+  </ol>
+
+  <h3>Publish the processor file</h3>
+  <ol class="steps">
+    <li>Edit <code>/user/boardroom.json</code> and close it in Toolbox.</li>
+    <li>Hold <span class="sig">Enable_Push</span> high. Set <span class="sig">Push_Interval</span> to 0s for one upload, or set <span class="sig">Push_Interval_Override</span> to 30 to upload about every 30 seconds.</li>
+    <li><span class="sig">Overwritten</span> pulses after each successful upload. <span class="sig">Feedback</span> says <code>Remote file replaced</code>. The processor file is not replaced by the remote copy.</li>
+  </ol>
+
+  <h3>Self-signed HTTPS</h3>
+  <ol class="steps">
+    <li>Set <span class="sig">Remote_URL</span> to <code>https://192.168.1.20:8443/boardroom.json</code>.</li>
+    <li>Leave <span class="sig">Allow_Insecure_TLS</span> low and pulse <span class="sig">Check</span>. The check fails.</li>
+    <li>Raise <span class="sig">Allow_Insecure_TLS</span> and pulse <span class="sig">Check</span> again. <span class="sig">Feedback</span> says <code>Remote file found</code>.</li>
+  </ol>
+
+  <h3>Push an edit back</h3>
+  <ol class="steps">
+    <li>Edit <code>/user/boardroom.json</code> on the processor. Close it in Toolbox.</li>
+    <li>Pulse <span class="sig">Overwrite</span>. <span class="sig">Overwritten</span> pulses and <span class="sig">Feedback</span> says <code>Remote file replaced</code>.</li>
+    <li>Pulse <span class="sig">Retrieve</span>. The processor file matches the edit that was uploaded.</li>
+  </ol>
+
+  <h3>Reject a bad password</h3>
+  <ol class="steps">
+    <li>Set <span class="sig">Remote_User</span> to the account and <span class="sig">Remote_Password</span> to a wrong password.</li>
+    <li>Pulse <span class="sig">Check</span>. <span class="sig">Remote_Exists_FB</span> stays low.</li>
+    <li>HTTP and HTTPS set <span class="sig">Feedback</span> to <code>Login was rejected</code>. FTP stops at the login and does not transfer the file.</li>
+    <li>Clear <span class="sig">Remote_User</span> to try the same URL anonymously, or put the correct password back.</li>
+  </ol>
+
+  <h2 id="versions">Versions</h2>
+  <p>Document revision v1.0, 14 October 2026. 4-Series only.</p>
+  <h3>v1.0 — 14 October 2026 — RGW / AI</h3>
+  <ul>
+    <li>Check, retrieve, and overwrite one file at an <code>http://</code>, <code>https://</code>, or <code>ftp://</code> URL.</li>
+    <li><span class="sig">Enable_Pull</span> retrieves on an interval and never uploads. <span class="sig">Enable_Push</span> uploads on an interval and never downloads. Each interval is a time. Each override is seconds. 0 uses the parameter.</li>
+    <li>A filled user sends Basic authentication on the first HTTP or HTTPS request.</li>
+    <li>Source <code>RemoteFileSync10142026.cs</code>. Library <span class="sig">RemoteFileSync_v1.clz</span>.</li>
+  </ul>
+</main>
+<footer>
+  Remote File Sync v1.0. Not affiliated with Crestron Electronics. Keep this file next to the SIMPL+ symbol.
+</footer>
+</body>
+</html>

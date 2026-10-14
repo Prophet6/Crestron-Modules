@@ -1,0 +1,303 @@
+#HELP_BEGIN
+- VERSION HISTORY ------------------------------------------------------------------
+
+v1.0  10/14/2026  RGW / AI
+- Initial module. Source RemoteFileSync10142026.cs. Library RemoteFileSync_v1
+- Pull_Interval is unitTime. Pull_Interval_Override is seconds. 0 uses the parameter
+- 4-Series HTTPS requires TLS 1.2. TLS 1.3-only servers fail the handshake
+- A filled user sends Basic authentication on the first HTTP or HTTPS request
+- Enable_Push uploads on Push_Interval. It never downloads. Push_Interval_Override is seconds
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#HELP_PDF_FILE "Remote File Sync v1.0 Technical Manual.html"
+#CATEGORY "9"
+
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "RemoteFileSync_v1"
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	Check, Retrieve, Overwrite,
+				_SKIP_,
+				Allow_Insecure_TLS, Enable_Pull, Enable_Push;
+
+DIGITAL_OUTPUT	Remote_Exists_FB, Local_Exists_FB, Busy_FB,
+				_SKIP_,
+				Retrieved, Overwritten,
+				_SKIP_;
+
+ANALOG_INPUT	Pull_Interval_Override, Push_Interval_Override;
+ANALOG_OUTPUT	_SKIP_, _SKIP_;
+
+STRING_INPUT	_SKIP_,
+				Remote_URL_Override[255], Local_Path_Override[255],
+				_SKIP_,
+				Remote_User_Override[64], Remote_Password_Override[64];
+
+STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_,
+				Feedback;
+
+INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_,
+					_SKIP_,
+					_SKIP_, _SKIP_,
+					_SKIP_, Pull_Interval, Push_Interval;
+
+STRING_PARAMETER	_SKIP_,
+					Remote_URL[255], Local_Path[255],
+					_SKIP_,
+					Remote_User[64], Remote_Password[64];
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Pull_Interval
+	propValidUnits = unitTime;
+	propDefaultUnit = unitTime;
+	propBounds = 0s, 3600s;
+	propDefaultValue = 0s;
+	propShortDescription = "Time between pulls while Enable_Pull is high. 0s pulls once.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Push_Interval
+	propValidUnits = unitTime;
+	propDefaultUnit = unitTime;
+	propBounds = 0s, 3600s;
+	propDefaultValue = 0s;
+	propShortDescription = "Time between pushes while Enable_Push is high. 0s pushes once.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Remote_URL
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propShortDescription = "http://, https://, or ftp:// URL of the one remote file";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Local_Path
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propShortDescription = "Full processor path, extension included";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Remote_User
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propShortDescription = "Login. Empty is anonymous.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Remote_Password
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propShortDescription = "Password. Not copied to Feedback.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+STRING Url$[255], User$[64], Pass$[64], Path$[255], TempFeedback$[255];
+INTEGER PullArmed;
+LONG_INTEGER IntervalTicks, PushTicks;
+RemoteFileSync Core;
+
+/* FUNCTIONS */
+
+FUNCTION ApplyPaths() {
+	if (len(Remote_URL_Override) > 0)
+		Url$ = Remote_URL_Override;
+	else
+		Url$ = Remote_URL;
+
+	if (len(Local_Path_Override) > 0)
+		Path$ = Local_Path_Override;
+	else
+		Path$ = Local_Path;
+
+	if (len(Remote_User_Override) > 0)
+		User$ = Remote_User_Override;
+	else
+		User$ = Remote_User;
+
+	if (len(Remote_Password_Override) > 0)
+		Pass$ = Remote_Password_Override;
+	else
+		Pass$ = Remote_Password;
+}
+
+FUNCTION RefreshLocal() {
+	ApplyPaths();
+	if (Core.LocalFileExists(Path$) = 1)
+		Local_Exists_FB = 1;
+	else
+		Local_Exists_FB = 0;
+}
+
+FUNCTION StartWork(SIGNED_INTEGER operation) {
+	if (Busy_FB = 1)
+		return;
+	ApplyPaths();
+	Busy_FB = 1;
+	Core.Begin(operation, Url$, User$, Pass$, Path$, Allow_Insecure_TLS);
+}
+
+FUNCTION ApplyInterval() {
+	if (Pull_Interval_Override <> 0) {
+		IntervalTicks = Pull_Interval_Override;
+		IntervalTicks = IntervalTicks * 100;
+	}
+	else
+		IntervalTicks = Pull_Interval;
+}
+
+FUNCTION StartPull() {
+	if (Enable_Pull = 0)
+		return;
+	StartWork(5);
+}
+
+FUNCTION ApplyPushInterval() {
+	if (Push_Interval_Override <> 0) {
+		PushTicks = Push_Interval_Override;
+		PushTicks = PushTicks * 100;
+	}
+	else
+		PushTicks = Push_Interval;
+}
+
+FUNCTION StartPush() {
+	if (Enable_Push = 0)
+		return;
+	StartWork(7);
+}
+
+CALLBACK FUNCTION HandleFinished(SIGNED_INTEGER operation, SIGNED_INTEGER code) {
+	if (operation = 4) {
+		if (Enable_Pull = 1)
+			StartPull();
+		return;
+	}
+	if (operation = 6) {
+		if (Enable_Push = 1)
+			StartPush();
+		return;
+	}
+
+	TempFeedback$ = Core.Feedback;
+	Feedback = TempFeedback$;
+	RefreshLocal();
+
+	if (operation = 1) {
+		if (code = 1)
+			Remote_Exists_FB = 1;
+		else
+			Remote_Exists_FB = 0;
+	}
+	else if (operation = 2) {
+		if (code = 0) {
+			Remote_Exists_FB = 1;
+			Pulse(1, Retrieved);
+		}
+	}
+	else if (operation = 3) {
+		if (code = 0) {
+			Remote_Exists_FB = 1;
+			Pulse(1, Overwritten);
+		}
+	}
+	else if (operation = 5) {
+		if (code = 1) {
+			Remote_Exists_FB = 1;
+			Pulse(1, Retrieved);
+		}
+		else if (code = 0)
+			Remote_Exists_FB = 0;
+	}
+	else if (operation = 7) {
+		if (code = 0) {
+			Remote_Exists_FB = 1;
+			Pulse(1, Overwritten);
+		}
+	}
+
+	Busy_FB = 0;
+}
+
+/* EVENT HANDLERS */
+
+PUSH Check {
+	StartWork(1);
+}
+
+PUSH Retrieve {
+	StartWork(2);
+}
+
+PUSH Overwrite {
+	StartWork(3);
+}
+
+CHANGE Enable_Pull {
+	if (PullArmed = 0)
+		return;
+	if (Enable_Pull = 1) {
+		ApplyInterval();
+		Core.SetPull(1, IntervalTicks);
+		StartPull();
+	}
+	else
+		Core.SetPull(0, 0);
+}
+
+CHANGE Pull_Interval_Override {
+	if (PullArmed = 0)
+		return;
+	if (Enable_Pull = 0)
+		return;
+	ApplyInterval();
+	Core.SetPull(1, IntervalTicks);
+}
+
+CHANGE Enable_Push {
+	if (PullArmed = 0)
+		return;
+	if (Enable_Push = 1) {
+		ApplyPushInterval();
+		Core.SetPush(1, PushTicks);
+		StartPush();
+	}
+	else
+		Core.SetPush(0, 0);
+}
+
+CHANGE Push_Interval_Override {
+	if (PullArmed = 0)
+		return;
+	if (Enable_Push = 0)
+		return;
+	ApplyPushInterval();
+	Core.SetPush(1, PushTicks);
+}
+
+CHANGE Local_Path_Override {
+	RefreshLocal();
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	PullArmed = 0;
+	RegisterDelegate(Core, OnFinished, HandleFinished);
+	WaitForInitializationComplete();
+	RefreshLocal();
+	PullArmed = 1;
+	if (Enable_Pull = 1) {
+		ApplyInterval();
+		Core.SetPull(1, IntervalTicks);
+		StartPull();
+	}
+	if (Enable_Push = 1) {
+		ApplyPushInterval();
+		Core.SetPush(1, PushTicks);
+		StartPush();
+	}
+}

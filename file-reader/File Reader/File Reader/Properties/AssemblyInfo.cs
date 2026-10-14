@@ -1,11 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("FileReader20261013")]
+[assembly: AssemblyTitle("FileReader_v3")]
 [assembly: AssemblyDescription("File Reader Simpl# library for SIMPL+")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("FileReader20261013")]
+[assembly: AssemblyProduct("FileReader_v3")]
 [assembly: AssemblyCopyright("Copyright ©  2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

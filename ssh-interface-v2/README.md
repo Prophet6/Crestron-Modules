@@ -14,6 +14,8 @@ A PC-side mock lives in [Testing-Tools](https://github.com/Prophet6/Testing-Tool
 
 This project is not affiliated with Crestron Electronics.
 
+<!-- screenshots -->
+
 ---
 
 ## Repository layout
@@ -130,6 +132,40 @@ copy "SSH Interface\bin\Debug\SSH_Interface_v2.clz" ..
 Then recompile the `.usp` file (step 3 above).
 
 ---
+
+## Signals (SSH Interface Client v2.0)
+
+| Input | Role |
+|-------|------|
+| Connect | Hold high to connect; release to disconnect |
+| Retry | Retry the connection |
+| Accept_New_Key / Decline_New_Key | Trust and store an unknown or changed host key, or abort |
+| Accept_Any_Key_Override | High forces `Accept_Any_Key` = Yes |
+| Debug | Hold high for console trace |
+| IP_Address_Override, IP_Port_Override, Username_Override, Password_Override$ | Runtime overrides (empty / 0 uses the parameter) |
+| To_Server | Sent as-is (no extra CR/LF) |
+
+| Output | Role |
+|--------|------|
+| Is_Connected | High while connected |
+| Accept_New_Key_Notice / New_Key_Text | Host key needs approval, and its fingerprint |
+| Connection_Status_Out | 1 Trying, 2 Connected, 3 Not Connected, 4 Non-Matching Fingerprint |
+| Connection_Status_Text | Status as text |
+| From_Server | Incoming data, chunked at 250 characters |
+
+| Parameter | Default |
+|-----------|---------|
+| IP_Address | `0.0.0.0` |
+| IP_Port | 22 |
+| Username / Password | (blank) |
+| Accept_Any_Key | No |
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| v2.0 | 2026-08-21 | New Simpl# core (`SSH_Interface_v2.clz`): reconnect, host-key store, and TX gather in Simpl#. Password + keyboard-interactive auth. IP override, debug as a digital input, `Accept_Any_Key_Override`. Host-key file named from the symbol instance. Inbound TCP moved to the stock TCP/IP Server. |
+| v1.7 | | Earlier SIMPL+ processor that v2.0 replaces |
 
 ## License / disclaimer
 

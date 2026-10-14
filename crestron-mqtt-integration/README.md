@@ -3,6 +3,8 @@
 **Canonical MQTT sources for git / rebuild live in this folder.**
 A former sibling `CrestronMqttWrapper/` work tree is not part of this public repository.
 
+<!-- screenshots -->
+
 ## Goal
 Integrate the Waveshare ESP32-S3 panel with Home Assistant via MQTT using Crestron 4-Series SIMPL# Pro + SIMPL+.
 
@@ -31,6 +33,32 @@ Receive occupancy from HA to wake the panel.
 - Use MQTT broker (e.g. Mosquitto or HA built-in).
 - Publish panel state/brightness from Crestron.
 - Subscribe to binary_sensor.esp_room_station_occupancy to wake the panel.
+
+## Requirements
+
+- **4-Series** processor (SIMPL# Pro + SIMPL+)
+- Visual Studio 2022 with the Crestron SDK to build the library
+- An MQTT broker (Mosquitto or the Home Assistant add-on)
+
+## Signals (Crestron MQTT Client)
+
+| Input | Role |
+|-------|------|
+| Connect / Disconnect | Open or close the broker session |
+| Broker$, Port, ClientId$, Username$, Password$, UseTls | Connection settings |
+| PublishTopic$, PublishPayload$, PublishQoS, PublishRetain | Message to publish |
+| PublishTrigger | Publish the message |
+| SubscribeTopic$, SubscribeQoS | Topic to subscribe to |
+| SubscribeTrigger | Subscribe |
+
+| Output | Role |
+|--------|------|
+| Connected | High while connected to the broker |
+| ReceivedTopic$ / ReceivedPayload$ | Last message received on a subscribed topic |
+
+## Version History
+
+No version history in the `.usp` yet. Work in progress (see `PROJECT_STATUS_AND_NEXT_STEPS.md`).
 
 ## Status and Next Steps
 See RESTART_HERE.md and PROJECT_STATUS_AND_NEXT_STEPS.md

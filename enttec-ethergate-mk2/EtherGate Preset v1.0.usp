@@ -49,8 +49,9 @@ Controller_Override is ignored until an analog value arrives. After that,
 1-8 selects that slot.
 #HELP_END
 
+#SYMBOL_NAME "Enttec EtherGate Preset v1.0"
 #HELP_PDF_FILE "EtherGate v1.html"
-#CATEGORY "12"
+#CATEGORY "46" "DMX" // Custom
 #DEFAULT_VOLATILE
 #ENABLE_DYNAMIC
 #ENABLE_STACK_CHECKING
