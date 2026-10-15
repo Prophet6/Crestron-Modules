@@ -14,7 +14,7 @@ This project is not affiliated with Crestron Electronics.
 <!-- screenshots -->
 ## Screenshots
 
-![Screenshot 1](Screenshot%201.png)
+<img src="Screenshot%201.png" alt="Screenshot 1" width="400">
 
 
 ---

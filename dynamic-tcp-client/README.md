@@ -15,7 +15,7 @@ This is the outbound counterpart to [TCP Server with Authentication](../tcp-serv
 <!-- screenshots -->
 ## Screenshots
 
-![Screenshot 1](Screenshot%201.png)
+<img src="Screenshot%201.png" alt="Screenshot 1" width="400">
 
 
 ---
