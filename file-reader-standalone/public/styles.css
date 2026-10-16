@@ -32,7 +32,9 @@ input[type="text"], input[type="password"], input[type="number"] {
   padding: 6px 10px;
 }
 .check { align-self: end; flex-direction: row; align-items: center; gap: 8px; min-height: 40px; }
-.actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.actions, .pull { grid-column: 1 / -1; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pull { margin: 0; color: #d7e4f4; }
 button, .file {
   min-height: 40px;
   border: 1px solid #2a3644;

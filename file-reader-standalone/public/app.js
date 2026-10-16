@@ -151,6 +151,18 @@ document.querySelector('#write').addEventListener('click', async () => {
   }
 });
 
+document.querySelector('#publish').addEventListener('click', async () => {
+  try {
+    const encoded = await post('/api/encode', { file });
+    const published = await post('/api/publish', { text: encoded.text });
+    const pull = document.querySelector('#pull');
+    pull.textContent = `Remote File Sync Remote_URL ${published.pullUrl} and Local_Path ${published.localPath}. Retrieve writes that file on the processor.`;
+    setStatus('Published for \\user');
+  } catch (error) {
+    setStatus(error.message);
+  }
+});
+
 document.querySelector('#download').addEventListener('click', async () => {
   try {
     const encoded = await post('/api/encode', { file });

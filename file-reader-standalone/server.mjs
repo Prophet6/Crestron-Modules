@@ -1,13 +1,41 @@
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
+import os from 'node:os';
+import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encodeJson, parseJson } from './codec.mjs';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), 'public');
+async function loadSea() {
+  try {
+    const sea = await import('node:sea');
+    if (sea.isSea()) {
+      return sea;
+    }
+  } catch {
+    /* Source checkout. The single-file executable is the only SEA build. */
+  }
+  return null;
+}
+
+const sea = await loadSea();
+
+const root = sea ? '' : join(dirname(fileURLToPath(import.meta.url)), 'public');
 const port = Number(process.env.PORT || 5180);
+let staged = encodeJson();
+
+function lanHost() {
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const entry of entries ?? []) {
+      if (entry.family === 'IPv4' && !entry.internal) {
+        return entry.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -288,6 +316,30 @@ const server = http.createServer(async (request, response) => {
       sendJson(response, 200, { file: parseJson(String(body.text ?? '')) });
       return;
     }
+    if (request.method === 'GET' && url.pathname === '/api/info') {
+      sendJson(response, 200, {
+        pullUrl: `http://${lanHost()}:${server.address()?.port || port}/export.json`,
+        localPath: '/user/config.json',
+      });
+      return;
+    }
+    if (request.method === 'POST' && url.pathname === '/api/publish') {
+      const body = await readBody(request);
+      staged = String(body.text ?? '');
+      sendJson(response, 200, {
+        pullUrl: `http://${lanHost()}:${server.address()?.port || port}/export.json`,
+        localPath: '/user/config.json',
+      });
+      return;
+    }
+    if (request.method === 'GET' && url.pathname === '/export.json') {
+      response.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': Buffer.byteLength(staged),
+      });
+      response.end(staged);
+      return;
+    }
     if (request.method === 'POST' && url.pathname === '/api/transfer') {
       const body = await readBody(request);
       const result = await transfer({
@@ -302,19 +354,39 @@ const server = http.createServer(async (request, response) => {
       return;
     }
     const requested = (url.pathname === '/' ? 'index.html' : url.pathname).replace(/^[/\\]+/, '');
-    const filePath = normalize(join(root, requested));
-    if (!filePath.startsWith(root)) {
+    if (requested.includes('..')) {
       sendJson(response, 404, { error: 'Not found' });
       return;
     }
-    const bytes = await readFile(filePath);
-    response.writeHead(200, { 'Content-Type': types[extname(filePath)] || 'application/octet-stream' });
+    const bytes = sea
+      ? Buffer.from(sea.getAsset(requested))
+      : await readFile(normalize(join(root, requested)));
+    response.writeHead(200, { 'Content-Type': types[extname(requested)] || 'application/octet-stream' });
     response.end(bytes);
   } catch (error) {
     sendJson(response, 400, { error: error instanceof Error ? error.message : 'Request failed' });
   }
 });
 
-server.listen(port, () => {
-  console.log(`File Reader standalone at http://localhost:${port}`);
-});
+function listen(start) {
+  return new Promise((resolve, reject) => {
+    const attempt = (next) => {
+      server.once('error', (error) => {
+        if (error.code === 'EADDRINUSE' && next < start + 10) {
+          attempt(next + 1);
+          return;
+        }
+        reject(error);
+      });
+      server.listen(next, '0.0.0.0', () => resolve(next));
+    };
+    attempt(start);
+  });
+}
+
+const chosen = await listen(port);
+const pageUrl = `http://127.0.0.1:${chosen}`;
+console.log(`File Reader standalone at ${pageUrl}`);
+if (sea) {
+  spawn('cmd', ['/c', 'start', '', pageUrl], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
+}

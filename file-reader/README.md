@@ -11,7 +11,9 @@ This project is not affiliated with Crestron Electronics.
 <!-- screenshots -->
 ## Screenshots
 
-<img src="Screenshot%201.png" alt="Screenshot 1" width="400">
+<img src="Screenshot%201.png" alt="File Reader symbol" width="400">
+
+<img src="Screenshot%202.png" alt="File Reader test interface" width="400">
 
 
 ## Overview
