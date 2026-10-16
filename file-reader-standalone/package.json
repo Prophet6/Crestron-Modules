@@ -1,0 +1,12 @@
+{
+  "name": "file-reader-standalone",
+  "private": true,
+  "type": "module",
+  "description": "Edit a File Reader JSON file and transfer it without SIMPL.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=24.4.0"
+  }
+}

@@ -58,6 +58,11 @@ v3.2.1  10/13/2026  RGW / AI
 - Filename_FB reports the selected file name with its extension
 - Paired Simpl# source: FileReader20261013.cs. Library FileReader_v3
 
+v3.3.0  10/15/2026  RGW / AI
+- File_Location stays a string. The user-module list holds the 4-Series folders
+- Compact flash (\CF0\) is not a 4-Series path
+- File_Location_Override: 0 uses File_Location. 1 through 5 select \nvram\, \user\, \html\, \rm\, \rm2\
+
 #HELP_END
 
 /* COMPILER DIRECTIVES */
@@ -67,7 +72,7 @@ v3.2.1  10/13/2026  RGW / AI
 #CATEGORY "0" // Hidden
 
 #USER_SIMPLSHARP_LIBRARY "FileReader_v3"
-//#HELP_PDF_FILE "File Reader v3.2.1 Technical Manual.html"
+//#HELP_PDF_FILE "File Reader v3.3.0 Technical Manual.html"
 
 #ENABLE_DYNAMIC #ENABLE_STACK_CHECKING
 #DIGITAL_EXPAND InputsWithOutputs
@@ -91,6 +96,7 @@ DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				Enable_Auto_Create, Match_Partial,
 				Digital_Input_[MaxSignals];
 ANALOG_INPUT	_SKIP_,
+				File_Location_Override,
 				Format_Override;
 STRING_INPUT	Filename_Override[MaxStringLength], _SKIP_, Encryption_Key[256];
 ANALOG_INPUT	_SKIP_,
@@ -105,6 +111,7 @@ DIGITAL_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
 				Set_Default_Values, _SKIP_,
 				Digital_Output_[MaxSignals];
 ANALOG_OUTPUT	_SKIP_,
+				_SKIP_,
 				Detected_Format;
 STRING_OUTPUT	Filename_FB, Feedback, File_Size;
 ANALOG_OUTPUT	_SKIP_,
@@ -120,10 +127,6 @@ INTEGER_PARAMETER	Format, Default_Settle_Time;
 #BEGIN_PARAMETER_PROPERTIES File_Location
 	propValidUnits = unitString;
 	propDefaultUnit = unitString;
-	//propDefaultValue = "\\NVRAM\\";
-	//propList =	{"\\NVRAM\\", "Nonvolatile RAM"},
-	//			{"\\CF0\\", "Compact Flash"},
-	//			{"\\User\\", "User Folder"};
 	propShortDescription =	"The path of where the file should/does live";
 #END_PARAMETER_PROPERTIES
 
@@ -226,6 +229,38 @@ FUNCTION UpdateFileExtension() {
 	}
 }
 
+STRING_FUNCTION EffectiveFolder() {
+	STRING folder[MaxStringLength];
+
+	CSwitch (File_Location_Override) {
+		Case (1): {
+			folder = "\\nvram\\";
+			Break;
+		}
+		Case (2): {
+			folder = "\\user\\";
+			Break;
+		}
+		Case (3): {
+			folder = "\\html\\";
+			Break;
+		}
+		Case (4): {
+			folder = "\\rm\\";
+			Break;
+		}
+		Case (5): {
+			folder = "\\rm2\\";
+			Break;
+		}
+		Default: {
+			folder = File_Location;
+			Break;
+		}
+	}
+	return (folder);
+}
+
 FUNCTION BuildEffectivePath() {
 	STRING name$[MaxStringLength], selected$[255];
 	INTEGER partial;
@@ -237,7 +272,7 @@ FUNCTION BuildEffectivePath() {
 		name$ = Filename;
 
 	partial = Match_Partial;
-	DataFile.ResolveMatch(File_Location, name$, FileExtension$, partial);
+	DataFile.ResolveMatch(EffectiveFolder(), name$, FileExtension$, partial);
 	selected$ = DataFile.SelectedFileName;
 	Filename_FB = selected$;
 	EffectivePath$ = selected$;
@@ -364,7 +399,7 @@ FUNCTION MaybeAutoCreateDefaultFile() {
 	BuildEffectivePath();
 
 	if (len(EffectivePath$) = 0) return;
-	if (len(File_Location) = 0) return;
+	if (len(EffectiveFolder()) = 0) return;
 	if ((len(Filename_Override) = 0) && (len(Filename) = 0)) return;
 
 	UpdateFileExists();
@@ -457,6 +492,12 @@ PUSH Delete_Backup {
 }
 
 CHANGE Format_Override {
+	AutoCreateAttempted = 0;
+	UpdateFileExists();
+	MaybeAutoCreateDefaultFile();
+}
+
+CHANGE File_Location_Override {
 	AutoCreateAttempted = 0;
 	UpdateFileExists();
 	MaybeAutoCreateDefaultFile();

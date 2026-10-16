@@ -1,0 +1,34 @@
+{
+  "name": "file-reader-ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CH5 interface for File Reader v3.2.1. Operates the module and edits its 64 signal slots.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.4.0",
+    "npm": ">=11.4.0"
+  },
+  "scripts": {
+    "generate:contract": "node scripts/generate-contract.mjs",
+    "dev": "vite",
+    "build": "npm run generate:contract && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "archive": "node scripts/archive.mjs",
+    "build:ch5z": "npm run build && npm run archive",
+    "deploy:xpanel": "node scripts/deploy.mjs xpanel",
+    "deploy:panel": "node scripts/deploy.mjs panel"
+  },
+  "dependencies": {
+    "@crestron/ch5-crcomlib": "^99.0.448",
+    "@crestron/ch5-webxpanel": "^2.8.0",
+    "eruda": "^3.4.3"
+  },
+  "devDependencies": {
+    "@crestron/ch5-utilities-cli": "^2.19.0",
+    "@types/node": "^26.3.0",
+    "typescript": "^5.9.2",
+    "vite": "^8.2.2",
+    "vite-plugin-static-copy": "^4.1.1"
+  }
+}

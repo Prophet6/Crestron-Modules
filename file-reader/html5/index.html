@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0b0f14" />
+    <title>File Reader</title>
+    <script src="./cr-com-lib.js"></script>
+  </head>
+  <body>
+    <div id="app" class="shell" data-page="file">
+      <header class="header">
+        <div class="header__title">
+          <p class="kicker">File Reader v3.3.0</p>
+          <h1 id="file-name">No file selected</h1>
+        </div>
+        <div class="chips" aria-label="File status">
+          <span id="chip-exists" class="chip" data-state="unknown">File</span>
+          <span id="chip-encrypted" class="chip" data-state="unknown">Plain</span>
+          <span id="chip-backup" class="chip" data-state="unknown">No backup</span>
+          <span id="chip-busy" class="chip" data-state="unknown">Idle</span>
+          <span id="size-fb" class="chip chip--quiet">Size —</span>
+        </div>
+        <div class="header__actions">
+          <button type="button" id="read" class="btn btn--primary">Read</button>
+          <button type="button" id="write" class="btn btn--primary">Write</button>
+        </div>
+        <div class="header__side">
+          <div class="clock">
+            <p id="clock-time">--:--</p>
+            <p id="clock-date">—</p>
+          </div>
+          <div class="conn">
+            <span id="cip-dot" class="status-dot" data-state="connecting" aria-hidden="true"></span>
+            <p id="cip-label">Connecting</p>
+          </div>
+        </div>
+        <p id="status-line" class="status-line" aria-live="polite">Waiting for the processor</p>
+      </header>
+
+      <main class="stage">
+        <section id="page-file" class="page">
+          <div class="cards">
+            <article class="card">
+              <h2>File</h2>
+              <div class="format-grid" role="group" aria-label="File location">
+                <button type="button" class="btn location-btn" data-location="0" aria-pressed="false">Parameter</button>
+                <button type="button" class="btn location-btn" data-location="1" aria-pressed="false">NVRAM</button>
+                <button type="button" class="btn location-btn" data-location="2" aria-pressed="false">User</button>
+                <button type="button" class="btn location-btn" data-location="3" aria-pressed="false">HTML</button>
+                <button type="button" class="btn location-btn" data-location="4" aria-pressed="false">Removable</button>
+                <button type="button" class="btn location-btn" data-location="5" aria-pressed="false">Removable 2</button>
+              </div>
+              <p class="hint">Parameter uses the File Location list. The other buttons force \nvram\, \user\, \html\, \rm\, or \rm2\. The extension is still added from the format.</p>
+              <label class="field">
+                <span>File name override</span>
+                <input id="name-override" type="text" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Uses the Filename parameter" />
+              </label>
+              <p class="hint">No extension. Empty leaves the Filename parameter in charge. A fragment such as config can select Boardroom1S25_config.json when Match partial is on.</p>
+              <button type="button" id="match-partial" class="toggle" aria-pressed="false">Match partial</button>
+            </article>
+
+            <article class="card">
+              <h2>Write format</h2>
+              <div class="format-grid" role="group" aria-label="Write format">
+                <button type="button" class="btn format-btn" data-format="1" aria-pressed="false">Text</button>
+                <button type="button" class="btn format-btn" data-format="2" aria-pressed="false">CSV</button>
+                <button type="button" class="btn format-btn" data-format="3" aria-pressed="false">XML</button>
+                <button type="button" class="btn format-btn" data-format="4" aria-pressed="false">JSON</button>
+                <button type="button" class="btn format-btn" data-format="5" aria-pressed="false">INI</button>
+                <button type="button" class="btn format-btn" data-format="6" aria-pressed="false">Binary</button>
+              </div>
+              <p class="hint">A button pulses Format_Text through Format_Binary. Those set the Format analog to 1 through 6 inside the user module. The extension is added for you.</p>
+              <label class="field">
+                <span>Format analog</span>
+                <input id="format-analog" inputmode="numeric" autocomplete="off" placeholder="1–6, or blank to use the parameter" />
+              </label>
+              <p id="detected-line" class="detected">Detected: Not read</p>
+              <div id="detected-dots" class="detected-dots" aria-label="Detected format">
+                <span data-detected="1">Text</span>
+                <span data-detected="2">CSV</span>
+                <span data-detected="3">XML</span>
+                <span data-detected="4">JSON</span>
+                <span data-detected="5">INI</span>
+                <span data-detected="6">Binary</span>
+              </div>
+              <p class="hint">Detected lights after a read. It is not the format you are about to write. -1 is undetected. -2 is an integrity failure.</p>
+            </article>
+
+            <article class="card">
+              <h2>Auto-create</h2>
+              <button type="button" id="auto-create" class="toggle" aria-pressed="false">Auto-create file</button>
+              <p id="default-flash" class="flash" hidden aria-live="polite">Set_Default_Values</p>
+              <p class="hint">Held high, a missing file pulses Set_Default_Values, waits Default Wait Time, then writes. An existing file is read and is not overwritten. The values already in the editor are what get written.</p>
+              <button type="button" id="delete" class="btn btn--danger">Delete file</button>
+            </article>
+
+            <article class="card">
+              <h2>Backup</h2>
+              <p id="backup-state" class="lead">No backup</p>
+              <div class="stack">
+                <button type="button" id="enable-backup" class="toggle" aria-pressed="false">Enable backup</button>
+                <button type="button" id="enable-history" class="toggle" aria-pressed="false">Keep backup history</button>
+              </div>
+              <p class="hint">With backup enabled, a write stores name.ext.bak beside the file. With history also enabled, the previous backup is archived as .bak.yyyyMMdd.gz instead of being overwritten.</p>
+              <div class="stack stack--row">
+                <button type="button" id="restore" class="btn btn--primary">Restore backup</button>
+                <button type="button" id="delete-backup" class="btn btn--danger">Delete backup</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Encrypt</h2>
+              <p id="encrypted-state" class="lead">Not encrypted</p>
+              <button type="button" id="encrypt" class="toggle" aria-pressed="false">Encrypt writes</button>
+              <label class="field">
+                <span>Encryption key</span>
+                <span class="key-row">
+                  <input id="encryption-key" type="password" maxlength="256" autocomplete="off" spellcheck="false" placeholder="16 characters is AES-128" />
+                  <button type="button" id="key-show" class="btn">Show</button>
+                </span>
+              </label>
+              <p class="warn">A write with Encrypt high and no key fails. A read of an encrypted file fails without the same key.</p>
+            </article>
+
+            <article class="card card--note">
+              <h2>Set in SIMPL</h2>
+              <ul>
+                <li><strong>File Location</strong> is the folder string from the user-module list: \nvram\, \user\, \html\, \rm\, or \rm2\. Parameter on this page uses that string. The extension is still appended.</li>
+                <li><strong>Filename</strong> is used while the name override is empty.</li>
+                <li><strong>Format</strong> is used while the Format analog is outside 1 through 6.</li>
+                <li><strong>Default Wait Time</strong> is the pause after Set_Default_Values. Default 0.25s.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section id="page-signals" class="page" hidden>
+          <div class="editor-bar">
+            <div class="kind-tabs" role="tablist" aria-label="Signal type">
+              <button type="button" class="btn" data-kind="digital" aria-pressed="true">Digitals</button>
+              <button type="button" class="btn" data-kind="analog" aria-pressed="false">Analogs</button>
+              <button type="button" class="btn" data-kind="serial" aria-pressed="false">Serials</button>
+            </div>
+            <label class="check">
+              <input id="diff-only" type="checkbox" />
+              Differences only
+            </label>
+            <label class="field field--inline">
+              <span>Go to</span>
+              <input id="jump" type="number" min="1" max="64" inputmode="numeric" />
+            </label>
+            <button type="button" id="use-file" class="btn">Use file values</button>
+            <button type="button" id="clear-edits" class="btn">Clear edits</button>
+          </div>
+          <p class="hint editor-hint">The edit column is sent to the module. The file column is what a read or a successful write put on the outputs. Read does not copy the file back into the edits.</p>
+          <p id="no-diffs" class="empty" hidden>No unsaved edits on this tab.</p>
+          <div id="rows" class="rows" data-kind="digital" data-diff-only="false">
+            <div class="row row--head">
+              <span>#</span>
+              <span>Edit</span>
+              <span>In the file</span>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <nav class="nav" aria-label="Pages">
+        <button type="button" data-nav="file" aria-pressed="true">File</button>
+        <button type="button" data-nav="signals" aria-pressed="false">Signals</button>
+      </nav>
+
+      <div id="confirm" class="confirm" hidden>
+        <div class="confirm__card" role="alertdialog" aria-modal="true" aria-labelledby="confirm-text">
+          <p id="confirm-text">Delete the file?</p>
+          <div class="stack stack--row">
+            <button type="button" id="confirm-yes" class="btn btn--danger">Delete</button>
+            <button type="button" id="confirm-no" class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

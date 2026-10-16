@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>File Reader standalone</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="kicker">No SIMPL symbol</p>
+      <h1>File Reader</h1>
+    </div>
+    <p id="status">Ready</p>
+  </header>
+  <section class="transfer">
+    <label>URL
+      <input id="url" type="text" spellcheck="false" placeholder="ftp://192.168.86.200/user/config.json">
+    </label>
+    <label>User
+      <input id="user" type="text" autocomplete="off" spellcheck="false">
+    </label>
+    <label>Password
+      <input id="password" type="password" autocomplete="off">
+    </label>
+    <label class="check"><input id="insecure" type="checkbox"> Allow insecure TLS</label>
+    <div class="actions">
+      <button type="button" id="check">Check</button>
+      <button type="button" id="read" class="primary">Read</button>
+      <button type="button" id="write" class="primary">Write</button>
+      <button type="button" id="download">Download JSON</button>
+      <label class="file">Open JSON<input id="open" type="file" accept=".json,application/json"></label>
+    </div>
+  </section>
+  <nav class="kinds">
+    <button type="button" data-kind="digital" aria-pressed="true">Digitals</button>
+    <button type="button" data-kind="analog" aria-pressed="false">Analogs</button>
+    <button type="button" data-kind="serial" aria-pressed="false">Serials</button>
+  </nav>
+  <div id="rows"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

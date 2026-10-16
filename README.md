@@ -2,7 +2,7 @@
 
 Public catalog of Crestron **SIMPL+** / **Simpl#** modules.
 
-Each module lives in its own folder. Keep the compiled `.clz` (when the module uses Simpl#) next to the `.usp` so SIMPL Windows can find it.
+Each module lives in its own folder. Keep the compiled `.clz` (when the module uses Simpl#) next to the `.usp` so SIMPL Windows can find it. [file-reader-standalone](file-reader-standalone/) edits a File Reader JSON file and transfers it over HTTP, HTTPS, or FTP without a SIMPL program.
 
 This project is not affiliated with Crestron Electronics.
 
@@ -10,7 +10,7 @@ This project is not affiliated with Crestron Electronics.
 
 | Folder | Module | Series | What it does |
 |--------|--------|--------|----------------|
-| [file-reader](file-reader/) | File Reader v3.2.1 | 3-Series / 4-Series | Read and write digital, analog, and serial values to Text / CSV / XML / JSON / INI / Binary files, with optional AES encryption and backups. |
+| [file-reader](file-reader/) | File Reader v3.3.0 | **4-Series** | Read and write digital, analog, and serial values to Text / CSV / XML / JSON / INI / Binary files, with optional AES encryption and backups. |
 | [remote-file-sync](remote-file-sync/) | Remote File Sync v1.0 | **4-Series** | Check, retrieve, or overwrite one file at an `http://`, `https://`, or `ftp://` URL. `Enable_Pull` retrieves on an interval. Pair `Retrieved` with File Reader `Read`. |
 | [power-shutdown-confirmation](power-shutdown-confirmation/) | Power Shutdown Confirmation v1.0 | 3-Series / 4-Series | Confirm a shutdown (or similar) action before the program acts on it. |
 | [crestron-mqtt-integration](crestron-mqtt-integration/) | Crestron MQTT (HA bridge) | **4-Series** | MQTT client (M2Mqtt / SSharp port) for Home Assistant publish and subscribe. |

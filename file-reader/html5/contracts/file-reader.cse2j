@@ -1,0 +1,1087 @@
+{
+	"name": "FileReader",
+	"timestamp": "2026-10-16 01:39:04.886",
+	"version": "1.0.0.0",
+	"schema_version": 1,
+	"extra_value": "File Reader v3.3.0 name-based CH5 contract",
+	"signals": {
+		"states": {
+			"boolean": {
+				"1": {
+					"1": "FileReader.Exists_FB",
+					"2": "FileReader.Not_Exist_FB",
+					"3": "FileReader.Busy_FB",
+					"4": "FileReader.Encrypted_FB",
+					"5": "FileReader.Backup_Exists_FB",
+					"6": "FileReader.Set_Default_Values",
+					"7": "FileReader.Format_Text_FB",
+					"8": "FileReader.Format_CSV_FB",
+					"9": "FileReader.Format_XML_FB",
+					"10": "FileReader.Format_JSON_FB",
+					"11": "FileReader.Format_INI_FB",
+					"12": "FileReader.Format_Binary_FB",
+					"13": "FileReader.Digital_Output_1",
+					"14": "FileReader.Digital_Output_2",
+					"15": "FileReader.Digital_Output_3",
+					"16": "FileReader.Digital_Output_4",
+					"17": "FileReader.Digital_Output_5",
+					"18": "FileReader.Digital_Output_6",
+					"19": "FileReader.Digital_Output_7",
+					"20": "FileReader.Digital_Output_8",
+					"21": "FileReader.Digital_Output_9",
+					"22": "FileReader.Digital_Output_10",
+					"23": "FileReader.Digital_Output_11",
+					"24": "FileReader.Digital_Output_12",
+					"25": "FileReader.Digital_Output_13",
+					"26": "FileReader.Digital_Output_14",
+					"27": "FileReader.Digital_Output_15",
+					"28": "FileReader.Digital_Output_16",
+					"29": "FileReader.Digital_Output_17",
+					"30": "FileReader.Digital_Output_18",
+					"31": "FileReader.Digital_Output_19",
+					"32": "FileReader.Digital_Output_20",
+					"33": "FileReader.Digital_Output_21",
+					"34": "FileReader.Digital_Output_22",
+					"35": "FileReader.Digital_Output_23",
+					"36": "FileReader.Digital_Output_24",
+					"37": "FileReader.Digital_Output_25",
+					"38": "FileReader.Digital_Output_26",
+					"39": "FileReader.Digital_Output_27",
+					"40": "FileReader.Digital_Output_28",
+					"41": "FileReader.Digital_Output_29",
+					"42": "FileReader.Digital_Output_30",
+					"43": "FileReader.Digital_Output_31",
+					"44": "FileReader.Digital_Output_32",
+					"45": "FileReader.Digital_Output_33",
+					"46": "FileReader.Digital_Output_34",
+					"47": "FileReader.Digital_Output_35",
+					"48": "FileReader.Digital_Output_36",
+					"49": "FileReader.Digital_Output_37",
+					"50": "FileReader.Digital_Output_38",
+					"51": "FileReader.Digital_Output_39",
+					"52": "FileReader.Digital_Output_40",
+					"53": "FileReader.Digital_Output_41",
+					"54": "FileReader.Digital_Output_42",
+					"55": "FileReader.Digital_Output_43",
+					"56": "FileReader.Digital_Output_44",
+					"57": "FileReader.Digital_Output_45",
+					"58": "FileReader.Digital_Output_46",
+					"59": "FileReader.Digital_Output_47",
+					"60": "FileReader.Digital_Output_48",
+					"61": "FileReader.Digital_Output_49",
+					"62": "FileReader.Digital_Output_50",
+					"63": "FileReader.Digital_Output_51",
+					"64": "FileReader.Digital_Output_52",
+					"65": "FileReader.Digital_Output_53",
+					"66": "FileReader.Digital_Output_54",
+					"67": "FileReader.Digital_Output_55",
+					"68": "FileReader.Digital_Output_56",
+					"69": "FileReader.Digital_Output_57",
+					"70": "FileReader.Digital_Output_58",
+					"71": "FileReader.Digital_Output_59",
+					"72": "FileReader.Digital_Output_60",
+					"73": "FileReader.Digital_Output_61",
+					"74": "FileReader.Digital_Output_62",
+					"75": "FileReader.Digital_Output_63",
+					"76": "FileReader.Digital_Output_64"
+				}
+			},
+			"numeric": {
+				"1": {
+					"1": "FileReader.Detected_Format_FB",
+					"2": "FileReader.Analog_Output_1",
+					"3": "FileReader.Analog_Output_2",
+					"4": "FileReader.Analog_Output_3",
+					"5": "FileReader.Analog_Output_4",
+					"6": "FileReader.Analog_Output_5",
+					"7": "FileReader.Analog_Output_6",
+					"8": "FileReader.Analog_Output_7",
+					"9": "FileReader.Analog_Output_8",
+					"10": "FileReader.Analog_Output_9",
+					"11": "FileReader.Analog_Output_10",
+					"12": "FileReader.Analog_Output_11",
+					"13": "FileReader.Analog_Output_12",
+					"14": "FileReader.Analog_Output_13",
+					"15": "FileReader.Analog_Output_14",
+					"16": "FileReader.Analog_Output_15",
+					"17": "FileReader.Analog_Output_16",
+					"18": "FileReader.Analog_Output_17",
+					"19": "FileReader.Analog_Output_18",
+					"20": "FileReader.Analog_Output_19",
+					"21": "FileReader.Analog_Output_20",
+					"22": "FileReader.Analog_Output_21",
+					"23": "FileReader.Analog_Output_22",
+					"24": "FileReader.Analog_Output_23",
+					"25": "FileReader.Analog_Output_24",
+					"26": "FileReader.Analog_Output_25",
+					"27": "FileReader.Analog_Output_26",
+					"28": "FileReader.Analog_Output_27",
+					"29": "FileReader.Analog_Output_28",
+					"30": "FileReader.Analog_Output_29",
+					"31": "FileReader.Analog_Output_30",
+					"32": "FileReader.Analog_Output_31",
+					"33": "FileReader.Analog_Output_32",
+					"34": "FileReader.Analog_Output_33",
+					"35": "FileReader.Analog_Output_34",
+					"36": "FileReader.Analog_Output_35",
+					"37": "FileReader.Analog_Output_36",
+					"38": "FileReader.Analog_Output_37",
+					"39": "FileReader.Analog_Output_38",
+					"40": "FileReader.Analog_Output_39",
+					"41": "FileReader.Analog_Output_40",
+					"42": "FileReader.Analog_Output_41",
+					"43": "FileReader.Analog_Output_42",
+					"44": "FileReader.Analog_Output_43",
+					"45": "FileReader.Analog_Output_44",
+					"46": "FileReader.Analog_Output_45",
+					"47": "FileReader.Analog_Output_46",
+					"48": "FileReader.Analog_Output_47",
+					"49": "FileReader.Analog_Output_48",
+					"50": "FileReader.Analog_Output_49",
+					"51": "FileReader.Analog_Output_50",
+					"52": "FileReader.Analog_Output_51",
+					"53": "FileReader.Analog_Output_52",
+					"54": "FileReader.Analog_Output_53",
+					"55": "FileReader.Analog_Output_54",
+					"56": "FileReader.Analog_Output_55",
+					"57": "FileReader.Analog_Output_56",
+					"58": "FileReader.Analog_Output_57",
+					"59": "FileReader.Analog_Output_58",
+					"60": "FileReader.Analog_Output_59",
+					"61": "FileReader.Analog_Output_60",
+					"62": "FileReader.Analog_Output_61",
+					"63": "FileReader.Analog_Output_62",
+					"64": "FileReader.Analog_Output_63",
+					"65": "FileReader.Analog_Output_64"
+				}
+			},
+			"string": {
+				"1": {
+					"1": "FileReader.FileName_FB",
+					"2": "FileReader.Operational_Feedback",
+					"3": "FileReader.Size_FB",
+					"4": "FileReader.Serial_Output_1",
+					"5": "FileReader.Serial_Output_2",
+					"6": "FileReader.Serial_Output_3",
+					"7": "FileReader.Serial_Output_4",
+					"8": "FileReader.Serial_Output_5",
+					"9": "FileReader.Serial_Output_6",
+					"10": "FileReader.Serial_Output_7",
+					"11": "FileReader.Serial_Output_8",
+					"12": "FileReader.Serial_Output_9",
+					"13": "FileReader.Serial_Output_10",
+					"14": "FileReader.Serial_Output_11",
+					"15": "FileReader.Serial_Output_12",
+					"16": "FileReader.Serial_Output_13",
+					"17": "FileReader.Serial_Output_14",
+					"18": "FileReader.Serial_Output_15",
+					"19": "FileReader.Serial_Output_16",
+					"20": "FileReader.Serial_Output_17",
+					"21": "FileReader.Serial_Output_18",
+					"22": "FileReader.Serial_Output_19",
+					"23": "FileReader.Serial_Output_20",
+					"24": "FileReader.Serial_Output_21",
+					"25": "FileReader.Serial_Output_22",
+					"26": "FileReader.Serial_Output_23",
+					"27": "FileReader.Serial_Output_24",
+					"28": "FileReader.Serial_Output_25",
+					"29": "FileReader.Serial_Output_26",
+					"30": "FileReader.Serial_Output_27",
+					"31": "FileReader.Serial_Output_28",
+					"32": "FileReader.Serial_Output_29",
+					"33": "FileReader.Serial_Output_30",
+					"34": "FileReader.Serial_Output_31",
+					"35": "FileReader.Serial_Output_32",
+					"36": "FileReader.Serial_Output_33",
+					"37": "FileReader.Serial_Output_34",
+					"38": "FileReader.Serial_Output_35",
+					"39": "FileReader.Serial_Output_36",
+					"40": "FileReader.Serial_Output_37",
+					"41": "FileReader.Serial_Output_38",
+					"42": "FileReader.Serial_Output_39",
+					"43": "FileReader.Serial_Output_40",
+					"44": "FileReader.Serial_Output_41",
+					"45": "FileReader.Serial_Output_42",
+					"46": "FileReader.Serial_Output_43",
+					"47": "FileReader.Serial_Output_44",
+					"48": "FileReader.Serial_Output_45",
+					"49": "FileReader.Serial_Output_46",
+					"50": "FileReader.Serial_Output_47",
+					"51": "FileReader.Serial_Output_48",
+					"52": "FileReader.Serial_Output_49",
+					"53": "FileReader.Serial_Output_50",
+					"54": "FileReader.Serial_Output_51",
+					"55": "FileReader.Serial_Output_52",
+					"56": "FileReader.Serial_Output_53",
+					"57": "FileReader.Serial_Output_54",
+					"58": "FileReader.Serial_Output_55",
+					"59": "FileReader.Serial_Output_56",
+					"60": "FileReader.Serial_Output_57",
+					"61": "FileReader.Serial_Output_58",
+					"62": "FileReader.Serial_Output_59",
+					"63": "FileReader.Serial_Output_60",
+					"64": "FileReader.Serial_Output_61",
+					"65": "FileReader.Serial_Output_62",
+					"66": "FileReader.Serial_Output_63",
+					"67": "FileReader.Serial_Output_64"
+				}
+			}
+		},
+		"events": {
+			"boolean": {
+				"FileReader.Read": {
+					"joinId": 1,
+					"smartObjectId": 1
+				},
+				"FileReader.Write": {
+					"joinId": 2,
+					"smartObjectId": 1
+				},
+				"FileReader.Delete": {
+					"joinId": 3,
+					"smartObjectId": 1
+				},
+				"FileReader.Encrypt": {
+					"joinId": 4,
+					"smartObjectId": 1
+				},
+				"FileReader.Enable_Backup": {
+					"joinId": 5,
+					"smartObjectId": 1
+				},
+				"FileReader.Enable_Backup_History": {
+					"joinId": 6,
+					"smartObjectId": 1
+				},
+				"FileReader.Restore_Backup": {
+					"joinId": 7,
+					"smartObjectId": 1
+				},
+				"FileReader.Delete_Backup": {
+					"joinId": 8,
+					"smartObjectId": 1
+				},
+				"FileReader.Auto_Create_File": {
+					"joinId": 9,
+					"smartObjectId": 1
+				},
+				"FileReader.Match_Partial": {
+					"joinId": 10,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_Text": {
+					"joinId": 11,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_CSV": {
+					"joinId": 12,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_XML": {
+					"joinId": 13,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_JSON": {
+					"joinId": 14,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_INI": {
+					"joinId": 15,
+					"smartObjectId": 1
+				},
+				"FileReader.Format_Binary": {
+					"joinId": 16,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_1": {
+					"joinId": 17,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_2": {
+					"joinId": 18,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_3": {
+					"joinId": 19,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_4": {
+					"joinId": 20,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_5": {
+					"joinId": 21,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_6": {
+					"joinId": 22,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_7": {
+					"joinId": 23,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_8": {
+					"joinId": 24,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_9": {
+					"joinId": 25,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_10": {
+					"joinId": 26,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_11": {
+					"joinId": 27,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_12": {
+					"joinId": 28,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_13": {
+					"joinId": 29,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_14": {
+					"joinId": 30,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_15": {
+					"joinId": 31,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_16": {
+					"joinId": 32,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_17": {
+					"joinId": 33,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_18": {
+					"joinId": 34,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_19": {
+					"joinId": 35,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_20": {
+					"joinId": 36,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_21": {
+					"joinId": 37,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_22": {
+					"joinId": 38,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_23": {
+					"joinId": 39,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_24": {
+					"joinId": 40,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_25": {
+					"joinId": 41,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_26": {
+					"joinId": 42,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_27": {
+					"joinId": 43,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_28": {
+					"joinId": 44,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_29": {
+					"joinId": 45,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_30": {
+					"joinId": 46,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_31": {
+					"joinId": 47,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_32": {
+					"joinId": 48,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_33": {
+					"joinId": 49,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_34": {
+					"joinId": 50,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_35": {
+					"joinId": 51,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_36": {
+					"joinId": 52,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_37": {
+					"joinId": 53,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_38": {
+					"joinId": 54,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_39": {
+					"joinId": 55,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_40": {
+					"joinId": 56,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_41": {
+					"joinId": 57,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_42": {
+					"joinId": 58,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_43": {
+					"joinId": 59,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_44": {
+					"joinId": 60,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_45": {
+					"joinId": 61,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_46": {
+					"joinId": 62,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_47": {
+					"joinId": 63,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_48": {
+					"joinId": 64,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_49": {
+					"joinId": 65,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_50": {
+					"joinId": 66,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_51": {
+					"joinId": 67,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_52": {
+					"joinId": 68,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_53": {
+					"joinId": 69,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_54": {
+					"joinId": 70,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_55": {
+					"joinId": 71,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_56": {
+					"joinId": 72,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_57": {
+					"joinId": 73,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_58": {
+					"joinId": 74,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_59": {
+					"joinId": 75,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_60": {
+					"joinId": 76,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_61": {
+					"joinId": 77,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_62": {
+					"joinId": 78,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_63": {
+					"joinId": 79,
+					"smartObjectId": 1
+				},
+				"FileReader.Digital_Input_64": {
+					"joinId": 80,
+					"smartObjectId": 1
+				}
+			},
+			"numeric": {
+				"FileReader.File_Location_Override": {
+					"joinId": 1,
+					"smartObjectId": 1
+				},
+				"FileReader.Format": {
+					"joinId": 2,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_1": {
+					"joinId": 3,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_2": {
+					"joinId": 4,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_3": {
+					"joinId": 5,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_4": {
+					"joinId": 6,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_5": {
+					"joinId": 7,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_6": {
+					"joinId": 8,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_7": {
+					"joinId": 9,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_8": {
+					"joinId": 10,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_9": {
+					"joinId": 11,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_10": {
+					"joinId": 12,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_11": {
+					"joinId": 13,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_12": {
+					"joinId": 14,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_13": {
+					"joinId": 15,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_14": {
+					"joinId": 16,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_15": {
+					"joinId": 17,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_16": {
+					"joinId": 18,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_17": {
+					"joinId": 19,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_18": {
+					"joinId": 20,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_19": {
+					"joinId": 21,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_20": {
+					"joinId": 22,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_21": {
+					"joinId": 23,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_22": {
+					"joinId": 24,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_23": {
+					"joinId": 25,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_24": {
+					"joinId": 26,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_25": {
+					"joinId": 27,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_26": {
+					"joinId": 28,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_27": {
+					"joinId": 29,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_28": {
+					"joinId": 30,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_29": {
+					"joinId": 31,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_30": {
+					"joinId": 32,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_31": {
+					"joinId": 33,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_32": {
+					"joinId": 34,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_33": {
+					"joinId": 35,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_34": {
+					"joinId": 36,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_35": {
+					"joinId": 37,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_36": {
+					"joinId": 38,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_37": {
+					"joinId": 39,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_38": {
+					"joinId": 40,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_39": {
+					"joinId": 41,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_40": {
+					"joinId": 42,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_41": {
+					"joinId": 43,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_42": {
+					"joinId": 44,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_43": {
+					"joinId": 45,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_44": {
+					"joinId": 46,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_45": {
+					"joinId": 47,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_46": {
+					"joinId": 48,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_47": {
+					"joinId": 49,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_48": {
+					"joinId": 50,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_49": {
+					"joinId": 51,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_50": {
+					"joinId": 52,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_51": {
+					"joinId": 53,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_52": {
+					"joinId": 54,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_53": {
+					"joinId": 55,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_54": {
+					"joinId": 56,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_55": {
+					"joinId": 57,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_56": {
+					"joinId": 58,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_57": {
+					"joinId": 59,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_58": {
+					"joinId": 60,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_59": {
+					"joinId": 61,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_60": {
+					"joinId": 62,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_61": {
+					"joinId": 63,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_62": {
+					"joinId": 64,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_63": {
+					"joinId": 65,
+					"smartObjectId": 1
+				},
+				"FileReader.Analog_Input_64": {
+					"joinId": 66,
+					"smartObjectId": 1
+				}
+			},
+			"string": {
+				"FileReader.FileName_Override": {
+					"joinId": 1,
+					"smartObjectId": 1
+				},
+				"FileReader.Encryption_Key": {
+					"joinId": 2,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_1": {
+					"joinId": 3,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_2": {
+					"joinId": 4,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_3": {
+					"joinId": 5,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_4": {
+					"joinId": 6,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_5": {
+					"joinId": 7,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_6": {
+					"joinId": 8,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_7": {
+					"joinId": 9,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_8": {
+					"joinId": 10,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_9": {
+					"joinId": 11,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_10": {
+					"joinId": 12,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_11": {
+					"joinId": 13,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_12": {
+					"joinId": 14,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_13": {
+					"joinId": 15,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_14": {
+					"joinId": 16,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_15": {
+					"joinId": 17,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_16": {
+					"joinId": 18,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_17": {
+					"joinId": 19,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_18": {
+					"joinId": 20,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_19": {
+					"joinId": 21,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_20": {
+					"joinId": 22,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_21": {
+					"joinId": 23,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_22": {
+					"joinId": 24,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_23": {
+					"joinId": 25,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_24": {
+					"joinId": 26,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_25": {
+					"joinId": 27,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_26": {
+					"joinId": 28,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_27": {
+					"joinId": 29,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_28": {
+					"joinId": 30,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_29": {
+					"joinId": 31,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_30": {
+					"joinId": 32,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_31": {
+					"joinId": 33,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_32": {
+					"joinId": 34,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_33": {
+					"joinId": 35,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_34": {
+					"joinId": 36,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_35": {
+					"joinId": 37,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_36": {
+					"joinId": 38,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_37": {
+					"joinId": 39,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_38": {
+					"joinId": 40,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_39": {
+					"joinId": 41,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_40": {
+					"joinId": 42,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_41": {
+					"joinId": 43,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_42": {
+					"joinId": 44,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_43": {
+					"joinId": 45,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_44": {
+					"joinId": 46,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_45": {
+					"joinId": 47,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_46": {
+					"joinId": 48,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_47": {
+					"joinId": 49,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_48": {
+					"joinId": 50,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_49": {
+					"joinId": 51,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_50": {
+					"joinId": 52,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_51": {
+					"joinId": 53,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_52": {
+					"joinId": 54,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_53": {
+					"joinId": 55,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_54": {
+					"joinId": 56,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_55": {
+					"joinId": 57,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_56": {
+					"joinId": 58,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_57": {
+					"joinId": 59,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_58": {
+					"joinId": 60,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_59": {
+					"joinId": 61,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_60": {
+					"joinId": 62,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_61": {
+					"joinId": 63,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_62": {
+					"joinId": 64,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_63": {
+					"joinId": 65,
+					"smartObjectId": 1
+				},
+				"FileReader.Serial_Input_64": {
+					"joinId": 66,
+					"smartObjectId": 1
+				}
+			}
+		}
+	}
+}

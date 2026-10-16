@@ -1,0 +1,56 @@
+:root {
+  color: #e7edf5;
+  background: #0b0f14;
+  font: 16px/1.4 "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header, .transfer, .kinds, #rows { max-width: 960px; margin: 0 auto; }
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  padding: 20px 16px 8px;
+}
+h1 { margin: 0; font-size: 28px; }
+.kicker { margin: 0; letter-spacing: 0.12em; text-transform: uppercase; color: #8ea0b5; font-size: 12px; }
+#status { margin: 0; color: #d7e4f4; }
+.transfer, .kinds { padding: 8px 16px; }
+.transfer {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 10px;
+}
+label { display: flex; flex-direction: column; gap: 4px; color: #8ea0b5; font-size: 13px; }
+input[type="text"], input[type="password"], input[type="number"] {
+  min-height: 40px;
+  border: 1px solid #2a3644;
+  border-radius: 8px;
+  background: #121820;
+  color: inherit;
+  padding: 6px 10px;
+}
+.check { align-self: end; flex-direction: row; align-items: center; gap: 8px; min-height: 40px; }
+.actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+button, .file {
+  min-height: 40px;
+  border: 1px solid #2a3644;
+  border-radius: 8px;
+  background: #1a2330;
+  color: inherit;
+  padding: 8px 12px;
+}
+.primary { background: #d7e4f4; color: #102033; border-color: transparent; font-weight: 650; }
+.kinds { display: flex; justify-content: center; gap: 8px; }
+.kinds button[aria-pressed="true"] { background: #d7e4f4; color: #102033; }
+#rows { padding: 0 16px 32px; }
+.row {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #1c2632;
+}
+.row[hidden] { display: none; }

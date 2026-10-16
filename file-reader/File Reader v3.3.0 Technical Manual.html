@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File Reader v3.3.0</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --muted: #5c564c;
+    --line: #e3d8c8;
+    --paper: #f6f1e8;
+    --card: #fffdf8;
+    --amber: #9a4b12;
+    --header: #241f1a;
+    --warn: #8a4b08;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background: var(--header);
+    color: #f6f1e8;
+    padding: 2.4rem 1.5rem 2rem;
+  }
+  header.banner .wrap, main, nav.toc { max-width: 52rem; margin: 0 auto; }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #e8b48a;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+  }
+  header.banner p { margin: 0; max-width: 40rem; color: #e7dfd4; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #fffdf8;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+  }
+  nav.toc a { color: var(--amber); text-decoration: none; font-size: 0.92rem; }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 4rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.2rem 0 0.6rem;
+    padding-top: 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--amber); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--amber); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8ef; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: #f3ebe1;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.9em; }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.25rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  pre {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  footer {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · SIMPL# · 4-Series</p>
+    <h1>File Reader v3.3.0</h1>
+    <p>One user module and one shared library that store and restore digital, analog, and serial signals in a file on the processor.</p>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#formats">Formats</a>
+  <a href="#parameters">Parameters</a>
+  <a href="#inputs">Inputs</a>
+  <a href="#outputs">Outputs</a>
+  <a href="#auto">Auto-create</a>
+  <a href="#backup">Backup and encryption</a>
+  <a href="#examples">Examples</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead">File Reader v3.3.0 writes the signals on the symbol into a file, and reads that file back onto the outputs. Reads detect the format. Writes use the format you select. A successful write also copies the inputs onto the outputs. The folder is a 4-Series path. Compact flash is not offered.</p>
+  <div class="grid">
+    <article>
+      <h3>User module</h3>
+      <p><span class="sig">File Reader v3.3.0</span> is the symbol you drop in SIMPL Windows. F1 on that symbol opens this page. The groups, top to bottom, are File_Location, File_Info, Format, Digital, Analog, and Serial.</p>
+    </article>
+    <article>
+      <h3>SIMPL+ symbol</h3>
+      <p>The paired SIMPL+ module can stay visible until it is inside this user module. Its F1 help is the comment inside the <code>.usp</code>. Copy-after-write, auto-create, and the folder override live there.</p>
+    </article>
+    <article>
+      <h3>Library</h3>
+      <p>Library <span class="sig">FileReader_v3</span>, source <code>FileReader20261013.cs</code>, class <code>FileDataHandler</code>. Keep <code>FileReader_v3.clz</code> next to the <code>.usp</code>. Assembly version 3.2.1.0. The archive name stays on the major version.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Keep <span class="sig">FileReader_v3.clz</span> next to <code>File Reader v3.3.0.usp</code>. This package targets 4-Series only.</li>
+    <li>Add <span class="sig">File Reader v3.3.0</span>. Set <span class="sig">File Location</span>, <span class="sig">Filename</span> with no extension, and <span class="sig">Format</span>. The format default is 4, JSON. The folder default is <code>\nvram\</code>.</li>
+    <li>Expand the digital, analog, and serial pairs you need. The symbol ships with 64 of each type, and the arrays can be raised to 256.</li>
+    <li>Drive the inputs, then pulse <span class="sig">Write</span>. On success the file is stored and every input is copied to the matching output. Digitals are driven as an explicit 0 or 1.</li>
+    <li>Pulse <span class="sig">Read</span> to load a file. <span class="sig">Detected_Format_FB</span> and <span class="sig">Operational_Feedback</span> report what was found. Outputs stay where they were if the read fails.</li>
+    <li>For startup, hold <span class="sig">Auto_Create_File</span> high and wire <span class="sig">Set_Default_Values</span> to the logic that drives the default inputs. A missing file is created. An existing file is read and is not overwritten.</li>
+  </ol>
+  <div class="note">
+    Press F1 on the <span class="sig">File Reader v3.3.0</span> user module to open this page. Leave <code>File Reader v3.3.0 Technical Manual.html</code> next to the <code>.umc</code>.
+  </div>
+  <div class="card">
+    <strong>Path.</strong> The file is the chosen folder plus <span class="sig">Filename</span>, or <span class="sig">File_Name</span> when that string is not empty, plus the extension for the active format. Do not put the extension in the name. The folder string includes its trailing separator. No extra slash is inserted.
+    With <span class="sig">Match_Partial</span> high, that name is a fragment. <code>config</code> and JSON can select <code>Boardroom1S25_config.json</code> in the same folder. The comparison ignores case. Several matches use the first name alphabetically. No match uses the fragment as the whole file name, so auto-create can write <code>config.json</code>.
+    Directory names on a 4-Series processor are case-sensitive. Use the lowercase paths in the <span class="sig">File Location</span> list.
+  </div>
+
+  <h2 id="formats">Formats</h2>
+  <p>The <span class="sig">Format</span> parameter chooses the file written. The <span class="sig">Format</span> analog replaces that parameter when its value is 1 through 6. <span class="sig">Format_Text</span> through <span class="sig">Format_Binary</span> set that analog to 1 through 6. Reads ignore the selection and detect the format. <span class="sig">Detected_Format_FB</span> is across from the <span class="sig">Format</span> analog. <span class="sig">Format_Text_FB</span> through <span class="sig">Format_Binary_FB</span> follow the detected code.</p>
+  <table>
+    <thead><tr><th>Code</th><th>Format</th><th>Extension</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Text</td><td><code>.txt</code></td></tr>
+      <tr><td>2</td><td>CSV</td><td><code>.csv</code></td></tr>
+      <tr><td>3</td><td>XML</td><td><code>.xml</code></td></tr>
+      <tr><td>4</td><td>JSON</td><td><code>.json</code> (default)</td></tr>
+      <tr><td>5</td><td>INI</td><td><code>.ini</code></td></tr>
+      <tr><td>6</td><td>Binary</td><td><code>.bin</code></td></tr>
+    </tbody>
+  </table>
+  <p>After a read, <span class="sig">Detected_Format_FB</span> is 1 through 6, <code>-1</code> when the format is undetected or the read errors, or <code>-2</code> when a non-JSON integrity check fails. A SIMPL analog is 16-bit, so <code>-1</code> and <code>-2</code> arrive as 65535 and 65534. A write does not change <span class="sig">Detected_Format_FB</span>.</p>
+
+  <h3>JSON</h3>
+  <p>JSON may come from this module or from another tool. The reader looks for <code>digitals</code>, <code>analogs</code>, and <code>serials</code> arrays, at the top level or nested under <code>data</code> or <code>signalData</code>. Names are case-insensitive. Arrays may be shorter than 64. Missing slots stay 0 or empty. Digital elements may be 0 or 1, integers, or JSON booleans. An optional <code>crc32</code> field is ignored for pass or fail.</p>
+  <pre>{
+  "digitals": [0, 1, 0, 1],
+  "analogs": [8, 16, 32, 64],
+  "serials": ["Room A", "Scene 1", "", ""]
+}</pre>
+  <p>A write from this module stores a full 64-element set and may include <code>crc32</code>. Readers do not require it.</p>
+
+  <h2 id="parameters">Parameters</h2>
+  <p>These four parameters sit under the signals. <span class="sig">File Location</span> is the list actually passed into the SIMPL+ string. An unused parameter definition in the module file still holds the old compact-flash list. It is not the parameter on the symbol.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">File Location</td><td>Parameter</td><td>Folder on the 4-Series processor, including the trailing separator. Default <code>\nvram\</code>. The list is <code>\nvram\</code> (Nonvolatile RAM), <code>\user\</code> (User Folder), <code>\html\</code> (HTML Folder), <code>\rm\</code> (Removable 1), and <code>\rm2\</code> (Removable 2). <code>\rm\</code> and <code>\rm2\</code> exist only while a card is mounted. Used when the <span class="sig">File_Location</span> analog is 0 or outside 1 through 5.</td></tr>
+      <tr><td class="sig">Filename</td><td>Parameter</td><td>File name without the extension, such as <code>FileName</code>. Used while <span class="sig">File_Name</span> is empty. The extension comes from <span class="sig">Format</span>.</td></tr>
+      <tr><td class="sig">Format</td><td>Parameter</td><td>Write format, 1 through 6. Default 4 (JSON). The <span class="sig">Format</span> analog replaces this when it is 1 through 6. Reads detect the format themselves.</td></tr>
+      <tr><td class="sig">Default Wait Time</td><td>Parameter</td><td>Wait after <span class="sig">Set_Default_Values</span> before the auto-create write, so external logic can drive the inputs. The symbol default is 0.5s. The SIMPL+ range is 0.01s to 10s.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="inputs">Inputs</h2>
+  <p>The rows below follow the user module, top to bottom. A blank row is an unused cell and is omitted here. Pulse <span class="sig">Read</span>, <span class="sig">Write</span>, <span class="sig">Delete</span>, <span class="sig">Restore_Backup</span>, and <span class="sig">Delete_Backup</span>. Operations on one file are serialized.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Read</td><td>Digital in</td><td>Rising edge loads the file onto the outputs when the read succeeds. Across from <span class="sig">Exists_FB</span>.</td></tr>
+      <tr><td class="sig">Write</td><td>Digital in</td><td>Rising edge stores the inputs. On success, every input is copied to the matching output. Across from <span class="sig">Not_Exist_FB</span>.</td></tr>
+      <tr><td class="sig">Delete</td><td>Digital in</td><td>Rising edge deletes the file. Across from <span class="sig">Busy_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location_NVRAM</td><td>Digital in</td><td>File_Location group. Sets the <span class="sig">File_Location</span> analog to 1, which opens <code>\nvram\</code>. Across from <span class="sig">File_Location_NVRAM_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location_User_Folder</td><td>Digital in</td><td>Sets the analog to 2, <code>\user\</code>. Across from <span class="sig">File_Location_User_Folder_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location_HTML_Folder</td><td>Digital in</td><td>Sets the analog to 3, <code>\html\</code>. Files here are also served by the processor web server. Across from <span class="sig">File_Location_HTML_Folder_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location_Removable_Media_1</td><td>Digital in</td><td>Sets the analog to 4, <code>\rm\</code>. Across from <span class="sig">File_Location_Removable_Media_1_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location_Removable_Media_2</td><td>Digital in</td><td>Sets the analog to 5, <code>\rm2\</code>. Across from <span class="sig">File_Location_Removable_Media_2_FB</span>.</td></tr>
+      <tr><td class="sig">File_Location</td><td>Analog in</td><td>File_Location group. 0, and any value outside 1 through 5, uses the <span class="sig">File Location</span> parameter. 1 through 5 force <code>\nvram\</code>, <code>\user\</code>, <code>\html\</code>, <code>\rm\</code>, and <code>\rm2\</code>. The five digitals above drive this same analog. 0 is not its own folder, because an unwired analog is already 0. That row has no output.</td></tr>
+      <tr><td class="sig">File_Name</td><td>Serial in</td><td>File_Info group, across from <span class="sig">File_Name_FB</span>. A non-empty string replaces <span class="sig">Filename</span>. Empty leaves the parameter in charge. No extension.</td></tr>
+      <tr><td class="sig">Match_Partial</td><td>Digital in</td><td>File_Info, across from <span class="sig">Size_FB</span>. High treats <span class="sig">Filename</span> or <span class="sig">File_Name</span> as a fragment. The module selects the file in the chosen folder whose name contains that fragment and whose extension matches the format. Several matches use the first name alphabetically. No match uses the fragment as the whole name. Changing this input refreshes the file and re-runs auto-create.</td></tr>
+      <tr><td class="sig">Auto_Create_File</td><td>Digital in</td><td>File_Info, across from <span class="sig">Set_Default_Values</span>. High runs one automatic action when the program starts and again when the path changes. A missing file pulses <span class="sig">Set_Default_Values</span>, waits <span class="sig">Default Wait Time</span>, then writes. An existing file is read. An existing file is not overwritten.</td></tr>
+      <tr><td class="sig">Encrypt</td><td>Digital in</td><td>File_Info, across from <span class="sig">Encrypted_FB</span>. High encrypts writes with AES, using <span class="sig">Encryption_Key</span>.</td></tr>
+      <tr><td class="sig">Encryption_Key</td><td>Serial in</td><td>File_Info. AES key. A 16-character string is AES-128. Required while <span class="sig">Encrypt</span> is high, and required on read when the file is encrypted. That row has no output.</td></tr>
+      <tr><td class="sig">Enable_Backup</td><td>Digital in</td><td>File_Info, across from <span class="sig">Backup_Exists_FB</span>. High makes a write keep a <code>.bak</code> beside the file.</td></tr>
+      <tr><td class="sig">Enable_Backup_History</td><td>Digital in</td><td>File_Info. High, with backup enabled, archives the previous <code>.bak</code> to a dated <code>.gz</code>. Low overwrites the <code>.bak</code>. That row has no output.</td></tr>
+      <tr><td class="sig">Restore_Backup</td><td>Digital in</td><td>File_Info. Rising edge restores the <code>.bak</code> over the file when the backup exists. That row has no output.</td></tr>
+      <tr><td class="sig">Delete_Backup</td><td>Digital in</td><td>File_Info. Rising edge deletes the <code>.bak</code> file when it exists. That row has no output.</td></tr>
+      <tr><td class="sig">Format_Text</td><td>Digital in</td><td>Format group. Sets the <span class="sig">Format</span> analog to 1. Across from <span class="sig">Format_Text_FB</span>.</td></tr>
+      <tr><td class="sig">Format_CSV</td><td>Digital in</td><td>Sets the analog to 2. Across from <span class="sig">Format_CSV_FB</span>.</td></tr>
+      <tr><td class="sig">Format_XML</td><td>Digital in</td><td>Sets the analog to 3. Across from <span class="sig">Format_XML_FB</span>.</td></tr>
+      <tr><td class="sig">Format_JSON</td><td>Digital in</td><td>Sets the analog to 4. Across from <span class="sig">Format_JSON_FB</span>.</td></tr>
+      <tr><td class="sig">Format_INI</td><td>Digital in</td><td>Sets the analog to 5. Across from <span class="sig">Format_INI_FB</span>.</td></tr>
+      <tr><td class="sig">Format_Binary</td><td>Digital in</td><td>Sets the analog to 6. Across from <span class="sig">Format_Binary_FB</span>.</td></tr>
+      <tr><td class="sig">Format</td><td>Analog in</td><td>Format group, across from <span class="sig">Detected_Format_FB</span>. A value from 1 through 6 replaces the <span class="sig">Format</span> parameter. Any other value leaves the parameter in charge.</td></tr>
+      <tr><td class="sig">Digital_Input_1-64</td><td>Digital in</td><td>Digital group. Values written to the file. Each is across from <span class="sig">Digital_Output</span> of the same number.</td></tr>
+      <tr><td class="sig">Analog_Input_1-64</td><td>Analog in</td><td>Analog group. Values 0 through 65535 written to the file.</td></tr>
+      <tr><td class="sig">Serial_Input_1-64</td><td>Serial in</td><td>Serial group. Strings, up to 256 characters each, written to the file.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="outputs">Outputs</h2>
+  <p>A successful read loads the file onto the outputs. A successful write copies the inputs onto the outputs. An error leaves the outputs unchanged. <span class="sig">Operational_Feedback</span> is on the row under <span class="sig">Delete</span>.</p>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td class="sig">Exists_FB</td><td>Digital out</td><td>High when the file exists. Across from <span class="sig">Read</span>.</td></tr>
+      <tr><td class="sig">Not_Exist_FB</td><td>Digital out</td><td>High when the file does not exist. Across from <span class="sig">Write</span>.</td></tr>
+      <tr><td class="sig">Busy_FB</td><td>Digital out</td><td>High while a read, write, delete, restore, or auto-create is in progress. Across from <span class="sig">Delete</span>.</td></tr>
+      <tr><td class="sig">Operational_Feedback</td><td>Serial out</td><td>Status or error text. On the row under <span class="sig">Delete</span>.</td></tr>
+      <tr><td class="sig">File_Location_NVRAM_FB</td><td>Digital out</td><td>File_Location group, across from <span class="sig">File_Location_NVRAM</span>. The equate for these five feedbacks is meant to follow the <span class="sig">File_Location</span> analog: high when that analog is 1. The same pattern continues for User Folder (2), HTML Folder (3), Removable Media 1 (4), and Removable Media 2 (5).</td></tr>
+      <tr><td class="sig">File_Name_FB</td><td>Serial out</td><td>File_Info, across from <span class="sig">File_Name</span>. The selected file name, including the extension.</td></tr>
+      <tr><td class="sig">Size_FB</td><td>Serial out</td><td>File_Info, across from <span class="sig">Match_Partial</span>. Size as text, such as <code>456 bytes</code>, <code>1.23 KB</code>, or <code>7.89 MB</code>.</td></tr>
+      <tr><td class="sig">Set_Default_Values</td><td>Digital out</td><td>File_Info, across from <span class="sig">Auto_Create_File</span>. Pulses when auto-create needs defaults on the inputs.</td></tr>
+      <tr><td class="sig">Encrypted_FB</td><td>Digital out</td><td>File_Info, across from <span class="sig">Encrypt</span>. High when the file header says the file is encrypted.</td></tr>
+      <tr><td class="sig">Backup_Exists_FB</td><td>Digital out</td><td>File_Info, across from <span class="sig">Enable_Backup</span>. High when the <code>.bak</code> exists.</td></tr>
+      <tr><td class="sig">Format_Text_FB</td><td>Digital out</td><td>Format group, across from <span class="sig">Format_Text</span>. High when <span class="sig">Detected_Format_FB</span> is 1. CSV, XML, JSON, INI, and Binary follow for codes 2 through 6.</td></tr>
+      <tr><td class="sig">Detected_Format_FB</td><td>Analog out</td><td>Format group, across from the <span class="sig">Format</span> analog. 1 Text, 2 CSV, 3 XML, 4 JSON, 5 INI, 6 Binary, <code>-1</code> undetected or error, <code>-2</code> integrity check failed. Unchanged after a write.</td></tr>
+      <tr><td class="sig">Digital_Output_1-64</td><td>Digital out</td><td>Loaded from the file after a successful read, or copied from the matching input after a successful write. Unchanged on error.</td></tr>
+      <tr><td class="sig">Analog_Output_1-64</td><td>Analog out</td><td>Same rule as the digital outputs. Raw values, 0 through 65535.</td></tr>
+      <tr><td class="sig">Serial_Output_1-64</td><td>Serial out</td><td>Same rule as the digital outputs.</td></tr>
+    </tbody>
+  </table>
+  <div class="warn">
+    The location feedback equate in <code>File Reader v3.3.0.umc</code> currently takes <span class="sig">Detected_Format_FB</span> as its analog input, the same input the format equate uses. Until that input is the <span class="sig">File_Location</span> analog, <span class="sig">File_Location_NVRAM_FB</span> through <span class="sig">File_Location_Removable_Media_2_FB</span> follow detected-format codes 1 through 5, not the selected folder. The location buttons themselves do set the analog to 1 through 5.
+  </div>
+
+  <h2 id="auto">Auto-create</h2>
+  <p>Hold <span class="sig">Auto_Create_File</span> high to replace an external routine that wrote defaults when the file was missing and read the file when it already existed.</p>
+  <ol class="steps">
+    <li>Hold <span class="sig">Auto_Create_File</span> high.</li>
+    <li>Wire <span class="sig">Set_Default_Values</span> to logic that drives the digital, analog, and serial inputs with the default configuration.</li>
+    <li>On startup, or when the effective path changes, a missing file pulses <span class="sig">Set_Default_Values</span>, waits <span class="sig">Default Wait Time</span>, writes, then copies the inputs to the outputs.</li>
+    <li>An existing file is read onto the outputs. Auto-create does not overwrite it.</li>
+    <li>One automatic action runs for a path. Changing the folder, the name, the format, or <span class="sig">Match_Partial</span> allows another.</li>
+  </ol>
+  <p><span class="sig">Busy_FB</span> stays high through that sequence, including the settle wait and the write or read. An override of 1 through 5 still runs when the <span class="sig">File Location</span> parameter string is empty.</p>
+
+  <h2 id="backup">Backup and encryption</h2>
+  <p>With <span class="sig">Enable_Backup</span> high, a write stores <code>name.ext.bak</code> in the same folder. With <span class="sig">Enable_Backup_History</span> also high, the previous backup is archived as <code>.bak.yyyyMMdd.gz</code> instead of being overwritten.</p>
+  <ul>
+    <li>Pulse <span class="sig">Restore_Backup</span> to put the <code>.bak</code> back.</li>
+    <li>Pulse <span class="sig">Delete_Backup</span> to remove the <code>.bak</code>. <span class="sig">Backup_Exists_FB</span> follows the result.</li>
+    <li>Pulse <span class="sig">Delete</span> to remove the main file. The backup file is left in place.</li>
+  </ul>
+  <p>Set <span class="sig">Encrypt</span> high and provide <span class="sig">Encryption_Key</span> before a write that should be encrypted. On read, the header sets <span class="sig">Encrypted_FB</span>. Provide the same key.</p>
+  <div class="warn">
+    A write with <span class="sig">Encrypt</span> high and no key fails. A read of an encrypted file with no key fails. The key has to match the key that wrote the file.
+  </div>
+  <p>Non-JSON formats can fail the checksum. <span class="sig">Detected_Format_FB</span> becomes <code>-2</code> and <span class="sig">Operational_Feedback</span> names the format. JSON does not fail the read because <code>crc32</code> is missing or different.</p>
+
+  <h2 id="examples">Examples</h2>
+
+  <h3>JSON configuration in User</h3>
+  <ol class="steps">
+    <li>Set <span class="sig">Format</span> to 4. Set <span class="sig">File Location</span> to <code>\user\</code> and <span class="sig">Filename</span> to <code>config</code>. Format 4 appends <code>.json</code>, so the file is <code>\user\config.json</code>.</li>
+    <li>Connect <span class="sig">Analog_Input_1</span> to the volume level.</li>
+    <li>Pulse <span class="sig">Write</span>. The outputs copy the inputs. <span class="sig">Exists_FB</span> goes high. <span class="sig">File_Name_FB</span> shows <code>config.json</code>.</li>
+    <li>Pulse <span class="sig">Read</span>. <span class="sig">Detected_Format_FB</span> is 4 and the outputs load.</li>
+  </ol>
+
+  <h3>Pick the folder from a button</h3>
+  <ol class="steps">
+    <li>Leave <span class="sig">File Location</span> at <code>\nvram\</code>. Pulse <span class="sig">File_Location_User_Folder</span>. The <span class="sig">File_Location</span> analog becomes 2, so the file opens under <code>\user\</code> instead of the parameter.</li>
+    <li>Set the <span class="sig">File_Location</span> analog to 0 to return to the parameter.</li>
+  </ol>
+
+  <h3>Partial name</h3>
+  <p>Hold <span class="sig">Match_Partial</span> high, set <span class="sig">File_Name</span> to <code>config</code>, and use format 4. The module opens the first <code>.json</code> file in that folder whose name contains <code>config</code>. <span class="sig">File_Name_FB</span> shows the full name, including the extension.</p>
+
+  <h2 id="versions">Versions</h2>
+  <p>Document revision v3.3.0, 15 October 2026. Current packaging targets 4-Series.</p>
+
+  <h3>v3.3.0 — 15 October 2026 — RGW / AI</h3>
+  <ul>
+    <li><span class="sig">File Location</span> is a list of 4-Series folders: <code>\nvram\</code>, <code>\user\</code>, <code>\html\</code>, <code>\rm\</code>, <code>\rm2\</code>. Compact flash is removed.</li>
+    <li><span class="sig">File_Location</span> analog: 0 uses that parameter. 1 through 5 force those folders. The five <span class="sig">File_Location_*</span> digitals set the analog.</li>
+    <li>The name override on the user module is <span class="sig">File_Name</span>, across from <span class="sig">File_Name_FB</span>. <span class="sig">Size_FB</span> is across from <span class="sig">Match_Partial</span>. <span class="sig">Auto_Create_File</span> is across from <span class="sig">Set_Default_Values</span>.</li>
+    <li>Library stays <span class="sig">FileReader_v3</span>. Source stays <code>FileReader20261013.cs</code>.</li>
+  </ul>
+
+  <h3>v3.2.1 — 13 October 2026 — RGW / AI</h3>
+  <ul>
+    <li><span class="sig">Match_Partial</span> selects a file whose name contains the filename. Several matches use the first name alphabetically. No match keeps the exact name so auto-create can write it.</li>
+    <li><span class="sig">File_Name_FB</span> reports that file name with its extension.</li>
+  </ul>
+
+  <h3>v3.2.0 — 16 July 2026 — RGW / AI</h3>
+  <ul>
+    <li>A successful write copies digital, analog, and serial inputs to the matching outputs.</li>
+    <li><span class="sig">Auto_Create_File</span>, <span class="sig">Set_Default_Values</span>, and <span class="sig">Default Wait Time</span>.</li>
+  </ul>
+
+  <h3>Earlier</h3>
+  <ul>
+    <li><strong>v3.1.2 — 16 July 2026.</strong> Digital outputs assert after a successful read. JSON reads accept standard objects. <code>crc32</code> is optional.</li>
+    <li><strong>v3.1.1 — 1 May 2026.</strong> Text detection uses structured markers. Parameter formatting was removed so the symbol could sit inside a user module.</li>
+    <li><strong>v3.1 — 25 February 2026.</strong> Added <span class="sig">Not_Exist_FB</span>.</li>
+    <li><strong>v3.0 — 4 August 2025.</strong> First release, including JSON, then exists, delete, busy, size, CSV, INI, backup, AES, and 1-based format codes.</li>
+  </ul>
+</main>
+<footer>
+  File Reader v3.3.0 · library FileReader_v3 · source FileReader20261013.cs · 15 October 2026
+</footer>
+</body>
+</html>

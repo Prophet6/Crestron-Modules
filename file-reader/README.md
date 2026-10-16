@@ -1,10 +1,10 @@
-# File Reader v3.2.1
+# File Reader v3.3.0
 
 Part of **[Crestron Modules](https://github.com/Prophet6/Crestron-Modules)**.
 
-A user module plus shared Simpl# library that store digital, analog, and serial signals in a file on the processor and restore them later. Reads detect the file format on their own. Writes use the format you pick. A successful write also copies the inputs to the outputs.
+A user module plus shared Simpl# library that store digital, analog, and serial signals in a file on a 4-Series processor and restore them later. Reads detect the file format on their own. Writes use the format you pick. A successful write also copies the inputs to the outputs.
 
-Press **F1** on the user module for the full guide: [`File Reader v3.2.1 Technical Manual.html`](File%20Reader%20v3.2.1%20Technical%20Manual.html). Keep it next to the `.umc`.
+Press **F1** on the user module for the full guide: [`File Reader v3.3.0 Technical Manual.html`](File%20Reader%20v3.3.0%20Technical%20Manual.html). Keep it next to the `.umc`.
 
 This project is not affiliated with Crestron Electronics.
 
@@ -18,12 +18,14 @@ This project is not affiliated with Crestron Electronics.
 
 | File | Role |
 |------|------|
-| `File Reader v3.2.1.umc` | User module you drop in SIMPL Windows (F1 opens the manual) |
-| `File Reader v3.2.1.usp` | Hidden SIMPL+ module (copy-after-write and auto-create) |
+| `File Reader v3.3.0.umc` | User module you drop in SIMPL Windows (F1 opens the manual) |
+| `File Reader v3.3.0.usp` | SIMPL+ module (folder override, copy-after-write, auto-create). Hidden once it is inside the user module. |
 | `FileReader_v3.clz` | Simpl# library, class `FileDataHandler`, assembly 3.2.1.0. Source stays `FileReader20261013.cs`. Keep the `.clz` next to the `.usp`. |
 | `File Reader/` | Simpl# source (Visual Studio) |
+| `html5/` | Touchpanel and browser test page for the user module |
+| [`file-reader-standalone`](../file-reader-standalone/) | Editor that reads and writes one JSON file over HTTP, HTTPS, or FTP, with no SIMPL program |
 
-The file path is `File Location` + `Filename` (or `FileName_Override` when it's not empty) + the extension for the active format. Don't put the extension in the name.
+The file path is the chosen folder + `Filename` (or `File_Name` when that serial is not empty) + the extension for the active format. Don't put the extension in the name.
 
 ## Requirements
 
@@ -47,17 +49,19 @@ The file path is `File Location` + `Filename` (or `FileName_Override` when it's 
 
 | Parameter | Role |
 |-----------|------|
-| File Location | Folder, e.g. `\NVRAM\` or `\CF0\` (with trailing separator) |
-| Filename | Name without extension |
+| File Location | 4-Series folder, with the trailing separator. `\nvram\` (default), `\user\`, `\html\`, `\rm\`, `\rm2\`. |
+| Filename | Name without extension. `File_Name` replaces it when that serial is not empty. |
 | Format | Write format 1-6, default 4 (JSON). The `Format` analog overrides it when 1-6. |
-| Default Wait Time | Wait after `Set_Default_Values` before the auto-create write. Default 0.25s (0.01s-10s). |
+| Default Wait Time | Wait after `Set_Default_Values` before the auto-create write. Symbol default 0.5s. |
 
 ## Signals
 
 | Input | Role |
 |-------|------|
 | Read / Write / Delete | Rising edge reads the file, writes the inputs, or deletes the file |
-| FileName_Override | Non-empty replaces `Filename` |
+| File_Location_NVRAM ... Removable_Media_2 | Set the `File_Location` analog to 1 through 5 |
+| File_Location | 0 uses the File Location parameter. 1 through 5 force `\nvram\`, `\user\`, `\html\`, `\rm\`, `\rm2\` |
+| File_Name | Non-empty replaces `Filename` |
 | Match_Partial | High treats the name as a fragment: picks the first file (alphabetical, case-insensitive) containing it. No match uses the fragment as the exact name. |
 | Encrypt / Encryption_Key | AES on write (16-character key = AES-128). Key also needed to read an encrypted file. |
 | Enable_Backup / Enable_Backup_History | Keep a `.bak` on write / archive the old `.bak` as a dated `.gz` |
@@ -71,7 +75,8 @@ The file path is `File Location` + `Filename` (or `FileName_Override` when it's 
 | Exists_FB / Not_Exist_FB | File present / missing |
 | Busy_FB | High during read, write, delete, or auto-create |
 | Operational_Feedback | Status or error text |
-| FileName_FB / Size_FB | Selected file name with extension / size as text |
+| File_Location_*_FB | Across from the folder buttons. Point the location equate at the `File_Location` analog so these follow codes 1 through 5. |
+| File_Name_FB / Size_FB | Selected file name with extension / size as text |
 | Encrypted_FB / Backup_Exists_FB | File is encrypted / `.bak` exists |
 | Set_Default_Values | Pulse when auto-create needs defaults driven on the inputs |
 | Format_*_FB, Detected_Format_FB | Detected format of the last read |
@@ -79,18 +84,19 @@ The file path is `File Location` + `Filename` (or `FileName_Override` when it's 
 
 ## Usage
 
-1. Add **File Reader v3.2.1**. Set File Location and Filename (no extension). Set Format.
+1. Add **File Reader v3.3.0**. Set File Location and Filename (no extension). Set Format.
 2. Expand the digital, analog, and serial pairs you need.
 3. Drive the inputs and pulse **Write**. On success the file is saved and the inputs are copied to the outputs.
 4. Pulse **Read** to load the file. On failure the outputs stay where they were.
 5. For startup defaults, hold **Auto_Create_File** high and wire **Set_Default_Values** to the logic that drives the default inputs.
 
-Example: Format 4, `\NVRAM\`, `config`, `Analog_Input_1` = volume. Write, then Read at startup to restore it as `config.json`.
+Example: Format 4, `\user\`, `config`, `Analog_Input_1` = volume. Write, then Read at startup to restore it as `\user\config.json`.
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| v3.3.0 | 2026-10-15 | 4-Series folder list (`\nvram\`, `\user\`, `\html\`, `\rm\`, `\rm2\`). `File_Location` analog and folder buttons. `File_Name` replaces the filename parameter. |
 | v3.2.1 | 2026-10-13 | `Match_Partial` (partial file-name match), `FileName_FB`. Source `FileReader20261013.cs`. Library `FileReader_v3`, assembly 3.2.1.0. |
 | v3.2.0 | 2026-07-16 | Write copies inputs to outputs. `Auto_Create_File`, `Set_Default_Values`, `Default Wait Time`. Library `FileReader20260623`. |
 | v3.1.2 | 2026-07-16 | Digital outputs assert reliably after a read. JSON reads accept standard objects; `crc32` optional. |
