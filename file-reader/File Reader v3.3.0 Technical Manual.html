@@ -270,7 +270,7 @@
       <tr><td class="sig">Not_Exist_FB</td><td>Digital out</td><td>High when the file does not exist. Across from <span class="sig">Write</span>.</td></tr>
       <tr><td class="sig">Busy_FB</td><td>Digital out</td><td>High while a read, write, delete, restore, or auto-create is in progress. Across from <span class="sig">Delete</span>.</td></tr>
       <tr><td class="sig">Operational_Feedback</td><td>Serial out</td><td>Status or error text. On the row under <span class="sig">Delete</span>.</td></tr>
-      <tr><td class="sig">File_Location_NVRAM_FB</td><td>Digital out</td><td>File_Location group, across from <span class="sig">File_Location_NVRAM</span>. The equate for these five feedbacks is meant to follow the <span class="sig">File_Location</span> analog: high when that analog is 1. The same pattern continues for User Folder (2), HTML Folder (3), Removable Media 1 (4), and Removable Media 2 (5).</td></tr>
+      <tr><td class="sig">File_Location_NVRAM_FB</td><td>Digital out</td><td>File_Location group, across from <span class="sig">File_Location_NVRAM</span>. High when the <span class="sig">File_Location</span> analog is 1. User Folder is 2, HTML Folder is 3, Removable Media 1 is 4, and Removable Media 2 is 5. A value of 0 lights none of them.</td></tr>
       <tr><td class="sig">File_Name_FB</td><td>Serial out</td><td>File_Info, across from <span class="sig">File_Name</span>. The selected file name, including the extension.</td></tr>
       <tr><td class="sig">Size_FB</td><td>Serial out</td><td>File_Info, across from <span class="sig">Match_Partial</span>. Size as text, such as <code>456 bytes</code>, <code>1.23 KB</code>, or <code>7.89 MB</code>.</td></tr>
       <tr><td class="sig">Set_Default_Values</td><td>Digital out</td><td>File_Info, across from <span class="sig">Auto_Create_File</span>. Pulses when auto-create needs defaults on the inputs.</td></tr>
@@ -283,9 +283,6 @@
       <tr><td class="sig">Serial_Output_1-64</td><td>Serial out</td><td>Same rule as the digital outputs.</td></tr>
     </tbody>
   </table>
-  <div class="warn">
-    The location feedback equate in <code>File Reader v3.3.0.umc</code> currently takes <span class="sig">Detected_Format_FB</span> as its analog input, the same input the format equate uses. Until that input is the <span class="sig">File_Location</span> analog, <span class="sig">File_Location_NVRAM_FB</span> through <span class="sig">File_Location_Removable_Media_2_FB</span> follow detected-format codes 1 through 5, not the selected folder. The location buttons themselves do set the analog to 1 through 5.
-  </div>
 
   <h2 id="auto">Auto-create</h2>
   <p>Hold <span class="sig">Auto_Create_File</span> high to replace an external routine that wrote defaults when the file was missing and read the file when it already existed.</p>

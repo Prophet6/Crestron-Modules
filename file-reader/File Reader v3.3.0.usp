@@ -175,12 +175,10 @@ FUNCTION ReportError(Integer level, String errorText$) {
 	CSwitch(level) {
 		Case(Notice): {
 			level$ = "Notice";
-			GenerateUserNotice("[user]: %s = %s", InstanceNode$, errorText$);
 			BREAK;
 		}
 		Case(Warning): {
 			level$ = "Warning";
-			GenerateUserWarning("[user]: %s = %s", InstanceNode$, errorText$);
 			BREAK;
 		}
 		Case(Error): {

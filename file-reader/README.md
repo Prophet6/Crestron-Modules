@@ -77,7 +77,7 @@ The file path is the chosen folder + `Filename` (or `File_Name` when that serial
 | Exists_FB / Not_Exist_FB | File present / missing |
 | Busy_FB | High during read, write, delete, or auto-create |
 | Operational_Feedback | Status or error text |
-| File_Location_*_FB | Across from the folder buttons. Point the location equate at the `File_Location` analog so these follow codes 1 through 5. |
+| File_Location_*_FB | High when `File_Location` is 1 through 5 for NVRAM, User, HTML, Removable, and Removable 2. A value of 0 lights none of them. |
 | File_Name_FB / Size_FB | Selected file name with extension / size as text |
 | Encrypted_FB / Backup_Exists_FB | File is encrypted / `.bak` exists |
 | Set_Default_Values | Pulse when auto-create needs defaults driven on the inputs |

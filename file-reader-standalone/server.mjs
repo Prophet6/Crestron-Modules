@@ -238,6 +238,20 @@ async function ftpTransfer(job) {
       }
       return { ok: true, exists: true, message: 'Retrieved', text: result.body.toString('utf8') };
     }
+    if (job.op === 'delete') {
+      const reply = await ftpCommand(control, `DELE ${path}`);
+      await ftpCommand(control, 'QUIT');
+      if (reply.code === 250 || reply.code === 550) {
+        return { ok: true, exists: false, message: reply.code === 250 ? 'Deleted' : 'Remote file not found' };
+      }
+      throw new Error(reply.text || 'Delete failed');
+    }
+    if (job.op === 'list') {
+      const result = await ftpData(control, `NLST ${path}`);
+      await ftpCommand(control, 'QUIT');
+      const names = result.body.toString('utf8').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      return { ok: true, names, message: 'Listed' };
+    }
     const payload = Buffer.from(job.text ?? '', 'utf8');
     const passive = await ftpCommand(control, 'PASV');
     if (passive.code !== 227) {
@@ -285,6 +299,13 @@ async function webTransfer(job) {
     }
     return { ok: true, exists: true, message: 'Retrieved', text: result.body };
   }
+  if (job.op === 'delete') {
+    const result = await webRequest({ ...job, target, method: 'DELETE' });
+    if (result.status === 404 || result.status === 410 || (result.status >= 200 && result.status < 300)) {
+      return { ok: true, exists: false, message: result.status === 404 ? 'Remote file not found' : 'Deleted' };
+    }
+    throw new Error(`HTTP ${result.status}`);
+  }
   const result = await webRequest({ ...job, target, method: 'PUT', body: job.text ?? '' });
   if (result.status < 200 || result.status >= 300) {
     throw new Error(`HTTP ${result.status}`);
@@ -319,7 +340,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/info') {
       sendJson(response, 200, {
         pullUrl: `http://${lanHost()}:${server.address()?.port || port}/export.json`,
-        localPath: '/user/config.json',
+        localPath: '/nvram/config.json',
       });
       return;
     }
@@ -328,7 +349,7 @@ const server = http.createServer(async (request, response) => {
       staged = String(body.text ?? '');
       sendJson(response, 200, {
         pullUrl: `http://${lanHost()}:${server.address()?.port || port}/export.json`,
-        localPath: '/user/config.json',
+        localPath: String(body.localPath || '/nvram/config.json'),
       });
       return;
     }
