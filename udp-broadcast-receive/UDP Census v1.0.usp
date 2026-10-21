@@ -1,0 +1,193 @@
+#HELP_BEGIN
+UDP Census v1.0
+
+One 4-Series symbol that can answer a processor poll, collect the answers
+into a local database, or both.
+
+Drop it on every processor. Leave Respond_Mode on and Discover_Mode off for
+a processor that only answers. Turn Discover_Mode on for the processor that
+keeps the list. Turn both on when that collector should also answer polls
+from someone else.
+
+The collector broadcasts ?POLL to 255.255.255.255. Each responder unicasts
+!HERE,MAC,UID,Data back to the collector. The collector keeps one row per
+UID (or per MAC, or per IP when those are empty), including itself. Rows
+that do not answer the next poll are removed when the window closes.
+
+Browse the database with Index. 1 is the first row. Count is the number of
+rows. Answered_FB is high when the row shown in Processor_* replied to the
+poll now in progress, or is still in the list after the window closes.
+
+Leave Respond and Discover unwired to use Respond_Mode and Discover_Mode.
+After a change on either digital, that digital takes over and does not fall
+back to the parameter.
+
+Poll_Interval 0s polls only when Poll is pulsed. Any other period also polls
+while Discover is active. A Poll pulse runs one census even when Discover
+is off. Poll_Window is how long answers are accepted. Use 3s or more when
+hundreds of processors can reply. Maximum 512 rows.
+
+Wire format:
+  ?POLL
+  !HERE,00:00:00:00:00:00,uid,data
+
+The listen socket stays open on the LAN adapter. Replies do not retarget it.
+
+-- VERSION HISTORY --
+v1.0  2026-10-20
+- Poll, answer, or both, in one symbol
+- Indexed database of the processors that answered
+
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#CATEGORY "46" "TCP/IP" // Custom
+#DEFAULT_VOLATILE
+#USER_SIMPLSHARP_LIBRARY "UdpCensus_v1"
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	Enable, Poll, Respond, Discover;
+ANALOG_INPUT	Index;
+STRING_INPUT	_SKIP_, Mac[17], UID[32], Data[128];
+
+DIGITAL_OUTPUT	Enable_FB, Polling_FB, Answered_FB, _SKIP_;
+ANALOG_OUTPUT	Count;
+STRING_OUTPUT	Processor_IP, Processor_MAC, Processor_UID, Processor_Data;
+
+INTEGER_PARAMETER	UDP_Port, Poll_Window, Respond_Mode, Discover_Mode, Poll_Interval;
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES UDP_Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			1024d, 65535d;
+	propDefaultValue =		50001d;
+	propShortDescription =	"UDP port";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Poll_Window
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0.5s, 30s;
+	propDefaultValue =		3s;
+	propShortDescription =	"How long to accept answers after a poll";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Respond_Mode
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{0d, "Off"},
+							{1d, "Answer polls"};
+	propShortDescription =	"Answer ?POLL when the Respond digital is unwired";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Discover_Mode
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "Off"},
+							{1d, "Keep the database"};
+	propShortDescription =	"Poll on Poll_Interval when the Discover digital is unwired";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Poll_Interval
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0s, 600s;
+	propDefaultValue =		30s;
+	propShortDescription =	"Time between polls. 0s polls only on the Poll pulse.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+INTEGER		RespondHeld, DiscoverHeld;
+STRING		IpBuf[64], MacBuf[17], UidBuf[32], DataBuf[128];
+UdpCensus	Core;
+
+/* FUNCTIONS */
+
+FUNCTION PushSetup() {
+	INTEGER respond, discover;
+
+	respond = Respond_Mode;
+	discover = Discover_Mode;
+	If (RespondHeld = 1) respond = Respond;
+	If (DiscoverHeld = 1) discover = Discover;
+	Core.Configure(respond, discover, UDP_Port, Poll_Interval, Poll_Window);
+	Core.SetIdentity(Mac, UID, Data);
+}
+
+/* CALLBACKS */
+
+CALLBACK FUNCTION HandleCensus (Integer enabled, Integer polling, Integer count) {
+	Enable_FB = enabled;
+	Polling_FB = polling;
+	Count = count;
+}
+
+CALLBACK FUNCTION HandleRecord (String ip, String mac, String uid, String data, Integer answered) {
+	IpBuf = ip;
+	MacBuf = mac;
+	UidBuf = uid;
+	DataBuf = data;
+	Processor_IP = IpBuf;
+	Processor_MAC = MacBuf;
+	Processor_UID = UidBuf;
+	Processor_Data = DataBuf;
+	Answered_FB = answered;
+}
+
+/* EVENT HANDLERS */
+
+CHANGE Enable {
+	If (Enable = 1) Core.Open();
+	Else Core.Close();
+}
+
+PUSH Poll {
+	Core.PollNow();
+}
+
+CHANGE Respond {
+	RespondHeld = 1;
+	PushSetup();
+}
+
+CHANGE Discover {
+	DiscoverHeld = 1;
+	PushSetup();
+}
+
+CHANGE Mac {
+	Core.SetIdentity(Mac, UID, Data);
+}
+
+CHANGE UID {
+	Core.SetIdentity(Mac, UID, Data);
+}
+
+CHANGE Data {
+	Core.SetIdentity(Mac, UID, Data);
+}
+
+CHANGE Index {
+	Core.Select(Index);
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	RegisterDelegate(Core, OnCensus, HandleCensus);
+	RegisterDelegate(Core, OnRecord, HandleRecord);
+	WaitForInitializationComplete();
+	If (Respond = 1) RespondHeld = 1;
+	If (Discover = 1) DiscoverHeld = 1;
+	PushSetup();
+	If (Index > 0) Core.Select(Index);
+	Else Core.Select(1);
+	If (Enable = 1) Core.Open();
+}

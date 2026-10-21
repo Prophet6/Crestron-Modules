@@ -1,36 +1,44 @@
 #HELP_BEGIN
-UDP Extract Data v1.0
+UDP Extract Data v2.0
 
-Companion to UDP Broadcast and Receive v1.3. One instance latches IP, MAC, UID,
-and raw Data from the last inbound packet that matches this instance's filter.
+Companion to UDP Broadcast and Receive v2.0. One instance latches IP, MAC, UID,
+and Data from the last inbound packet that matches this instance's filter, and
+drops that latch when the peer goes quiet.
 
 Wire Received_IP / Received_MAC / Received_UID / Received_Data from the UDP
-module (same cue names). Do not wire Enable_FB.
+module. Wire Packet_Rx to Packet_Rx. Do not wire Enable_FB.
 
-Filter: Match_IP, Match_MAC, and Match_UID (each with a serial override).
-Default for every match parameter is [SKIP] (do not use that field).
-Any combination of the three may be active; all active fields must match
-(AND). Exact, case-sensitive compare.
+Packet_Rx evaluates the match immediately. The Received_* change path still
+waits 0.01 s after the last change, so a v1.3 UDP symbol (no Packet_Rx) still
+works.
+
+Filter: Match_IP, Match_MAC, and Match_UID, each with a serial override.
+Default for every match parameter is [SKIP] (that field is not used).
+Any combination may be active. All active fields must match (AND).
+Exact, case-sensitive compare.
 
 At startup the locals take the parameters, then any override with length > 0.
-CHANGE on an override sets that local to the override string as-is; an empty
-string means [SKIP] from then on (does not fall back to the parameter).
+CHANGE on an override sets that local to the override string as-is. An empty
+string means [SKIP] from then on and does not fall back to the parameter.
 
-UDP v1.3 clears then fills Received_*; this module waits 0.01 s after the
-last CHANGE so the snapshot is complete before matching.
-A non-match does not clear already latched outputs.
+A non-match does not clear a latch that is already held.
+Timeout is unitTime. 0s keeps the last match and leaves Online_FB high.
+Any other value drops Online_FB and clears the peer outputs when no new match
+arrives within that time. Default 15s, maximum 600s.
 
-In the SIMPL program, pulse UDP Retrigger on CHANGE Received_IP so a new
-talker gets this processor's announce back.
-
-Peer_UID is Received_UID from the matching packet (when the filter is IP or MAC).
+Peer_UID is Received_UID from the matching packet.
 Peer_Data is the raw Received_Data from the matching packet.
 
 Drop one copy of this symbol per peer.
 
 -- VERSION HISTORY --
+v2.0  2026-10-18
+- Packet_Rx evaluates the snapshot without the settle delay
+- Online_FB and Timeout. 0s latches until a new match. Any other time clears
+  the peer when packets stop.
+
 v1.0  2026-09-09
-- Initial companion latch / filter
+- Prior symbol, left in the tree unchanged
 
 #HELP_END
 
@@ -42,16 +50,30 @@ v1.0  2026-09-09
 
 /* INPUTS & OUTPUTS */
 
-STRING_INPUT	Match_IP_Override[16], Match_MAC_Override[17], Match_UID_Override[32],
+DIGITAL_INPUT	Packet_Rx;
+STRING_INPUT	_SKIP_,
+				Match_IP_Override[16], Match_MAC_Override[17], Match_UID_Override[32],
 				_SKIP_,
 				Received_IP[16], Received_MAC[17], Received_UID[32], Received_Data[255];
 
-STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+DIGITAL_OUTPUT	Online_FB;
+STRING_OUTPUT	_SKIP_,
+				_SKIP_, _SKIP_, _SKIP_,
+				_SKIP_,
 				Peer_IP, Peer_MAC, Peer_UID, Peer_Data;
 
-STRING_PARAMETER	Match_IP[16], Match_MAC[17], Match_UID[32];
+INTEGER_PARAMETER	Timeout;
+STRING_PARAMETER	_SKIP_, Match_IP[16], Match_MAC[17], Match_UID[32];
 
 /* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Timeout
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0s, 600s;
+	propDefaultValue =		15s;
+	propShortDescription =	"Drop the peer after this silence. 0s keeps the last match.";
+#END_PARAMETER_PROPERTIES
 
 #BEGIN_PARAMETER_PROPERTIES Match_IP
 	propValidUnits =		unitString;
@@ -77,12 +99,21 @@ STRING_PARAMETER	Match_IP[16], Match_MAC[17], Match_UID[32];
 /* GLOBAL VARIABLES */
 
 STRING	CurIP[16], CurMAC[17], CurUID[32];
-INTEGER	Pending;
+INTEGER	Pending, PeerAge;
 
 /* FUNCTIONS */
 
 FUNCTION ArmSettle() {
 	Pending = 1;
+}
+
+FUNCTION DropPeer() {
+	Online_FB = 0;
+	Peer_IP = "";
+	Peer_MAC = "";
+	Peer_UID = "";
+	Peer_Data = "";
+	PeerAge = 0;
 }
 
 FUNCTION EvaluateMatch() {
@@ -114,7 +145,16 @@ FUNCTION EvaluateMatch() {
 		Peer_MAC = Received_MAC;
 		Peer_UID = Received_UID;
 		Peer_Data = Received_Data;
+		PeerAge = 0;
+		Online_FB = 1;
 	}
+}
+
+FUNCTION AgePeer() {
+	If (Timeout = 0) Return;
+	If (Online_FB = 0) Return;
+	PeerAge = PeerAge + 1;
+	If (PeerAge >= Timeout) DropPeer();
 }
 
 /* EVENT HANDLERS */
@@ -150,6 +190,11 @@ CHANGE Received_Data {
 	ArmSettle();
 }
 
+PUSH Packet_Rx {
+	Pending = 0;
+	EvaluateMatch();
+}
+
 /* MAIN */
 
 FUNCTION Main() {
@@ -161,12 +206,17 @@ FUNCTION Main() {
 	If (LEN(Match_MAC_Override) > 0) CurMAC = Match_MAC_Override;
 	If (LEN(Match_UID_Override) > 0) CurUID = Match_UID_Override;
 	Pending = 0;
+	PeerAge = 0;
+	Online_FB = 0;
 	WHILE (1) {
 		If (Pending = 1) {
 			Pending = 0;
-			DELAY (1);
+			DELAY(1);
 			If (Pending = 0) EvaluateMatch();
 		}
-		Else DELAY (1);
+		Else {
+			DELAY(1);
+		}
+		AgePeer();
 	}
 }

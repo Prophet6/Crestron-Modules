@@ -18,7 +18,7 @@ This project is not affiliated with Crestron Electronics.
 | [tcp-server-with-authentication](tcp-server-with-authentication/) | TCP Server with Authentication | 3-Series / 4-Series | TCP listener on the processor. Defaults match the built-in **TCP/IP Server** symbol. Optional TLS (`SecureTCPServer`, `ssl self`) and optional `AUTH` username/password. |
 | [ssh-interface-v2](ssh-interface-v2/) | SSH Interface Client v2.0 | **4-Series** | SSH **client** — the processor connects out to a device. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools). |
 | [dynamic-tcp-client](dynamic-tcp-client/) | TCP Client Dynamic IP v1.0 | **4-Series** | TCP **client** with runtime `Address$` — stock Connect / Connect_FB / TX$ / RX$ / Status, no IP table. Bench: [Testing-Tools](https://github.com/Prophet6/Testing-Tools) `start-tcp-server.bat`. |
-| [udp-broadcast-receive](udp-broadcast-receive/) | UDP Broadcast and Receive v1.3 + UDP Extract Data v1.0 | 3-Series / 4-Series | UDP broadcast send/receive (`MAC,UID,Data`). Companion latch filters on IP/MAC/UID (`[SKIP]` = unused) and holds that peer's IP, MAC, UID, and raw Data. |
+| [udp-broadcast-receive](udp-broadcast-receive/) | UDP Census v1.0 | **4-Series** | One symbol answers a poll, collects a database of processors, or both. The v2.0 beacon stays in the folder. v1.3 is in `_archive`. |
 | [enttec-ethergate-mk2](enttec-ethergate-mk2/) | EtherGate Controller, Channel, and Preset v1.0 | **4-Series** | Art-Net control of an Enttec DIN EtherGate (up to 8 gateways). Press F1 on a symbol for `EtherGate v1.html`. |
 
 Compile SIMPL+ with SPlusCC — see [COMPILE_SIMPL_PLUS_CLI.md](COMPILE_SIMPL_PLUS_CLI.md).

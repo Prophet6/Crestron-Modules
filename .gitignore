@@ -52,6 +52,7 @@ SPlsWork/
 !enttec-ethergate-mk2/EtherGate_v1.clz
 !file-reader/FileReader_v3.clz
 !remote-file-sync/RemoteFileSync_v1.clz
+!udp-broadcast-receive/UdpCensus_v1.clz
 !teams-room-help/TeamsRoomHelp_v1.clz
 
 devenv-build.log
