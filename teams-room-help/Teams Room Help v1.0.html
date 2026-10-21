@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teams Room Help v1.0</title>
+<style>
+  :root {
+    --ink: #242424;
+    --muted: #605e5c;
+    --line: #e1dfdd;
+    --paper: #f5f5f5;
+    --card: #ffffff;
+    --teams: #5b5fc7;
+    --teams-soft: #ececf9;
+    --header: #464775;
+    --ok: #0f6b3c;
+    --warn: #a4262c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background: var(--header);
+    color: #f4f4fc;
+    padding: 2.4rem 1.5rem 2rem;
+  }
+  header.banner .wrap, main, nav.toc {
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #c5c6f5;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.4rem;
+    line-height: 1.15;
+    margin: 0 0 0.6rem;
+  }
+  header.banner p { margin: 0; max-width: 40rem; color: #e4e4f4; }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+  }
+  nav.toc a {
+    color: var(--teams);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 4rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.2rem 0 0.6rem;
+    padding-top: 0.4rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--teams); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--teams); }
+  .warn { border-left: 4px solid var(--warn); background: #fdf6f6; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--teams-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.25rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  pre {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  footer {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · SIMPL# · 4-Series</p>
+    <h1>Teams Room Help v1.0</h1>
+    <p>One symbol posts a room help alert to a Teams Workflow and polls a second webhook for the latest human reply. The processor never holds a Microsoft login. Highly experimental and completely untested.</p>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#files">Files</a>
+  <a href="#panel">Panel</a>
+  <a href="#symbol">Symbol</a>
+  <a href="#defaults">Defaults</a>
+  <a href="#overrides">Overrides</a>
+  <a href="#inputs">Inputs</a>
+  <a href="#outputs">Outputs</a>
+  <a href="#poll">Polling</a>
+  <a href="#hours">Hours and holidays</a>
+  <a href="#json">JSON</a>
+  <a href="#replies">Replies</a>
+  <a href="#https">HTTPS</a>
+  <a href="#limits">Limits</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <div class="warn">
+    <strong>Highly experimental. Completely untested.</strong>
+    This module has not been run on a processor and has not been tried against a live Teams webhook. Nothing on this page has been verified in a real program. Do not ship it until you have tested it yourself.
+  </div>
+
+  <h2 id="start">Start here</h2>
+  <p class="lead"><span class="sig">Teams Room Help v1.0</span> is one instance per room. A help press sends the room name and the problem. Cancel and Fixed send a follow-up. While the request is open, the symbol asks a second webhook for the newest answer and puts the sender, the time, and the text on serial outputs.</p>
+  <div class="grid">
+    <article>
+      <h3>You fill in</h3>
+      <p>Room name, both webhook URLs, and the shared secret. The defaults are examples. Replace them before the room goes live.</p>
+    </article>
+    <article>
+      <h3>IT fills in</h3>
+      <p>The group chat, the flows, and the two URLs. That setup is <code>Teams Room Help - IT setup.docx</code> in this folder. The last page of that handout is the sheet they send back.</p>
+    </article>
+    <article>
+      <h3>The panel draws</h3>
+      <p>This symbol does not draw a page. Join the presses and the serials in the touchpanel project. A picture in the IT handout is only an example of one possible page.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Keep <code>TeamsRoomHelp_v1.clz</code> and <code>Teams Room Help v1.0.html</code> in the same folder as <code>Teams Room Help v1.0.usp</code>.</li>
+    <li>Drop one symbol for the room. Paste the alert URL, the reply URL, and the secret from IT. Set <span class="sig">Room_Name</span> to the exact spelling in their SharePoint list.</li>
+    <li>Join the issue presses you show on the page, up to eight, plus Cancel, Fixed, and <span class="sig">Issue_Text</span>.</li>
+    <li>Show <span class="sig">Status</span>, and show <span class="sig">Response_Sender</span> with <span class="sig">Response_Time</span> on one line above <span class="sig">Response_Text</span>.</li>
+    <li>Drive <span class="sig">Holiday</span> from the room calendar when business hours are on. Leave it low when today is a normal weekday.</li>
+  </ol>
+  <div class="note">Press F1 on <span class="sig">Teams Room Help v1.0</span> in SIMPL Windows to open this page. Leave the HTML file next to the <code>.usp</code>. The comment inside the <code>.usp</code> is the version history.</div>
+
+  <h2 id="files">Files</h2>
+  <table>
+    <thead><tr><th>File</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>Teams Room Help v1.0.usp</code></td><td>The SIMPL+ symbol.</td></tr>
+      <tr><td><code>Teams Room Help v1.0.html</code></td><td>This manual.</td></tr>
+      <tr><td><code>TeamsRoomHelp_v1.clz</code></td><td>The Simpl# library. The program will not link without it.</td></tr>
+      <tr><td><code>Teams Room Help - IT setup.docx</code></td><td>The handout for the client's IT team. It is not the symbol help.</td></tr>
+    </tbody>
+  </table>
+  <p>Target processor is 4-Series. The symbol calls <code>Crestron.SimplSharp.Net.Https.HttpsClient</code>. It opens outbound TCP 443 to the flow host. It does not listen for a webhook.</p>
+
+  <h2 id="panel">Panel</h2>
+  <p>The symbol has eight preset issues, <span class="sig">Issue_Press_1</span> through <span class="sig">Issue_Press_8</span>, plus one typed issue. The example picture uses the first four and leaves the other four off the page. Wire only the presses you show. An unwired press never sends.</p>
+  <table>
+    <thead><tr><th>Panel control</th><th>Join</th><th>What is sent</th></tr></thead>
+    <tbody>
+      <tr><td>Preset 1 through 8</td><td><span class="sig">Issue_Press_1</span> through <span class="sig">Issue_Press_8</span></td><td>The matching <span class="sig">Issue_1</span> through <span class="sig">Issue_8</span> text, action <span class="sig">Action_Help</span>. The first four defaults match the example picture: Audio problem, No video, Can't join, Can't share.</td></tr>
+      <tr><td>Typed problem</td><td><span class="sig">Issue_Text</span> and <span class="sig">Send_Issue</span></td><td>The typed string, action <span class="sig">Action_Help</span>. An empty string does not post. Status becomes <code>Type the problem first</code>.</td></tr>
+      <tr><td>Cancel</td><td><span class="sig">Cancel</span></td><td>Action <span class="sig">Action_Cancel</span>. The poll stops. The last reply stays on the serials.</td></tr>
+      <tr><td>Fixed</td><td><span class="sig">Fixed</span></td><td>Action <span class="sig">Action_Fixed</span>. The poll stops. The last reply stays on the serials.</td></tr>
+    </tbody>
+  </table>
+  <p>The panel keyboard is the touchpanel's own keyboard. Open it when the text entry takes focus. This symbol only receives the string and the send press.</p>
+  <p>Leaving the Help page does not stop the poll. There is no page-visible input. Opening the page again shows the current <span class="sig">Status</span>, the last reply, and <span class="sig">Clear_At</span>.</p>
+  <div class="card"><strong>One line for the reply.</strong> Put <span class="sig">Response_Sender</span>, a hyphen, and <span class="sig">Response_Time</span> on one indirect text, then <span class="sig">Response_Text</span> under it. Example: <code>Alex - 3:04 PM</code>.</div>
+
+  <h2 id="symbol">Symbol</h2>
+  <p>Presses on the left, settings down the middle, feedback on the right. Do not restack the <code>.usp</code>. A <code>_SKIP_</code> holds a row so an override stays beside the parameter it replaces. <span class="sig">Status</span> through <span class="sig">Clear_At</span> sit under that list, on their own rows.</p>
+  <pre>Issue_Press_1                                         Request_Active_FB
+Issue_Press_2                                         Busy_FB
+Issue_Press_3                                         Fail_FB
+Issue_Press_4                                         Request_Sent_FB
+Issue_Press_5
+Issue_Press_6
+Issue_Press_7
+Issue_Press_8
+Send_Issue
+Cancel
+Fixed
+
+Holiday
+Allow_Insecure_TLS
+Auto_Clear_Override                 Auto_Clear
+Business_Hours_Override             Business_Hours_Only
+
+Poll_Interval_Override              Poll_Interval
+Clear_After_Override                Clear_After_Hours
+
+Issue_Text
+Room_Name_Override                  Room_Name
+Alert_URL_Override                  Alert_URL
+Reply_URL_Override                  Reply_URL
+Secret_Override                     Secret
+Secret_Header_Override              Secret_Header
+
+Issue_1_Override                    Issue_1
+Issue_2_Override                    Issue_2
+Issue_3_Override                    Issue_3
+Issue_4_Override                    Issue_4
+Issue_5_Override                    Issue_5
+Issue_6_Override                    Issue_6
+Issue_7_Override                    Issue_7
+Issue_8_Override                    Issue_8
+
+Action_Help_Override                Action_Help
+Action_Cancel_Override              Action_Cancel
+Action_Fixed_Override               Action_Fixed
+
+Field_Room_Override                 Field_Room
+Field_Action_Override               Field_Action
+Field_Issue_Override                Field_Issue
+Field_Message_Override              Field_Message
+Field_Sender_Override               Field_Sender
+Field_Text_Override                 Field_Text
+Field_At_Override                   Field_At
+
+Template_Help_Override              Template_Help
+Template_Cancel_Override            Template_Cancel
+Template_Fixed_Override             Template_Fixed
+
+Business_Start_Override             Business_Start
+Business_End_Override               Business_End
+
+                                                          Status
+                                                          Response_Sender
+                                                          Response_Time
+                                                          Response_Text
+                                                          Clear_At</pre>
+
+  <h2 id="defaults">Defaults</h2>
+  <p>These values are already on the symbol so a program can be built before IT sends the real URLs. A forgotten example URL does not reach Microsoft. <code>change-me</code> is not a real secret.</p>
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sig">Room_Name</span></td><td><code>Conference Room</code></td></tr>
+      <tr><td><span class="sig">Alert_URL</span></td><td><code>https://prod-00.westus.logic.azure.com/workflows/EXAMPLE/triggers/manual/paths/invoke</code></td></tr>
+      <tr><td><span class="sig">Reply_URL</span></td><td><code>https://prod-00.westus.logic.azure.com/workflows/EXAMPLE-REPLY/triggers/manual/paths/invoke</code></td></tr>
+      <tr><td><span class="sig">Secret</span></td><td><code>change-me</code></td></tr>
+      <tr><td><span class="sig">Secret_Header</span></td><td><code>x-room-help-secret</code></td></tr>
+      <tr><td><span class="sig">Issue_1</span> through <span class="sig">Issue_4</span></td><td><code>Audio problem</code>, <code>No video</code>, <code>Can't join</code>, <code>Can't share</code></td></tr>
+      <tr><td><span class="sig">Issue_5</span> through <span class="sig">Issue_8</span></td><td><code>Issue 5</code> through <code>Issue 8</code>. Rename these before those presses are shown.</td></tr>
+      <tr><td><span class="sig">Action_Help</span> / <span class="sig">Action_Cancel</span> / <span class="sig">Action_Fixed</span></td><td><code>help</code> / <code>cancel</code> / <code>fixed</code></td></tr>
+      <tr><td><span class="sig">Field_Room</span> / <span class="sig">Field_Action</span> / <span class="sig">Field_Issue</span> / <span class="sig">Field_Message</span></td><td><code>room</code> / <code>action</code> / <code>issue</code> / <code>message</code></td></tr>
+      <tr><td><span class="sig">Field_Sender</span> / <span class="sig">Field_Text</span> / <span class="sig">Field_At</span></td><td><code>sender</code> / <code>text</code> / <code>at</code></td></tr>
+      <tr><td><span class="sig">Template_Help</span></td><td><code>Urgent - {room}: {issue}</code></td></tr>
+      <tr><td><span class="sig">Template_Cancel</span></td><td><code>{room} cancelled the request. They figured it out.</code></td></tr>
+      <tr><td><span class="sig">Template_Fixed</span></td><td><code>{room} reports the issue is fixed.</code></td></tr>
+      <tr><td><span class="sig">Poll_Interval</span></td><td><code>15s</code>, bounds <code>5s</code> to <code>300s</code></td></tr>
+      <tr><td><span class="sig">Auto_Clear</span></td><td>On (<code>1d</code>)</td></tr>
+      <tr><td><span class="sig">Clear_After_Hours</span></td><td><code>9</code>, bounds <code>1</code> to <code>168</code></td></tr>
+      <tr><td><span class="sig">Business_Hours_Only</span></td><td>Off (<code>0d</code>)</td></tr>
+      <tr><td><span class="sig">Business_Start</span> / <span class="sig">Business_End</span></td><td><code>08:00</code> / <code>17:00</code></td></tr>
+    </tbody>
+  </table>
+  <p>Paste the full webhook URL Microsoft shows, including <code>sig=</code>. URL parameters hold 1024 characters. <code>{room}</code> and <code>{issue}</code> in a template are replaced before the message is placed in the JSON. An empty JSON field name omits that field.</p>
+  <p><span class="sig">Poll_Interval</span> is <code>unitTime</code>. <span class="sig">Clear_After_Hours</span> is a count of hours (<code>unitDecimal</code>). Several hours of <code>unitTime</code> do not fit in a SIMPL+ integer. <span class="sig">Auto_Clear</span> and <span class="sig">Business_Hours_Only</span> are Off/On lists.</p>
+
+  <h2 id="overrides">Overrides</h2>
+  <p>Every setting can be driven from the program. The parameter is the value until the matching input takes over.</p>
+  <table>
+    <thead><tr><th>Input</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>Serial overrides</td><td>An empty string uses the parameter. A non-empty string replaces it. Clearing the string returns to the parameter.</td></tr>
+      <tr><td><span class="sig">Poll_Interval_Override</span></td><td>Whole seconds. <code>0</code> uses <span class="sig">Poll_Interval</span>. Any other value is clamped to 5–300 seconds.</td></tr>
+      <tr><td><span class="sig">Clear_After_Override</span></td><td>Whole hours. <code>0</code> uses <span class="sig">Clear_After_Hours</span>. Any other value is clamped to 1–168 hours.</td></tr>
+      <tr><td><span class="sig">Auto_Clear_Override</span> and <span class="sig">Business_Hours_Override</span></td><td>Leave the digital unwired to use the parameter. After the digital changes, that digital stays in charge. A digital already high at startup is in charge. A wired low that never changes still uses the parameter.</td></tr>
+      <tr><td><span class="sig">Business_Start_Override</span> and <span class="sig">Business_End_Override</span></td><td>24-hour <code>HH:MM</code> or <code>H:MM</code>. Empty uses the parameter. <code>0</code> cannot mean "use the parameter" for a time of day. A bad string is ignored, the previous good time stays, and Status becomes <code>Business hours need HH:MM</code>.</td></tr>
+    </tbody>
+  </table>
+  <div class="warn">Clock times are strings. Do not tie a zero analog to <span class="sig">Business_Start_Override</span> and expect the parameter to return.</div>
+
+  <h2 id="inputs">Inputs</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sig">Issue_Press_1</span> through <span class="sig">Issue_Press_8</span></td><td>Digital</td><td>Each posts help with the matching <span class="sig">Issue_1</span> through <span class="sig">Issue_8</span> text. Leave a press unwired when that slot is not on the page.</td></tr>
+      <tr><td><span class="sig">Send_Issue</span></td><td>Digital</td><td>Posts help with <span class="sig">Issue_Text</span>.</td></tr>
+      <tr><td><span class="sig">Cancel</span></td><td>Digital</td><td>Posts the cancel action and stops the poll.</td></tr>
+      <tr><td><span class="sig">Fixed</span></td><td>Digital</td><td>Posts the fixed action and stops the poll.</td></tr>
+      <tr><td><span class="sig">Holiday</span></td><td>Digital</td><td>High means the processor's current local day is a holiday. It changes nothing while <span class="sig">Business_Hours_Only</span> is off.</td></tr>
+      <tr><td><span class="sig">Allow_Insecure_TLS</span></td><td>Digital</td><td>High skips HTTPS host and peer checks. Leave it low for Microsoft. Use it only for a lab server with a self-signed certificate.</td></tr>
+      <tr><td><span class="sig">Issue_Text</span></td><td>Serial, 255</td><td>The typed problem. Updated on each change. Sent when <span class="sig">Send_Issue</span> is pressed.</td></tr>
+    </tbody>
+  </table>
+  <p>A press while a call is already in flight sets Status to <code>Please wait</code> and pulses <span class="sig">Fail_FB</span>. It does not queue a second post.</p>
+  <p>A help press with an empty room name sets Status to <code>Add the room name</code>. An empty alert URL sets <code>Add the alert URL</code>. An empty preset issue sets <code>Add the issue text</code>. None of those start the poll.</p>
+
+  <h2 id="outputs">Outputs</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Kind</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sig">Request_Active_FB</span></td><td>Digital</td><td>High from a successful help until Cancel, Fixed, or auto-clear. Stays high outside business hours and on a holiday. The poll may be quiet while this is high.</td></tr>
+      <tr><td><span class="sig">Busy_FB</span></td><td>Digital</td><td>High during an HTTP call.</td></tr>
+      <tr><td><span class="sig">Fail_FB</span></td><td>Digital</td><td>Pulses on a failed call, a rejected clock string, a rejected press, or a missing URL.</td></tr>
+      <tr><td><span class="sig">Request_Sent_FB</span></td><td>Digital</td><td>Pulses after a successful help, cancel, or fixed post.</td></tr>
+      <tr><td><span class="sig">Status</span></td><td>Serial</td><td>The short line for the panel. See the list below.</td></tr>
+      <tr><td><span class="sig">Response_Sender</span></td><td>Serial</td><td>The reply <code>sender</code> field. Cleared when a new help succeeds.</td></tr>
+      <tr><td><span class="sig">Response_Time</span></td><td>Serial</td><td>The reply <code>at</code> field, converted to processor local time. Today is <code>3:04 PM</code>. Another day is <code>Mon 3:04 PM</code>. Empty when <code>at</code> is missing or cannot be read. The text still shows.</td></tr>
+      <tr><td><span class="sig">Response_Text</span></td><td>Serial</td><td>The reply text. Cleared when a new help succeeds. Left in place after Cancel, Fixed, or auto-clear.</td></tr>
+      <tr><td><span class="sig">Clear_At</span></td><td>Serial</td><td>The local deadline while a request is active and auto-clear is on. Same clock format as <span class="sig">Response_Time</span>. Empty when auto-clear is off, when no request is active, or when the business window cannot be walked.</td></tr>
+    </tbody>
+  </table>
+  <h3>Status strings</h3>
+  <table>
+    <thead><tr><th>Status</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><code>Request sent</code></td><td>Help post returned HTTP 2xx. Polling is armed.</td></tr>
+      <tr><td><code>Could not reach support</code></td><td>The call failed, timed out, or returned a code outside 200–299. A reply already on screen stays.</td></tr>
+      <tr><td><code>Cancelled</code></td><td>Cancel post succeeded.</td></tr>
+      <tr><td><code>Fixed</code></td><td>Fixed post succeeded.</td></tr>
+      <tr><td><code>Request expired</code></td><td>Auto-clear reached the deadline. No extra Teams message is sent.</td></tr>
+      <tr><td><code>Please wait</code></td><td>A press arrived while a call was in flight.</td></tr>
+      <tr><td><code>Add the room name</code></td><td>Room name is empty.</td></tr>
+      <tr><td><code>Add the alert URL</code></td><td>Alert URL is empty.</td></tr>
+      <tr><td><code>Add the reply URL</code></td><td>A poll fired with an empty reply URL.</td></tr>
+      <tr><td><code>Add the issue text</code></td><td>A preset issue string is empty.</td></tr>
+      <tr><td><code>Type the problem first</code></td><td><span class="sig">Send_Issue</span> with an empty <span class="sig">Issue_Text</span>.</td></tr>
+      <tr><td><code>Business hours need HH:MM</code></td><td>A start or end string is not a 24-hour clock time.</td></tr>
+      <tr><td><code>Business hours need a start before the end</code></td><td>Business hours are on and the end is not after the start. Polls do not go out, and business-hour accrual does not run.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="poll">Polling</h2>
+  <p>A successful help clears the three reply serials, stores the send time, raises <span class="sig">Request_Active_FB</span>, and arms the timer. The first poll is one interval after that success. Each later poll waits <span class="sig">Poll_Interval</span>.</p>
+  <p>The poll is <code>POST</code> with the room name. HTTP 200 and <code>{}</code>, or a body with no text field, leaves the reply serials as they are. A non-empty text field updates sender, time, and text.</p>
+  <p>Each call waits 8 seconds, then retries once. The body is not written to the error log. The webhook URL is not written either, because a Teams webhook URL contains <code>sig=</code>.</p>
+  <p>The timer keeps running after the visitor leaves the page. It stops when Cancel succeeds, Fixed succeeds, or auto-clear fires. Outside the business window the timer still wakes up, so it can notice the window opening and can notice the deadline. It does not place an HTTP call while the gate is closed.</p>
+
+  <h2 id="hours">Hours and holidays</h2>
+  <p>Time is the processor's local time. Set the processor clock and time zone. Monday through Friday are business days. <span class="sig">Business_End</span> itself is closed: 17:00 is not an open minute.</p>
+  <p><span class="sig">Business_Hours_Only</span> defaults to Off so a request after 17:00 still hears the reply. While it is off, <span class="sig">Holiday</span> does nothing. <span class="sig">Clear_After_Hours</span> is clock time from the successful help. Nine hours from Tuesday 10:00 is Tuesday 19:00. Nine hours from Friday 16:00 is Saturday 01:00.</p>
+  <p>While <span class="sig">Business_Hours_Only</span> is on, polls go out only from <span class="sig">Business_Start</span> inclusive to <span class="sig">Business_End</span> exclusive, on weekdays that are not the holiday. Hours outside that window, weekends, and the holiday day do not count toward <span class="sig">Clear_After_Hours</span>. The request stays active. Status stays <code>Request sent</code>. Turning the gate on does not clear the request.</p>
+  <p><span class="sig">Holiday</span> means the whole current local day. Future holidays are not known, so <span class="sig">Clear_At</span> assumes later weekdays are normal until the input says otherwise. Raising <span class="sig">Holiday</span> today removes today from the count, including time already accumulated today, and moves <span class="sig">Clear_At</span>.</p>
+  <p>With the default window 08:00–17:00 and 9 hours, business-hours mode clears at these times.</p>
+  <table>
+    <thead><tr><th>Sent</th><th>Holiday</th><th>Clears</th></tr></thead>
+    <tbody>
+      <tr><td>Tuesday 10:00</td><td>no</td><td>Wednesday 10:00</td></tr>
+      <tr><td>Tuesday 18:30</td><td>no</td><td>Wednesday 17:00</td></tr>
+      <tr><td>Friday 09:00</td><td>no</td><td>Monday 09:00</td></tr>
+      <tr><td>Saturday 12:00</td><td>no</td><td>Monday 17:00</td></tr>
+      <tr><td>Tuesday 10:00</td><td>Tuesday</td><td>Wednesday 17:00</td></tr>
+    </tbody>
+  </table>
+  <p><span class="sig">Auto_Clear</span> off keeps the request up until Cancel or Fixed. The business-hours gate can still suppress polls. <span class="sig">Clear_At</span> is empty. Auto-clear does not post another Teams message. Status becomes <code>Request expired</code> and the last reply stays until the next successful help.</p>
+  <div class="note">08:00 to 17:00 is 9 hours. The default of 9 matches one business day when the gate is on. Use 24 on the hours parameter, with the gate off, for a full clock day.</div>
+
+  <h2 id="json">JSON</h2>
+  <p>Both calls are <code>POST</code> with <code>Content-Type: application/json</code> and the secret header. Field names and action words are parameters, so a flow that already chose different names can be matched without a new compile.</p>
+  <p>A help post, with the defaults and room <code>Conference Room</code>, is:</p>
+  <pre>{
+  "room": "Conference Room",
+  "action": "help",
+  "issue": "Audio problem",
+  "message": "Urgent - Conference Room: Audio problem"
+}</pre>
+  <p><code>action</code> is <code>help</code>, <code>cancel</code>, or <code>fixed</code> unless those parameters were changed. <code>message</code> is the template after <code>{room}</code> and <code>{issue}</code> are replaced. The flow can post that field into the chat and skip building the sentence itself.</p>
+  <p>Cancel and fixed use the same keys. Their <code>issue</code> value is empty. Their <code>message</code> value comes from <span class="sig">Template_Cancel</span> or <span class="sig">Template_Fixed</span>.</p>
+  <p>The reply request is one field:</p>
+  <pre>{ "room": "Conference Room" }</pre>
+  <p>A waiting answer is:</p>
+  <pre>{
+  "sender": "Alex",
+  "text": "Conference Room - on our way",
+  "at": "2026-10-20T15:04:00Z"
+}</pre>
+  <p><code>at</code> is ISO-8601. A value with a <code>Z</code> or an offset is read as that instant. A value with no zone is read as UTC. It is then shown in processor local time. Nothing waiting is HTTP 200 and <code>{}</code>.</p>
+  <p>Quotes, backslashes, and line breaks in a value are escaped. The reply parser reads the configured field names. A value that is not a string, such as <code>null</code>, is treated as empty.</p>
+
+  <h2 id="replies">Replies</h2>
+  <p>The symbol shows a reply only when the text field is non-empty. If <code>at</code> parses to more than two minutes before this help was sent, the whole reply is ignored. That keeps yesterday's stored answer off the panel when the alert flow forgot to clear it. A reply with no <code>at</code> is shown, because it cannot be filtered by time.</p>
+  <p>Cancel and Fixed do not wipe the reply serials. The next successful help does.</p>
+  <p>Two rooms need two symbol instances. Each poll sends that instance's room name. The flows must store one answer per room name. Spelling has to match <span class="sig">Room_Name</span>, including capitals.</p>
+  <div class="warn">A thread reply under the alert often never reaches the save flow. Staff send a new message in the chat, and that message has to contain the room name. The bot's own alert must not be saved as the answer. Both of those rules live in the flows, not in this symbol.</div>
+
+  <h2 id="https">HTTPS</h2>
+  <p>Host verification and peer verification are on unless <span class="sig">Allow_Insecure_TLS</span> is high. Leave that digital low for <code>logic.azure.com</code>. Redirects are followed. The client does not keep the connection open.</p>
+  <p>A code from 200 through 299 is success, including 202. Any other code, a timeout, or a throw is <code>Could not reach support</code> after the retry. The secret is sent as the raw header value. It is not logged.</p>
+
+  <h2 id="limits">Limits</h2>
+  <ul>
+    <li>4-Series only. There is no 3-Series build.</li>
+    <li>Eight preset issue presses. The example picture shows four.</li>
+    <li>One active request per symbol. A new successful help replaces it.</li>
+    <li>Poll interval 5 to 300 seconds. Clear time 1 to 168 hours.</li>
+    <li>The symbol will not create an Xyte ticket, call Microsoft Graph, delete a Teams message, or host the webhook.</li>
+    <li>Real Teams Urgent (<code>importance: urgent</code>) is a step inside the flow, if IT adds it later. This symbol's urgent signal is the word Urgent in <span class="sig">Template_Help</span> plus whatever @mention the flow adds.</li>
+    <li><code>//#CATEGORY "0"</code> stays commented until the symbol is inside a user module. The file name is the symbol name.</li>
+  </ul>
+  <h3>Compile</h3>
+  <p>The Simpl# project uses the SDK already stored under <code>remote-file-sync</code>. Build the library, then the wrapper.</p>
+  <pre>&amp; "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" `
+  "Teams Room Help\Teams Room Help.sln" /p:Configuration=Release /v:m
+
+&amp; "C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe" `
+  \rebuild "Teams Room Help v1.0.usp" `
+  \target series4</pre>
+
+  <h2 id="versions">Versions</h2>
+  <table>
+    <thead><tr><th>Version</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>10/20/2026. First release. Highly experimental and completely untested. Eight preset issues, plus a typed issue. Help, cancel, and fixed posts. Reply poll. Business hours, holiday, and clear-after hours. Field names and templates are parameters.</td></tr>
+    </tbody>
+  </table>
+</main>
+<footer>
+  Teams Room Help v1.0 is not affiliated with Crestron Electronics or Microsoft. Press F1 on the symbol to open this page.
+</footer>
+</body>
+</html>

@@ -12,6 +12,7 @@ This project is not affiliated with Crestron Electronics.
 |--------|--------|--------|----------------|
 | [file-reader](file-reader/) | File Reader v3.3.0 | **4-Series** | Read and write digital, analog, and serial values to Text / CSV / XML / JSON / INI / Binary files, with optional AES encryption and backups. |
 | [remote-file-sync](remote-file-sync/) | Remote File Sync v1.0 | **4-Series** | Check, retrieve, or overwrite one file at an `http://`, `https://`, or `ftp://` URL. `Enable_Pull` retrieves on an interval. Pair `Retrieved` with File Reader `Read`. |
+| [teams-room-help](teams-room-help/) | Teams Room Help v1.0 | **4-Series** | **Experimental, untested.** Post a room help alert to a Teams Workflow webhook and poll the latest reply. Not run on a processor and not tried against a live Teams webhook. Press F1 for `Teams Room Help v1.0.html`. |
 | [power-shutdown-confirmation](power-shutdown-confirmation/) | Power Shutdown Confirmation v1.0 | 3-Series / 4-Series | Confirm a shutdown (or similar) action before the program acts on it. |
 | [crestron-mqtt-integration](crestron-mqtt-integration/) | Crestron MQTT (HA bridge) | **4-Series** | MQTT client (M2Mqtt / SSharp port) for Home Assistant publish and subscribe. |
 | [tcp-server-with-authentication](tcp-server-with-authentication/) | TCP Server with Authentication | 3-Series / 4-Series | TCP listener on the processor. Defaults match the built-in **TCP/IP Server** symbol. Optional TLS (`SecureTCPServer`, `ssl self`) and optional `AUTH` username/password. |

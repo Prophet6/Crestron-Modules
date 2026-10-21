@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37314.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Teams Room Help", "Teams Room Help\Teams Room Help.csproj", "{B7E2A1C4-5D18-4F90-8C33-1A6E9D0B4725}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7E2A1C4-5D18-4F90-8C33-1A6E9D0B4725}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7E2A1C4-5D18-4F90-8C33-1A6E9D0B4725}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7E2A1C4-5D18-4F90-8C33-1A6E9D0B4725}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7E2A1C4-5D18-4F90-8C33-1A6E9D0B4725}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D4F08B21-6C37-4A19-8E50-2B7C1A90F6E3}
+	EndGlobalSection
+EndGlobal

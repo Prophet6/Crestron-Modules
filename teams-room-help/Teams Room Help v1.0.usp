@@ -1,0 +1,518 @@
+#HELP_BEGIN
+- VERSION HISTORY ------------------------------------------------------------------
+
+v1.0  10/20/2026  RGW / AI
+- HIGHLY EXPERIMENTAL AND COMPLETELY UNTESTED. Not run on a processor. Not tried against a live Teams webhook.
+- 4-Series room help alert. Posts JSON to a Teams Workflow and polls a reply webhook.
+- Clear_After_Hours is a count of hours (unitDecimal). A unitTime of several hours
+  does not fit in a SIMPL+ INTEGER. Business_Hours_Only counts only open weekday
+  hours, and Holiday drops the current day out of that count.
+- Poll_Interval is unitTime. Poll_Interval_Override is whole seconds. 0 uses the parameter.
+- Defaults are examples. Replace the URLs and the secret before a room goes live.
+- Eight preset issues, Issue_Press_1 through Issue_Press_8. The example page shows four.
+- F1 opens Teams Room Help v1.0.html when that file is beside this symbol.
+- //#CATEGORY "0" stays commented until this symbol is inside a user module.
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#HELP_PDF_FILE "Teams Room Help v1.0.html"
+//#CATEGORY "0" // Hidden until this symbol is inside a user module
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "TeamsRoomHelp_v1"
+
+/*
+	Symbol grid. Do not restack.
+	Digital rows 1-8 are Issue_Press_1 through Issue_Press_8.
+	The four feedbacks share the top rows. They are not per-issue lights.
+	Row 12 is blank. Row 13 Holiday. Row 14 Allow_Insecure_TLS.
+	Rows 15-16 are the digital overrides beside Auto_Clear and Business_Hours_Only.
+	Analog rows 17-18 are the interval and clear-after overrides.
+	Serial rows then follow the string parameters. Status outputs sit under that list.
+*/
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT	Issue_Press_1, Issue_Press_2, Issue_Press_3, Issue_Press_4,
+				Issue_Press_5, Issue_Press_6, Issue_Press_7, Issue_Press_8,
+				Send_Issue, Cancel, Fixed,
+				_SKIP_,
+				Holiday, Allow_Insecure_TLS, Auto_Clear_Override, Business_Hours_Override;
+DIGITAL_OUTPUT	Request_Active_FB, Busy_FB, Fail_FB, Request_Sent_FB,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_,
+				_SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_;
+
+ANALOG_INPUT	Poll_Interval_Override, Clear_After_Override;
+ANALOG_OUTPUT	_SKIP_, _SKIP_;
+
+STRING_INPUT	Issue_Text[255],
+				Room_Name_Override[128], Alert_URL_Override[1024], Reply_URL_Override[1024],
+				Secret_Override[128], Secret_Header_Override[64],
+				_SKIP_,
+				Issue_1_Override[128], Issue_2_Override[128], Issue_3_Override[128], Issue_4_Override[128],
+				Issue_5_Override[128], Issue_6_Override[128], Issue_7_Override[128], Issue_8_Override[128],
+				_SKIP_,
+				Action_Help_Override[64], Action_Cancel_Override[64], Action_Fixed_Override[64],
+				_SKIP_,
+				Field_Room_Override[32], Field_Action_Override[32], Field_Issue_Override[32],
+				Field_Message_Override[32], Field_Sender_Override[32], Field_Text_Override[32],
+				Field_At_Override[32],
+				_SKIP_,
+				Template_Help_Override[255], Template_Cancel_Override[255], Template_Fixed_Override[255],
+				_SKIP_,
+				Business_Start_Override[8], Business_End_Override[8];
+STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				Status, Response_Sender, Response_Time, Response_Text, Clear_At;
+
+INTEGER_PARAMETER	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					Auto_Clear, Business_Hours_Only, Poll_Interval, Clear_After_Hours;
+STRING_PARAMETER	_SKIP_,
+					Room_Name[128], Alert_URL[1024], Reply_URL[1024], Secret[128], Secret_Header[64],
+					_SKIP_,
+					Issue_1[128], Issue_2[128], Issue_3[128], Issue_4[128],
+					Issue_5[128], Issue_6[128], Issue_7[128], Issue_8[128],
+					_SKIP_,
+					Action_Help[64], Action_Cancel[64], Action_Fixed[64],
+					_SKIP_,
+					Field_Room[32], Field_Action[32], Field_Issue[32], Field_Message[32],
+					Field_Sender[32], Field_Text[32], Field_At[32],
+					_SKIP_,
+					Template_Help[255], Template_Cancel[255], Template_Fixed[255],
+					_SKIP_,
+					Business_Start[8], Business_End[8];
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Auto_Clear
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propDefaultValue = 1d;
+	propList = {0d, "Off"},
+			   {1d, "On"};
+	propShortDescription = "Clear an open request after Clear_After_Hours. Unwired override uses this.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Business_Hours_Only
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propDefaultValue = 0d;
+	propList = {0d, "Off"},
+			   {1d, "On"};
+	propShortDescription = "On: poll and count clear-hours only on open weekdays. Off: clock time. Holiday is ignored while Off.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Poll_Interval
+	propValidUnits = unitTime;
+	propDefaultUnit = unitTime;
+	propBounds = 5s, 300s;
+	propDefaultValue = 15s;
+	propShortDescription = "Time between reply polls. Override analog is seconds. 0 uses this.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Clear_After_Hours
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propBounds = 1d, 168d;
+	propDefaultValue = 9d;
+	propShortDescription = "Hours before auto-clear. Clock hours, or business hours when that gate is On.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Room_Name
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Conference Room";
+	propShortDescription = "Room name sent with every alert and reply poll.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Alert_URL
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "https://prod-00.westus.logic.azure.com/workflows/EXAMPLE/triggers/manual/paths/invoke";
+	propShortDescription = "Alert webhook URL, including the sig= value Microsoft shows.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Reply_URL
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "https://prod-00.westus.logic.azure.com/workflows/EXAMPLE-REPLY/triggers/manual/paths/invoke";
+	propShortDescription = "Reply webhook URL, including the sig= value Microsoft shows.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Secret
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "change-me";
+	propShortDescription = "Shared secret sent in Secret_Header. Not copied to Status.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Secret_Header
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "x-room-help-secret";
+	propShortDescription = "HTTP header name that carries the secret.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_1
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Audio problem";
+	propShortDescription = "Issue text for Issue_Press_1.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_2
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "No video";
+	propShortDescription = "Issue text for Issue_Press_2.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_3
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Can't join";
+	propShortDescription = "Issue text for Issue_Press_3.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_4
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Can't share";
+	propShortDescription = "Issue text for Issue_Press_4.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_5
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Issue 5";
+	propShortDescription = "Issue text for Issue_Press_5. Rename before use.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_6
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Issue 6";
+	propShortDescription = "Issue text for Issue_Press_6. Rename before use.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_7
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Issue 7";
+	propShortDescription = "Issue text for Issue_Press_7. Rename before use.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Issue_8
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Issue 8";
+	propShortDescription = "Issue text for Issue_Press_8. Rename before use.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Action_Help
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "help";
+	propShortDescription = "action value for a help press.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Action_Cancel
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "cancel";
+	propShortDescription = "action value for Cancel.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Action_Fixed
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "fixed";
+	propShortDescription = "action value for Fixed.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Room
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "room";
+	propShortDescription = "JSON name for the room. Empty omits the field.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Action
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "action";
+	propShortDescription = "JSON name for the action. Empty omits the field.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Issue
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "issue";
+	propShortDescription = "JSON name for the issue. Empty omits the field.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Message
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "message";
+	propShortDescription = "JSON name for the filled-in template. Empty omits the field.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Sender
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "sender";
+	propShortDescription = "JSON name of the reply sender.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_Text
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "text";
+	propShortDescription = "JSON name of the reply text.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Field_At
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "at";
+	propShortDescription = "JSON name of the reply time. ISO-8601 UTC.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Template_Help
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "Urgent - {room}: {issue}";
+	propShortDescription = "Help message. {room} and {issue} are replaced.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Template_Cancel
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "{room} cancelled the request. They figured it out.";
+	propShortDescription = "Cancel message. {room} and {issue} are replaced.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Template_Fixed
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "{room} reports the issue is fixed.";
+	propShortDescription = "Fixed message. {room} and {issue} are replaced.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Business_Start
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "08:00";
+	propShortDescription = "Business-day open, 24-hour HH:MM. Empty override uses this.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Business_End
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "17:00";
+	propShortDescription = "Business-day close, 24-hour HH:MM. The close itself is not an open minute.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+INTEGER AutoClearHeld, BusinessHeld, AutoValue, BusinessValue, IntervalValue, HoursValue;
+STRING RoomBuf[128], AlertBuf[1024], ReplyBuf[1024], SecretBuf[128], HeaderBuf[64],
+	   Issue1Buf[128], Issue2Buf[128], Issue3Buf[128], Issue4Buf[128],
+	   Issue5Buf[128], Issue6Buf[128], Issue7Buf[128], Issue8Buf[128],
+	   ActionHelpBuf[64], ActionCancelBuf[64], ActionFixedBuf[64],
+	   FieldRoomBuf[32], FieldActionBuf[32], FieldIssueBuf[32], FieldMessageBuf[32],
+	   FieldSenderBuf[32], FieldTextBuf[32], FieldAtBuf[32],
+	   TemplateHelpBuf[255], TemplateCancelBuf[255], TemplateFixedBuf[255],
+	   StartBuf[8], EndBuf[8],
+	   StatusBuf[128], SenderBuf[128], TimeBuf[48], TextBuf[1024], ClearBuf[48];
+TeamsRoomHelp Core;
+
+/* FUNCTIONS */
+
+STRING_FUNCTION Pick(STRING choice, STRING fallback) {
+	If (len(choice) > 0)
+		Return (choice);
+	Return (fallback);
+}
+
+FUNCTION PushSetup() {
+	AutoValue = Auto_Clear;
+	BusinessValue = Business_Hours_Only;
+	If (AutoClearHeld = 1) AutoValue = Auto_Clear_Override;
+	If (BusinessHeld = 1) BusinessValue = Business_Hours_Override;
+
+	If (Poll_Interval_Override = 0)
+		IntervalValue = Poll_Interval;
+	Else {
+		IntervalValue = Poll_Interval_Override;
+		If (IntervalValue < 5) IntervalValue = 5;
+		If (IntervalValue > 300) IntervalValue = 300;
+		IntervalValue = IntervalValue * 100;
+	}
+
+	HoursValue = Clear_After_Hours;
+	If (Clear_After_Override <> 0) HoursValue = Clear_After_Override;
+	If (HoursValue < 1) HoursValue = 1;
+	If (HoursValue > 168) HoursValue = 168;
+
+	RoomBuf = Pick(Room_Name_Override, Room_Name);
+	AlertBuf = Pick(Alert_URL_Override, Alert_URL);
+	ReplyBuf = Pick(Reply_URL_Override, Reply_URL);
+	SecretBuf = Pick(Secret_Override, Secret);
+	HeaderBuf = Pick(Secret_Header_Override, Secret_Header);
+	Issue1Buf = Pick(Issue_1_Override, Issue_1);
+	Issue2Buf = Pick(Issue_2_Override, Issue_2);
+	Issue3Buf = Pick(Issue_3_Override, Issue_3);
+	Issue4Buf = Pick(Issue_4_Override, Issue_4);
+	Issue5Buf = Pick(Issue_5_Override, Issue_5);
+	Issue6Buf = Pick(Issue_6_Override, Issue_6);
+	Issue7Buf = Pick(Issue_7_Override, Issue_7);
+	Issue8Buf = Pick(Issue_8_Override, Issue_8);
+	ActionHelpBuf = Pick(Action_Help_Override, Action_Help);
+	ActionCancelBuf = Pick(Action_Cancel_Override, Action_Cancel);
+	ActionFixedBuf = Pick(Action_Fixed_Override, Action_Fixed);
+	FieldRoomBuf = Pick(Field_Room_Override, Field_Room);
+	FieldActionBuf = Pick(Field_Action_Override, Field_Action);
+	FieldIssueBuf = Pick(Field_Issue_Override, Field_Issue);
+	FieldMessageBuf = Pick(Field_Message_Override, Field_Message);
+	FieldSenderBuf = Pick(Field_Sender_Override, Field_Sender);
+	FieldTextBuf = Pick(Field_Text_Override, Field_Text);
+	FieldAtBuf = Pick(Field_At_Override, Field_At);
+	TemplateHelpBuf = Pick(Template_Help_Override, Template_Help);
+	TemplateCancelBuf = Pick(Template_Cancel_Override, Template_Cancel);
+	TemplateFixedBuf = Pick(Template_Fixed_Override, Template_Fixed);
+	StartBuf = Pick(Business_Start_Override, Business_Start);
+	EndBuf = Pick(Business_End_Override, Business_End);
+
+	Core.SetConnection(AlertBuf, ReplyBuf, SecretBuf, HeaderBuf, Allow_Insecure_TLS);
+	Core.SetCopy(RoomBuf, Issue1Buf, Issue2Buf, Issue3Buf, Issue4Buf, Issue5Buf, Issue6Buf, Issue7Buf, Issue8Buf, ActionHelpBuf, ActionCancelBuf, ActionFixedBuf, FieldRoomBuf, FieldActionBuf, FieldIssueBuf, FieldMessageBuf, FieldSenderBuf, FieldTextBuf, FieldAtBuf, TemplateHelpBuf, TemplateCancelBuf, TemplateFixedBuf);
+	Core.SetTyped(Issue_Text);
+	Core.SetSchedule(AutoValue, BusinessValue, Holiday, IntervalValue, HoursValue, StartBuf, EndBuf);
+}
+
+/* CALLBACKS */
+
+CALLBACK FUNCTION HandleState (Integer active, Integer busy, Integer fail, Integer sent, String status, String sender, String replyTime, String replyText, String clearAt) {
+	Request_Active_FB = (active = 1);
+	Busy_FB = (busy = 1);
+	StatusBuf = status;
+	SenderBuf = sender;
+	TimeBuf = replyTime;
+	TextBuf = replyText;
+	ClearBuf = clearAt;
+	Status = StatusBuf;
+	Response_Sender = SenderBuf;
+	Response_Time = TimeBuf;
+	Response_Text = TextBuf;
+	Clear_At = ClearBuf;
+	If (fail = 1) {
+		Fail_FB = 1;
+		Delay(1);
+		Fail_FB = 0;
+	}
+	If (sent = 1) {
+		Request_Sent_FB = 1;
+		Delay(1);
+		Request_Sent_FB = 0;
+	}
+}
+
+/* EVENT HANDLERS */
+
+PUSH Issue_Press_1 { PushSetup(); Core.PostPreset(1); }
+PUSH Issue_Press_2 { PushSetup(); Core.PostPreset(2); }
+PUSH Issue_Press_3 { PushSetup(); Core.PostPreset(3); }
+PUSH Issue_Press_4 { PushSetup(); Core.PostPreset(4); }
+PUSH Issue_Press_5 { PushSetup(); Core.PostPreset(5); }
+PUSH Issue_Press_6 { PushSetup(); Core.PostPreset(6); }
+PUSH Issue_Press_7 { PushSetup(); Core.PostPreset(7); }
+PUSH Issue_Press_8 { PushSetup(); Core.PostPreset(8); }
+
+PUSH Send_Issue {
+	PushSetup();
+	Core.PostTyped();
+}
+
+PUSH Cancel {
+	PushSetup();
+	Core.PostCancel();
+}
+
+PUSH Fixed {
+	PushSetup();
+	Core.PostFixed();
+}
+
+CHANGE Holiday {
+	PushSetup();
+}
+
+CHANGE Allow_Insecure_TLS {
+	PushSetup();
+}
+
+CHANGE Auto_Clear_Override {
+	AutoClearHeld = 1;
+	PushSetup();
+}
+
+CHANGE Business_Hours_Override {
+	BusinessHeld = 1;
+	PushSetup();
+}
+
+CHANGE Poll_Interval_Override {
+	PushSetup();
+}
+
+CHANGE Clear_After_Override {
+	PushSetup();
+}
+
+CHANGE Issue_Text {
+	Core.SetTyped(Issue_Text);
+}
+
+CHANGE Room_Name_Override { PushSetup(); }
+CHANGE Alert_URL_Override { PushSetup(); }
+CHANGE Reply_URL_Override { PushSetup(); }
+CHANGE Secret_Override { PushSetup(); }
+CHANGE Secret_Header_Override { PushSetup(); }
+CHANGE Issue_1_Override { PushSetup(); }
+CHANGE Issue_2_Override { PushSetup(); }
+CHANGE Issue_3_Override { PushSetup(); }
+CHANGE Issue_4_Override { PushSetup(); }
+CHANGE Issue_5_Override { PushSetup(); }
+CHANGE Issue_6_Override { PushSetup(); }
+CHANGE Issue_7_Override { PushSetup(); }
+CHANGE Issue_8_Override { PushSetup(); }
+CHANGE Action_Help_Override { PushSetup(); }
+CHANGE Action_Cancel_Override { PushSetup(); }
+CHANGE Action_Fixed_Override { PushSetup(); }
+CHANGE Field_Room_Override { PushSetup(); }
+CHANGE Field_Action_Override { PushSetup(); }
+CHANGE Field_Issue_Override { PushSetup(); }
+CHANGE Field_Message_Override { PushSetup(); }
+CHANGE Field_Sender_Override { PushSetup(); }
+CHANGE Field_Text_Override { PushSetup(); }
+CHANGE Field_At_Override { PushSetup(); }
+CHANGE Template_Help_Override { PushSetup(); }
+CHANGE Template_Cancel_Override { PushSetup(); }
+CHANGE Template_Fixed_Override { PushSetup(); }
+CHANGE Business_Start_Override { PushSetup(); }
+CHANGE Business_End_Override { PushSetup(); }
+
+FUNCTION Main() {
+	If (Auto_Clear_Override = 1) AutoClearHeld = 1;
+	If (Business_Hours_Override = 1) BusinessHeld = 1;
+	RegisterDelegate(Core, OnState, HandleState);
+	PushSetup();
+	WaitForInitializationComplete();
+}
