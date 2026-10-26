@@ -165,12 +165,12 @@
     <h1>Date v1.0</h1>
     <p>One serial string of the processor's date. You choose each piece, the shape of the date, and where the week number sits.</p>
     <div class="samples">
-      <span>Monday, January 3rd, 2026</span>
-      <span>Monday, 3rd January 2026</span>
-      <span>Monday, 1/3/2026</span>
-      <span>Monday, 3/1/2026</span>
-      <span>Monday, 2026-01-03</span>
-      <span>Week 1: Monday, January 3rd, 2026</span>
+      <span>Saturday, January 3rd, 2026</span>
+      <span>Saturday, 3rd January 2026</span>
+      <span>Saturday, 1/3/2026</span>
+      <span>Saturday, 3/1/2026</span>
+      <span>Saturday, 2026-01-03</span>
+      <span>Week 1: Saturday, January 3rd, 2026</span>
     </div>
   </div>
 </header>
@@ -194,7 +194,7 @@
   <div class="grid">
     <article>
       <h3>Drop the symbol</h3>
-      <p>It lives in Time/Date. The defaults already publish a full US date: <span class="ex">Monday, January 3rd, 2026</span> on a Monday the 3rd.</p>
+      <p>It lives in Time/Date. The defaults already publish a full US date: <span class="ex">Saturday, January 3rd, 2026</span> on Saturday, January 3.</p>
     </article>
     <article>
       <h3>Pulse it at midnight</h3>
@@ -214,7 +214,7 @@
     <li>Pulse <span class="sig">Refresh</span> from a When at midnight so the string rolls over.</li>
   </ol>
   <div class="note">
-    Press F1 on <span class="sig">Date v1.0</span> in SIMPL Windows to open this page. The spelling and date-shape names use Monday, the 3rd, January, and 2026 so you can see the shape. Week Format uses <span class="ex">&lt;date&gt;</span> for the date those dropdowns build. The processor clock supplies the real day.
+    Press F1 on <span class="sig">Date v1.0</span> in SIMPL Windows to open this page. Day-of-week names use Monday so you can see each length. Date-shape names use Saturday, January 3rd, 2026. Week Format uses <span class="ex">&lt;date&gt;</span> for the date those dropdowns build. The processor clock supplies the real day.
   </div>
 
   <h2 id="symbol">Symbol</h2>
@@ -248,11 +248,11 @@
   <p>Until a value arrives on that input after startup, the dropdown is in charge. The 0 that an unwired analog sits at does not count. After the first real change, that analog stays in charge. Sending 0 later is a real choice: Off for a piece, or the first order for <span class="sig">Final_Format</span>. It does not fall back to the dropdown.</p>
   <p>A value past the last entry is clamped to the last entry. It does not clear the string.</p>
   <div class="warn">
-    Do not treat override 0 as "use the parameter." That is true only before the input has ever changed. After it latches, 0 means Off, or the order <span class="ex">Monday, January 3rd, 2026</span>.
+    Do not treat override 0 as "use the parameter." That is true only before the input has ever changed. After it latches, 0 means Off, or the order <span class="ex">Saturday, January 3rd, 2026</span>.
   </div>
 
   <h2 id="pieces">Spellings</h2>
-  <p>Pictures in this section use Monday, January 3, 2026, which is week 1 of that year. They show the spelling. They are not a claim about whatever day the processor has today.</p>
+  <p>Day-of-week pictures show Monday and Thursday so you can see each length. Day, month, and year pictures use January 3, 2026. That day is a Saturday, in week 1. They show the spelling. They are not a claim about whatever day the processor has today.</p>
 
   <h3>Day of week</h3>
   <p><span class="sig">Dow_Format</span> default is Monday. One letter and two letters are the start of the English name. Tuesday and Thursday both start with T. Sunday and Saturday both start with S.</p>
@@ -311,23 +311,23 @@
   </table>
 
   <h2 id="order">Date shape</h2>
-  <p><span class="sig">Final_Format</span> is the punctuation of the date. Word shapes are pictured with Monday, 3rd, January, and 2026. Numeric shapes are pictured with 1, 3, and 2026. Change a spelling and the same shape changes with it. Turn a piece Off and that piece, plus the comma or space that belonged to it, drops out.</p>
-  <p><span class="ex">Monday, January 3rd</span> is the first shape with the year Off. <span class="ex">January 3rd, 2026</span> is that shape with the day of week Off. <span class="ex">January 2026</span> is <span class="ex">Monday, 3rd January 2026</span> with the day of week and the day Off. Those are not separate rows.</p>
-  <p>There is no Off for the date shape. Value 0 is <span class="ex">Monday, January 3rd, 2026</span>.</p>
+  <p><span class="sig">Final_Format</span> is the punctuation of the date. Word shapes are pictured with Saturday, January 3rd, 2026. Numeric shapes use that same Saturday as 1/3/2026, 3/1/2026, and 2026-01-03. Change a spelling and the same shape changes with it. Turn a piece Off and that piece, plus the comma or space that belonged to it, drops out.</p>
+  <p><span class="ex">Saturday, January 3rd</span> is the first shape with the year Off. <span class="ex">January 3rd, 2026</span> is that shape with the day of week Off. <span class="ex">January 2026</span> is <span class="ex">Saturday, 3rd January 2026</span> with the day of week and the day Off. Those are not separate rows.</p>
+  <p>There is no Off for the date shape. Value 0 is <span class="ex">Saturday, January 3rd, 2026</span>.</p>
   <table>
     <thead><tr><th>Value</th><th>Name</th><th>Slots</th></tr></thead>
     <tbody>
-      <tr><td>0</td><td class="ex">Monday, January 3rd, 2026</td><td>Day of week, month and day, year. Comma before the year.</td></tr>
-      <tr><td>1</td><td class="ex">Monday, January 3rd 2026</td><td>Same slots, with a space before the year.</td></tr>
-      <tr><td>2</td><td class="ex">Monday, 3rd January 2026</td><td>Day of week, then day, month, and year. Day of week and day Off leaves <span class="ex">January 2026</span>.</td></tr>
-      <tr><td>3</td><td class="ex">Monday, 1/3/2026</td><td>Day of week, then month, day, and year with slashes.</td></tr>
-      <tr><td>4</td><td class="ex">Monday, 3/1/2026</td><td>Day of week, then day, month, and year with slashes.</td></tr>
-      <tr><td>5</td><td class="ex">Monday, 2026-01-03</td><td>Day of week, then year, month, and day with hyphens.</td></tr>
+      <tr><td>0</td><td class="ex">Saturday, January 3rd, 2026</td><td>Day of week, month and day, year. Comma before the year.</td></tr>
+      <tr><td>1</td><td class="ex">Saturday, January 3rd 2026</td><td>Same slots, with a space before the year.</td></tr>
+      <tr><td>2</td><td class="ex">Saturday, 3rd January 2026</td><td>Day of week, then day, month, and year. Day of week and day Off leaves <span class="ex">January 2026</span>.</td></tr>
+      <tr><td>3</td><td class="ex">Saturday, 1/3/2026</td><td>Day of week, then month, day, and year with slashes.</td></tr>
+      <tr><td>4</td><td class="ex">Saturday, 3/1/2026</td><td>Day of week, then day, month, and year with slashes.</td></tr>
+      <tr><td>5</td><td class="ex">Saturday, 2026-01-03</td><td>Day of week, then year, month, and day with hyphens.</td></tr>
     </tbody>
   </table>
-  <p>The numeric names show the usual pairings. The shape still uses the spelling dropdowns, so the defaults on <span class="ex">Monday, 1/3/2026</span> read <span class="ex">Monday, January/3rd/2026</span>. Set the month to 1 or 01, the day to 3 or 03, and the year to 26 or 2026 when you want digits.</p>
-  <p>On <span class="ex">Monday, 3rd January 2026</span>, choosing the word Third inserts "of" and a comma before the year: <span class="ex">Monday, Third of January, 2026</span>. With the day of week Off that is <span class="ex">Third of January, 2026</span>. With the day of week and the day both Off, the comma goes with them and the string is <span class="ex">January 2026</span>.</p>
-  <p>On <span class="ex">Monday, 1/3/2026</span>, <span class="ex">Monday, 3/1/2026</span>, and <span class="ex">Monday, 2026-01-03</span>, the comma belongs to the day of week. Turn that spelling Off and the string is <span class="ex">1/3/2026</span>, <span class="ex">3/1/2026</span>, or <span class="ex">2026-01-03</span>.</p>
+  <p>The numeric names show the usual pairings. The shape still uses the spelling dropdowns, so the defaults on <span class="ex">Saturday, 1/3/2026</span> read <span class="ex">Saturday, January/3rd/2026</span>. Set the month to 1 or 01, the day to 3 or 03, and the year to 26 or 2026 when you want digits.</p>
+  <p>On <span class="ex">Saturday, 3rd January 2026</span>, choosing the word Third inserts "of" and a comma before the year: <span class="ex">Saturday, Third of January, 2026</span>. With the day of week Off that is <span class="ex">Third of January, 2026</span>. With the day of week and the day both Off, the comma goes with them and the string is <span class="ex">January 2026</span>.</p>
+  <p>On <span class="ex">Saturday, 1/3/2026</span>, <span class="ex">Saturday, 3/1/2026</span>, and <span class="ex">Saturday, 2026-01-03</span>, the comma belongs to the day of week. Turn that spelling Off and the string is <span class="ex">1/3/2026</span>, <span class="ex">3/1/2026</span>, or <span class="ex">2026-01-03</span>.</p>
 
   <h2 id="place">Week placement</h2>
   <p><span class="sig">Week_Format</span> default is Off. The other choices attach <span class="ex">Week n</span> to whatever date shape you picked. <span class="ex">&lt;date&gt;</span> in the name is that date. <span class="ex">January 2026</span> with the week in front is <span class="ex">Week 1, January 2026</span>.</p>
@@ -344,34 +344,34 @@
   <p>Parentheses and the colon appear only when the week and the date are both present. Week alone is <span class="ex">Week 1</span>. Turn the date pieces Off when the string should be the week by itself.</p>
 
   <h2 id="examples">Worked examples</h2>
-  <p>Each row is the dropdowns on the left and the string on a Monday, January 3, 2026.</p>
+  <p>Each row is the dropdowns on the left and the string on Saturday, January 3, 2026.</p>
   <table>
     <thead><tr><th>Settings</th><th>Full_Date</th></tr></thead>
     <tbody>
-      <tr><td>Defaults. Shape <span class="ex">Monday, January 3rd, 2026</span>. Week Off.</td><td class="ex">Monday, January 3rd, 2026</td></tr>
-      <tr><td>Year set to '26. Shape <span class="ex">Monday, January 3rd 2026</span>.</td><td class="ex">Monday, January 3rd '26</td></tr>
+      <tr><td>Defaults. Shape <span class="ex">Saturday, January 3rd, 2026</span>. Week Off.</td><td class="ex">Saturday, January 3rd, 2026</td></tr>
+      <tr><td>Year set to '26. Shape <span class="ex">Saturday, January 3rd 2026</span>.</td><td class="ex">Saturday, January 3rd '26</td></tr>
       <tr><td>Day of week Off. Shape unchanged from the default.</td><td class="ex">January 3rd, 2026</td></tr>
-      <tr><td>Day of week Mon, month Jan, day 3, year 2026. Default shape.</td><td class="ex">Mon, Jan 3, 2026</td></tr>
-      <tr><td>Day of week M, month J, day 3, year 2026. Default shape.</td><td class="ex">M, J 3, 2026</td></tr>
-      <tr><td>Month 1, day 3, year 2026, day of week Off. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">1/3/2026</td></tr>
-      <tr><td>Month 01, day 03, year 26, day of week Off. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">01/03/26</td></tr>
-      <tr><td>Month 01, day 03, year 2026, day of week Off. Shape <span class="ex">Monday, 2026-01-03</span>.</td><td class="ex">2026-01-03</td></tr>
-      <tr><td>Day Third, month January, year 2026, day of week Off. Shape <span class="ex">Monday, 3rd January 2026</span>.</td><td class="ex">Third of January, 2026</td></tr>
-      <tr><td>Week set to <span class="ex">&lt;date&gt; (Week 1)</span>. Other defaults.</td><td class="ex">Monday, January 3rd, 2026 (Week 1)</td></tr>
+      <tr><td>Day of week Mon, month Jan, day 3, year 2026. Default shape.</td><td class="ex">Sat, Jan 3, 2026</td></tr>
+      <tr><td>Day of week M, month J, day 3, year 2026. Default shape.</td><td class="ex">S, J 3, 2026</td></tr>
+      <tr><td>Month 1, day 3, year 2026, day of week Off. Shape <span class="ex">Saturday, 1/3/2026</span>.</td><td class="ex">1/3/2026</td></tr>
+      <tr><td>Month 01, day 03, year 26, day of week Off. Shape <span class="ex">Saturday, 1/3/2026</span>.</td><td class="ex">01/03/26</td></tr>
+      <tr><td>Month 01, day 03, year 2026, day of week Off. Shape <span class="ex">Saturday, 2026-01-03</span>.</td><td class="ex">2026-01-03</td></tr>
+      <tr><td>Day Third, month January, year 2026, day of week Off. Shape <span class="ex">Saturday, 3rd January 2026</span>.</td><td class="ex">Third of January, 2026</td></tr>
+      <tr><td>Week set to <span class="ex">&lt;date&gt; (Week 1)</span>. Other defaults.</td><td class="ex">Saturday, January 3rd, 2026 (Week 1)</td></tr>
       <tr><td>Every date piece Off. Week in front.</td><td class="ex">Week 1</td></tr>
-      <tr><td>Day of week Off and day Off. Shape <span class="ex">Monday, 3rd January 2026</span>.</td><td class="ex">January 2026</td></tr>
+      <tr><td>Day of week Off and day Off. Shape <span class="ex">Saturday, 3rd January 2026</span>.</td><td class="ex">January 2026</td></tr>
       <tr><td>Same settings. Month Jan, year '26.</td><td class="ex">Jan '26</td></tr>
       <tr><td>Same settings, week in front.</td><td class="ex">Week 1, January 2026</td></tr>
-      <tr><td>Day of week Monday, month 1, day 3, year 2026. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">Monday, 1/3/2026</td></tr>
+      <tr><td>Full weekday name, month 1, day 3, year 2026. Shape <span class="ex">Saturday, 1/3/2026</span>.</td><td class="ex">Saturday, 1/3/2026</td></tr>
       <tr><td>Same shape, day of week Off.</td><td class="ex">1/3/2026</td></tr>
-      <tr><td>Day of week Monday, month 01, day 03, year 2026. Shape <span class="ex">Monday, 2026-01-03</span>.</td><td class="ex">Monday, 2026-01-03</td></tr>
-      <tr><td>Day of week Monday, month 1, day 3, year 2026. Shape <span class="ex">Monday, 3/1/2026</span>.</td><td class="ex">Monday, 3/1/2026</td></tr>
+      <tr><td>Full weekday name, month 01, day 03, year 2026. Shape <span class="ex">Saturday, 2026-01-03</span>.</td><td class="ex">Saturday, 2026-01-03</td></tr>
+      <tr><td>Full weekday name, month 1, day 3, year 2026. Shape <span class="ex">Saturday, 3/1/2026</span>.</td><td class="ex">Saturday, 3/1/2026</td></tr>
       <tr><td>Same shape, day of week Off.</td><td class="ex">3/1/2026</td></tr>
       <tr><td>Every piece Off, including the week.</td><td>The string is empty.</td></tr>
     </tbody>
   </table>
   <div class="note">
-    A single field is a shape that contains it, with the other pieces Off. Monday alone is the default shape with the day, month, and year Off. 2026 alone is that shape with the day of week, day, and month Off. January alone is <span class="ex">Monday, 3rd January 2026</span> with the day of week, day, and year Off. That shape with the day of week and the day Off reads <span class="ex">January 2026</span>. The default shape keeps a comma: with the day Off it reads <span class="ex">January, 2026</span>.
+    A single field is a shape that contains it, with the other pieces Off. Saturday alone is the default shape with the day, month, and year Off. 2026 alone is that shape with the day of week, day, and month Off. January alone is <span class="ex">Saturday, 3rd January 2026</span> with the day of week, day, and year Off. That shape with the day of week and the day Off reads <span class="ex">January 2026</span>. The default shape keeps a comma: with the day Off it reads <span class="ex">January, 2026</span>.
   </div>
 
   <h2 id="week">Week number</h2>

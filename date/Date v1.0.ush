@@ -251,7 +251,7 @@
   ObjTp=Dp
   H=10
   Tp=1
-  SD=Date shape. Pictures use Monday, 3rd, January, and 2026
+  SD=Date shape. Pictures use Saturday, January 3rd, 2026
   HD=True
   DV=0d
   Sgn=0
@@ -262,15 +262,15 @@
   VVS=2
   VN=6
   Val1=0d
-  Lbl1=Monday, January 3rd, 2026
+  Lbl1=Saturday, January 3rd, 2026
   Val2=1d
-  Lbl2=Monday, January 3rd 2026
+  Lbl2=Saturday, January 3rd 2026
   Val3=2d
-  Lbl3=Monday, 3rd January 2026
+  Lbl3=Saturday, 3rd January 2026
   Val4=3d
-  Lbl4=Monday, 1/3/2026
+  Lbl4=Saturday, 1/3/2026
   Val5=4d
-  Lbl5=Monday, 3/1/2026
+  Lbl5=Saturday, 3/1/2026
   Val6=5d
-  Lbl6=Monday, 2026-01-03
+  Lbl6=Saturday, 2026-01-03
 [END]

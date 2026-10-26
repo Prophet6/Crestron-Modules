@@ -2,7 +2,7 @@
 
 Part of **[Crestron Modules](https://github.com/Prophet6/Crestron-Modules)**.
 
-Pure SIMPL+ date formatter. It reads the processor clock and writes one serial string, `Full_Date`. You choose how the day of week, day, month and year are spelled, the shape of the date, and where the week number goes. The defaults give a full US date such as `Monday, January 3rd, 2026`.
+Pure SIMPL+ date formatter. It reads the processor clock and writes one serial string, `Full_Date`. You choose how the day of week, day, month and year are spelled, the shape of the date, and where the week number goes. The defaults give a full US date such as `Saturday, January 3rd, 2026`.
 
 This project is not affiliated with Crestron Electronics.
 
@@ -52,7 +52,7 @@ Each override takes the same numbers as its dropdown, with 0 as the first entry.
 | Month_Format | 0 Off, 1 `J`, 2 `Jan`, 3 `January` (default), 4 `1`, 5 `01` |
 | Year_Format | 0 Off, 1 `26`, 2 `'26`, 3 `2026` (default) |
 | Week_Format | 0 Off (default), 1 `Week 1, <date>`, 2 `<date>, Week 1`, 3 `<date> (Week 1)`, 4 `Week 1: <date>` |
-| Final_Format | 0 `Monday, January 3rd, 2026` (default), 1 `Monday, January 3rd 2026`, 2 `Monday, 3rd January 2026`, 3 `Monday, 1/3/2026`, 4 `Monday, 3/1/2026`, 5 `Monday, 2026-01-03` |
+| Final_Format | 0 `Saturday, January 3rd, 2026` (default), 1 `Saturday, January 3rd 2026`, 2 `Saturday, 3rd January 2026`, 3 `Saturday, 1/3/2026`, 4 `Saturday, 3/1/2026`, 5 `Saturday, 2026-01-03` |
 
 `Final_Format` sets only the punctuation and order. The pieces still follow the spelling dropdowns. When a piece is Off, it drops out along with its comma or space. The week is the US calendar week: it starts on Sunday, week 1 contains January 1, and it runs 1 to 53. It is not the ISO week.
 
@@ -68,11 +68,11 @@ Each override takes the same numbers as its dropdown, with 0 as the first entry.
 
 | Settings | Full_Date |
 |----------|-----------|
-| Defaults | `Monday, January 3rd, 2026` |
-| Dow `Mon`, month `Jan`, day `3` | `Mon, Jan 3, 2026` |
+| Defaults | `Saturday, January 3rd, 2026` |
+| Dow `Mon`, month `Jan`, day `3` | `Sat, Jan 3, 2026` |
 | Dow Off, month `01`, day `03`, year `26`, shape 3 | `01/03/26` |
 | Dow Off, month `01`, day `03`, shape 5 | `2026-01-03` |
-| Week 3, other defaults | `Monday, January 3rd, 2026 (Week 1)` |
+| Week 3, other defaults | `Saturday, January 3rd, 2026 (Week 1)` |
 
 ## Version History
 

@@ -116,13 +116,13 @@ INTEGER_PARAMETER	_SKIP_,
 	propValidUnits =		unitDecimal;
 	propDefaultUnit =		unitDecimal;
 	propDefaultValue =		0d;
-	propList =				{0d, "Monday, January 3rd, 2026"},
-							{1d, "Monday, January 3rd 2026"},
-							{2d, "Monday, 3rd January 2026"},
-							{3d, "Monday, 1/3/2026"},
-							{4d, "Monday, 3/1/2026"},
-							{5d, "Monday, 2026-01-03"};
-	propShortDescription =	"Date shape. Pictures use Monday, 3rd, January, and 2026";
+	propList =				{0d, "Saturday, January 3rd, 2026"},
+							{1d, "Saturday, January 3rd 2026"},
+							{2d, "Saturday, 3rd January 2026"},
+							{3d, "Saturday, 1/3/2026"},
+							{4d, "Saturday, 3/1/2026"},
+							{5d, "Saturday, 2026-01-03"};
+	propShortDescription =	"Date shape. Pictures use Saturday, January 3rd, 2026";
 #END_PARAMETER_PROPERTIES
 
 /* GLOBAL VARIABLES */
