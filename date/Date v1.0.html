@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Date v1.0</title>
+<style>
+  :root {
+    --ink: #14202b;
+    --muted: #4d6170;
+    --line: #c9d7e2;
+    --paper: #e8f0f5;
+    --card: #f7fbfd;
+    --blue: #1a4f73;
+    --blue-soft: #d5e6f2;
+    --header: #10202c;
+    --ok: #14624c;
+    --warn: #8a4b12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background:
+      radial-gradient(1200px 280px at 10% -40%, rgba(143, 196, 224, 0.35), transparent 60%),
+      var(--header);
+    color: #e7f2f8;
+    padding: 2.6rem 1.5rem 2.1rem;
+  }
+  header.banner .wrap, main, nav.toc, footer {
+    max-width: 54rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #8ec4e0;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.5rem;
+    line-height: 1.12;
+    margin: 0 0 0.7rem;
+  }
+  header.banner p { margin: 0; max-width: 42rem; color: #d5e4ee; }
+  .samples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.3rem;
+  }
+  .samples span {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(180, 214, 232, 0.35);
+    border-radius: 999px;
+    padding: 0.28rem 0.75rem;
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-size: 0.95rem;
+    color: #f4fbff;
+  }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #f7fbfd;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  nav.toc a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 3rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.3rem 0 0.6rem;
+    padding-top: 0.2rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--blue); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--blue); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8f1; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--blue-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.28rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  .ex {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    color: var(--ink);
+  }
+  footer {
+    padding: 0 1.5rem 2.6rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · 3-Series and 4-Series</p>
+    <h1>Date v1.0</h1>
+    <p>One serial string of the processor's date. You choose each piece, the shape of the date, and where the week number sits.</p>
+    <div class="samples">
+      <span>Monday, January 3rd, 2026</span>
+      <span>Monday, 3rd January 2026</span>
+      <span>Monday, 1/3/2026</span>
+      <span>Monday, 3/1/2026</span>
+      <span>Monday, 2026-01-03</span>
+      <span>Week 1: Monday, January 3rd, 2026</span>
+    </div>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#symbol">Symbol</a>
+  <a href="#refresh">Refresh</a>
+  <a href="#overrides">Overrides</a>
+  <a href="#pieces">Spellings</a>
+  <a href="#order">Date shape</a>
+  <a href="#place">Week placement</a>
+  <a href="#examples">Worked examples</a>
+  <a href="#week">Week number</a>
+  <a href="#letters">One-letter names</a>
+  <a href="#empty">Empty string</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead"><span class="sig">Date v1.0</span> reads the processor clock and writes <span class="sig">Full_Date</span>. Four dropdowns spell the day of week, the day of the month, the month, and the year. Each includes Off. <span class="sig">Final_Format</span> is the date shape. <span class="sig">Week_Format</span> is where <span class="ex">Week n</span> sits, or Off. Neither dropdown replaces the spellings.</p>
+  <div class="grid">
+    <article>
+      <h3>Drop the symbol</h3>
+      <p>It lives in Time/Date. The defaults already publish a full US date: <span class="ex">Monday, January 3rd, 2026</span> on a Monday the 3rd.</p>
+    </article>
+    <article>
+      <h3>Pulse it at midnight</h3>
+      <p>Tie <span class="sig">Refresh</span> to a When at 00:00. The module also publishes once at startup, and again whenever a latched override changes.</p>
+    </article>
+    <article>
+      <h3>F1 is this page</h3>
+      <p>Leave <code>Date v1.0.html</code> next to <code>Date v1.0.usp</code>. The comment inside the module is the short version.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Add <span class="sig">Date v1.0</span> from Time/Date.</li>
+    <li>Leave the spelling dropdowns, or set any of them to Off.</li>
+    <li>Pick a date shape. The name is a picture of that punctuation, not today's date.</li>
+    <li>Leave <span class="sig">Week_Format</span> Off, or pick where the week number sits.</li>
+    <li>Join <span class="sig">Full_Date</span> to the touchpanel serial.</li>
+    <li>Pulse <span class="sig">Refresh</span> from a When at midnight so the string rolls over.</li>
+  </ol>
+  <div class="note">
+    Press F1 on <span class="sig">Date v1.0</span> in SIMPL Windows to open this page. The spelling and date-shape names use Monday, the 3rd, January, and 2026 so you can see the shape. Week Format uses <span class="ex">&lt;date&gt;</span> for the date those dropdowns build. The processor clock supplies the real day.
+  </div>
+
+  <h2 id="symbol">Symbol</h2>
+  <p>Rows run top to bottom. <span class="sig">Refresh</span> shares the first row with <span class="sig">Full_Date</span> because that pulse rewrites the string. Each override shares its row with the dropdown it replaces.</p>
+  <table>
+    <thead>
+      <tr><th>Row</th><th>Input</th><th>Parameter</th><th>Output</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="sig">Refresh</span></td><td></td><td><span class="sig">Full_Date</span></td></tr>
+      <tr><td>2</td><td><span class="sig">Dow_Format_Override</span></td><td><span class="sig">Dow_Format</span></td><td></td></tr>
+      <tr><td>3</td><td><span class="sig">Day_Format_Override</span></td><td><span class="sig">Day_Format</span></td><td></td></tr>
+      <tr><td>4</td><td><span class="sig">Month_Format_Override</span></td><td><span class="sig">Month_Format</span></td><td></td></tr>
+      <tr><td>5</td><td><span class="sig">Year_Format_Override</span></td><td><span class="sig">Year_Format</span></td><td></td></tr>
+      <tr><td>6</td><td><span class="sig">Week_Format_Override</span></td><td><span class="sig">Week_Format</span></td><td></td></tr>
+      <tr><td>7</td><td><span class="sig">Final_Format_Override</span></td><td><span class="sig">Final_Format</span></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="refresh">Refresh</h2>
+  <p>The module does not watch the clock. Three things rewrite <span class="sig">Full_Date</span>:</p>
+  <ul>
+    <li>Program start, after the other symbols have initialized.</li>
+    <li>A rising edge on <span class="sig">Refresh</span>.</li>
+    <li>A change on an override that has already latched.</li>
+  </ul>
+  <p>A When symbol at midnight, driving <span class="sig">Refresh</span>, is the usual rollover. Pulse it any other time you want the string caught up, for example after the processor clock is set.</p>
+
+  <h2 id="overrides">Overrides</h2>
+  <p>Each dropdown has an analog override on the same row. The numbers are the same numbers as the dropdown: <code>0</code> is the first entry, then <code>1</code>, <code>2</code>, and so on. An Analog Initialize can send the value you would have picked in SIMPL Windows.</p>
+  <p>Until a value arrives on that input after startup, the dropdown is in charge. The 0 that an unwired analog sits at does not count. After the first real change, that analog stays in charge. Sending 0 later is a real choice: Off for a piece, or the first order for <span class="sig">Final_Format</span>. It does not fall back to the dropdown.</p>
+  <p>A value past the last entry is clamped to the last entry. It does not clear the string.</p>
+  <div class="warn">
+    Do not treat override 0 as "use the parameter." That is true only before the input has ever changed. After it latches, 0 means Off, or the order <span class="ex">Monday, January 3rd, 2026</span>.
+  </div>
+
+  <h2 id="pieces">Spellings</h2>
+  <p>Pictures in this section use Monday, January 3, 2026, which is week 1 of that year. They show the spelling. They are not a claim about whatever day the processor has today.</p>
+
+  <h3>Day of week</h3>
+  <p><span class="sig">Dow_Format</span> default is Monday. One letter and two letters are the start of the English name. Tuesday and Thursday both start with T. Sunday and Saturday both start with S.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>Monday</th><th>Thursday</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Off</td><td></td><td></td></tr>
+      <tr><td>1</td><td>M</td><td>M</td><td>T</td></tr>
+      <tr><td>2</td><td>Mo</td><td>Mo</td><td>Th</td></tr>
+      <tr><td>3</td><td>Mon</td><td>Mon</td><td>Thu</td></tr>
+      <tr><td>4</td><td>Monday</td><td>Monday</td><td>Thursday</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Day of the month</h3>
+  <p><span class="sig">Day_Format</span> default is 3rd. The word form is title case, with a hyphen from Twenty-first through Thirty-first. 11, 12, and 13 take "th". 21, 22, 23, and 31 take st, nd, rd, and st.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>The 3rd</th><th>The 11th</th><th>The 21st</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Off</td><td></td><td></td><td></td></tr>
+      <tr><td>1</td><td>3</td><td>3</td><td>11</td><td>21</td></tr>
+      <tr><td>2</td><td>3rd</td><td>3rd</td><td>11th</td><td>21st</td></tr>
+      <tr><td>3</td><td>Third</td><td>Third</td><td>Eleventh</td><td>Twenty-first</td></tr>
+      <tr><td>4</td><td>03</td><td>03</td><td>11</td><td>21</td></tr>
+    </tbody>
+  </table>
+  <p><span class="ex">03</span> is the leading-zero form. Use it with <span class="ex">01</span> for <span class="ex">01/03/2026</span> and <span class="ex">2026-01-03</span>. The 11th and the 21st are already two digits, so the leading zero does not change them.</p>
+
+  <h3>Week</h3>
+  <p>The week text is always <span class="ex">Week</span> plus the number, with no leading zero: <span class="ex">Week 1</span>, <span class="ex">Week 53</span>. <span class="sig">Week_Format</span> does not change that spelling. It chooses where the week sits relative to the date, or Off. The live number follows the calendar. See <a href="#week">Week number</a> and <a href="#place">Week placement</a>.</p>
+
+  <h3>Month</h3>
+  <p><span class="sig">Month_Format</span> default is January. One letter collides: March and May are both M, June and July are both J.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>January</th><th>June</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Off</td><td></td><td></td></tr>
+      <tr><td>1</td><td>J</td><td>J</td><td>J</td></tr>
+      <tr><td>2</td><td>Jan</td><td>Jan</td><td>Jun</td></tr>
+      <tr><td>3</td><td>January</td><td>January</td><td>June</td></tr>
+      <tr><td>4</td><td>1</td><td>1</td><td>6</td></tr>
+      <tr><td>5</td><td>01</td><td>01</td><td>06</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Year</h3>
+  <p><span class="sig">Year_Format</span> default is 2026. Two digits are always two digits, so 2006 is 06 and '06.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>2026</th><th>2006</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Off</td><td></td><td></td></tr>
+      <tr><td>1</td><td>26</td><td>26</td><td>06</td></tr>
+      <tr><td>2</td><td>'26</td><td>'26</td><td>'06</td></tr>
+      <tr><td>3</td><td>2026</td><td>2026</td><td>2006</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="order">Date shape</h2>
+  <p><span class="sig">Final_Format</span> is the punctuation of the date. Word shapes are pictured with Monday, 3rd, January, and 2026. Numeric shapes are pictured with 1, 3, and 2026. Change a spelling and the same shape changes with it. Turn a piece Off and that piece, plus the comma or space that belonged to it, drops out.</p>
+  <p><span class="ex">Monday, January 3rd</span> is the first shape with the year Off. <span class="ex">January 3rd, 2026</span> is that shape with the day of week Off. <span class="ex">January 2026</span> is <span class="ex">Monday, 3rd January 2026</span> with the day of week and the day Off. Those are not separate rows.</p>
+  <p>There is no Off for the date shape. Value 0 is <span class="ex">Monday, January 3rd, 2026</span>.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>Slots</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td class="ex">Monday, January 3rd, 2026</td><td>Day of week, month and day, year. Comma before the year.</td></tr>
+      <tr><td>1</td><td class="ex">Monday, January 3rd 2026</td><td>Same slots, with a space before the year.</td></tr>
+      <tr><td>2</td><td class="ex">Monday, 3rd January 2026</td><td>Day of week, then day, month, and year. Day of week and day Off leaves <span class="ex">January 2026</span>.</td></tr>
+      <tr><td>3</td><td class="ex">Monday, 1/3/2026</td><td>Day of week, then month, day, and year with slashes.</td></tr>
+      <tr><td>4</td><td class="ex">Monday, 3/1/2026</td><td>Day of week, then day, month, and year with slashes.</td></tr>
+      <tr><td>5</td><td class="ex">Monday, 2026-01-03</td><td>Day of week, then year, month, and day with hyphens.</td></tr>
+    </tbody>
+  </table>
+  <p>The numeric names show the usual pairings. The shape still uses the spelling dropdowns, so the defaults on <span class="ex">Monday, 1/3/2026</span> read <span class="ex">Monday, January/3rd/2026</span>. Set the month to 1 or 01, the day to 3 or 03, and the year to 26 or 2026 when you want digits.</p>
+  <p>On <span class="ex">Monday, 3rd January 2026</span>, choosing the word Third inserts "of" and a comma before the year: <span class="ex">Monday, Third of January, 2026</span>. With the day of week Off that is <span class="ex">Third of January, 2026</span>. With the day of week and the day both Off, the comma goes with them and the string is <span class="ex">January 2026</span>.</p>
+  <p>On <span class="ex">Monday, 1/3/2026</span>, <span class="ex">Monday, 3/1/2026</span>, and <span class="ex">Monday, 2026-01-03</span>, the comma belongs to the day of week. Turn that spelling Off and the string is <span class="ex">1/3/2026</span>, <span class="ex">3/1/2026</span>, or <span class="ex">2026-01-03</span>.</p>
+
+  <h2 id="place">Week placement</h2>
+  <p><span class="sig">Week_Format</span> default is Off. The other choices attach <span class="ex">Week n</span> to whatever date shape you picked. <span class="ex">&lt;date&gt;</span> in the name is that date. <span class="ex">January 2026</span> with the week in front is <span class="ex">Week 1, January 2026</span>.</p>
+  <table>
+    <thead><tr><th>Value</th><th>Name</th><th>Where the week goes</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>Off</td><td>No week number</td></tr>
+      <tr><td>1</td><td class="ex">Week 1, &lt;date&gt;</td><td>In front, with a comma</td></tr>
+      <tr><td>2</td><td class="ex">&lt;date&gt;, Week 1</td><td>After the date, with a comma</td></tr>
+      <tr><td>3</td><td class="ex">&lt;date&gt; (Week 1)</td><td>After the date, in parentheses</td></tr>
+      <tr><td>4</td><td class="ex">Week 1: &lt;date&gt;</td><td>In front, with a colon</td></tr>
+    </tbody>
+  </table>
+  <p>Parentheses and the colon appear only when the week and the date are both present. Week alone is <span class="ex">Week 1</span>. Turn the date pieces Off when the string should be the week by itself.</p>
+
+  <h2 id="examples">Worked examples</h2>
+  <p>Each row is the dropdowns on the left and the string on a Monday, January 3, 2026.</p>
+  <table>
+    <thead><tr><th>Settings</th><th>Full_Date</th></tr></thead>
+    <tbody>
+      <tr><td>Defaults. Shape <span class="ex">Monday, January 3rd, 2026</span>. Week Off.</td><td class="ex">Monday, January 3rd, 2026</td></tr>
+      <tr><td>Year set to '26. Shape <span class="ex">Monday, January 3rd 2026</span>.</td><td class="ex">Monday, January 3rd '26</td></tr>
+      <tr><td>Day of week Off. Shape unchanged from the default.</td><td class="ex">January 3rd, 2026</td></tr>
+      <tr><td>Day of week Mon, month Jan, day 3, year 2026. Default shape.</td><td class="ex">Mon, Jan 3, 2026</td></tr>
+      <tr><td>Day of week M, month J, day 3, year 2026. Default shape.</td><td class="ex">M, J 3, 2026</td></tr>
+      <tr><td>Month 1, day 3, year 2026, day of week Off. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">1/3/2026</td></tr>
+      <tr><td>Month 01, day 03, year 26, day of week Off. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">01/03/26</td></tr>
+      <tr><td>Month 01, day 03, year 2026, day of week Off. Shape <span class="ex">Monday, 2026-01-03</span>.</td><td class="ex">2026-01-03</td></tr>
+      <tr><td>Day Third, month January, year 2026, day of week Off. Shape <span class="ex">Monday, 3rd January 2026</span>.</td><td class="ex">Third of January, 2026</td></tr>
+      <tr><td>Week set to <span class="ex">&lt;date&gt; (Week 1)</span>. Other defaults.</td><td class="ex">Monday, January 3rd, 2026 (Week 1)</td></tr>
+      <tr><td>Every date piece Off. Week in front.</td><td class="ex">Week 1</td></tr>
+      <tr><td>Day of week Off and day Off. Shape <span class="ex">Monday, 3rd January 2026</span>.</td><td class="ex">January 2026</td></tr>
+      <tr><td>Same settings. Month Jan, year '26.</td><td class="ex">Jan '26</td></tr>
+      <tr><td>Same settings, week in front.</td><td class="ex">Week 1, January 2026</td></tr>
+      <tr><td>Day of week Monday, month 1, day 3, year 2026. Shape <span class="ex">Monday, 1/3/2026</span>.</td><td class="ex">Monday, 1/3/2026</td></tr>
+      <tr><td>Same shape, day of week Off.</td><td class="ex">1/3/2026</td></tr>
+      <tr><td>Day of week Monday, month 01, day 03, year 2026. Shape <span class="ex">Monday, 2026-01-03</span>.</td><td class="ex">Monday, 2026-01-03</td></tr>
+      <tr><td>Day of week Monday, month 1, day 3, year 2026. Shape <span class="ex">Monday, 3/1/2026</span>.</td><td class="ex">Monday, 3/1/2026</td></tr>
+      <tr><td>Same shape, day of week Off.</td><td class="ex">3/1/2026</td></tr>
+      <tr><td>Every piece Off, including the week.</td><td>The string is empty.</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    A single field is a shape that contains it, with the other pieces Off. Monday alone is the default shape with the day, month, and year Off. 2026 alone is that shape with the day of week, day, and month Off. January alone is <span class="ex">Monday, 3rd January 2026</span> with the day of week, day, and year Off. That shape with the day of week and the day Off reads <span class="ex">January 2026</span>. The default shape keeps a comma: with the day Off it reads <span class="ex">January, 2026</span>.
+  </div>
+
+  <h2 id="week">Week number</h2>
+  <p>The week is the US calendar week. It starts on Sunday, the same Sunday as <span class="sig">GetDayOfWeekNum</span> (0 is Sunday, 6 is Saturday). Week 1 is the week that contains January 1. The number runs from 1 to 53. This is not the ISO week, which starts on Monday.</p>
+  <table>
+    <thead><tr><th>Date</th><th>Weekday</th><th>Week</th></tr></thead>
+    <tbody>
+      <tr><td>January 1, 2026</td><td>Thursday</td><td>1</td></tr>
+      <tr><td>January 3, 2026</td><td>Saturday</td><td>1</td></tr>
+      <tr><td>January 4, 2026</td><td>Sunday</td><td>2</td></tr>
+      <tr><td>December 31, 2026</td><td>Thursday</td><td>53</td></tr>
+      <tr><td>February 29, 2024</td><td>Thursday</td><td>9</td></tr>
+      <tr><td>December 31, 2024</td><td>Tuesday</td><td>53</td></tr>
+    </tbody>
+  </table>
+  <p>February 29 is included in a leap year. A leap year divides by 4, skips years that divide by 100, and still includes years that divide by 400.</p>
+
+  <h2 id="letters">One-letter names</h2>
+  <p>The one-letter and two-letter forms are the start of the full English name. Use Mon or Jan when the first letter is not enough.</p>
+  <table>
+    <thead><tr><th>Day</th><th>M</th><th>Mo</th><th>Mon</th></tr></thead>
+    <tbody>
+      <tr><td>Sunday</td><td>S</td><td>Su</td><td>Sun</td></tr>
+      <tr><td>Monday</td><td>M</td><td>Mo</td><td>Mon</td></tr>
+      <tr><td>Tuesday</td><td>T</td><td>Tu</td><td>Tue</td></tr>
+      <tr><td>Wednesday</td><td>W</td><td>We</td><td>Wed</td></tr>
+      <tr><td>Thursday</td><td>T</td><td>Th</td><td>Thu</td></tr>
+      <tr><td>Friday</td><td>F</td><td>Fr</td><td>Fri</td></tr>
+      <tr><td>Saturday</td><td>S</td><td>Sa</td><td>Sat</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Month</th><th>J</th><th>Jan</th><th>1</th><th>01</th></tr></thead>
+    <tbody>
+      <tr><td>January</td><td>J</td><td>Jan</td><td>1</td><td>01</td></tr>
+      <tr><td>February</td><td>F</td><td>Feb</td><td>2</td><td>02</td></tr>
+      <tr><td>March</td><td>M</td><td>Mar</td><td>3</td><td>03</td></tr>
+      <tr><td>April</td><td>A</td><td>Apr</td><td>4</td><td>04</td></tr>
+      <tr><td>May</td><td>M</td><td>May</td><td>5</td><td>05</td></tr>
+      <tr><td>June</td><td>J</td><td>Jun</td><td>6</td><td>06</td></tr>
+      <tr><td>July</td><td>J</td><td>Jul</td><td>7</td><td>07</td></tr>
+      <tr><td>August</td><td>A</td><td>Aug</td><td>8</td><td>08</td></tr>
+      <tr><td>September</td><td>S</td><td>Sep</td><td>9</td><td>09</td></tr>
+      <tr><td>October</td><td>O</td><td>Oct</td><td>10</td><td>10</td></tr>
+      <tr><td>November</td><td>N</td><td>Nov</td><td>11</td><td>11</td></tr>
+      <tr><td>December</td><td>D</td><td>Dec</td><td>12</td><td>12</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="empty">Empty string</h2>
+  <p><span class="sig">Full_Date</span> is empty only when every piece is Off and the week is Off. Every shape includes the day of week. Turn that spelling Off and the comma that belonged to it drops out.</p>
+
+  <h2 id="versions">Versions</h2>
+  <table>
+    <thead><tr><th>Version</th><th>Date</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1.0</td><td>2026-10-26</td><td>Initial module. Six date shapes, a separate week placement, startup publish, midnight <span class="sig">Refresh</span>, and latched analog overrides for every dropdown.</td></tr>
+    </tbody>
+  </table>
+</main>
+<footer>
+  <p>Date v1.0 is not affiliated with Crestron Electronics. Press F1 on the symbol to open this page. Leave this file next to <code>Date v1.0.usp</code>.</p>
+</footer>
+</body>
+</html>

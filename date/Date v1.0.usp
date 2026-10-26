@@ -1,0 +1,732 @@
+#HELP_BEGIN
+Date v1.0
+
+Builds Full_Date from the processor clock. Four parameters spell the day
+of week, the day of the month, the month, and the year. Each can be Off.
+Final_Format is the date shape. Week_Format is where "Week n" sits, or Off.
+Neither one replaces the spellings.
+
+Spelling and date-shape names are pictures. Week Format uses <date> for
+the date those dropdowns build. The live string uses today's date and the
+spellings you picked. Tie Refresh to a When at midnight. Full_Date also
+publishes at startup, and again when a latched override changes.
+
+An override is ignored until a value arrives after startup. After that, the
+analog is the setting, and 0 is Off (or the first date shape, for
+Final_Format).
+
+Press F1 for Date v1.0.html. Leave that file next to this module.
+
+v1.0  2026-10-26
+- Initial module
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#HELP_PDF_FILE "Date v1.0.html"
+#CATEGORY "16" /* Time/Date */
+#HINT "Formats the current date as a string"
+
+#DEFINE_CONSTANT	MaxDow		4
+#DEFINE_CONSTANT	MaxDay		4
+#DEFINE_CONSTANT	MaxWeek		4
+#DEFINE_CONSTANT	MaxMonth	5
+#DEFINE_CONSTANT	MaxYear		3
+#DEFINE_CONSTANT	MaxOrder	5
+#DEFINE_CONSTANT	DayAsWord	3
+
+/* INPUTS & OUTPUTS */
+
+DIGITAL_INPUT		Refresh;
+
+ANALOG_INPUT		_SKIP_, Dow_Format_Override, Day_Format_Override, Month_Format_Override,
+					Year_Format_Override, Week_Format_Override,
+					_SKIP_, Final_Format_Override;
+
+STRING_OUTPUT		Full_Date;
+
+INTEGER_PARAMETER	_SKIP_,
+					_SKIP_, Dow_Format, Day_Format, Month_Format,
+					Year_Format, Week_Format,
+					_SKIP_, Final_Format;
+
+/* PROPERTIES */
+
+#BEGIN_PARAMETER_PROPERTIES Dow_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		4d;
+	propList =				{0d, "Off"},
+							{1d, "M"},
+							{2d, "Mo"},
+							{3d, "Mon"},
+							{4d, "Monday"};
+	propShortDescription =	"Day of week spelling, or Off";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Day_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		2d;
+	propList =				{0d, "Off"},
+							{1d, "3"},
+							{2d, "3rd"},
+							{3d, "Third"},
+							{4d, "03"};
+	propShortDescription =	"Day of the month spelling, or Off";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Month_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		3d;
+	propList =				{0d, "Off"},
+							{1d, "J"},
+							{2d, "Jan"},
+							{3d, "January"},
+							{4d, "1"},
+							{5d, "01"};
+	propShortDescription =	"Month spelling, or Off";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Year_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		3d;
+	propList =				{0d, "Off"},
+							{1d, "26"},
+							{2d, "'26"},
+							{3d, "2026"};
+	propShortDescription =	"Year spelling, or Off";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Week_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "Off"},
+							{1d, "Week 1, <date>"},
+							{2d, "<date>, Week 1"},
+							{3d, "<date> (Week 1)"},
+							{4d, "Week 1: <date>"};
+	propShortDescription =	"Where the week number sits, or Off";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Final_Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "Monday, January 3rd, 2026"},
+							{1d, "Monday, January 3rd 2026"},
+							{2d, "Monday, 3rd January 2026"},
+							{3d, "Monday, 1/3/2026"},
+							{4d, "Monday, 3/1/2026"},
+							{5d, "Monday, 2026-01-03"};
+	propShortDescription =	"Date shape. Pictures use Monday, 3rd, January, and 2026";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBAL VARIABLES */
+
+INTEGER	Ready, DowLatch, DayLatch, WeekLatch, MonthLatch, YearLatch, FinalLatch,
+		YearNow, MonthNow, DayNow, DowNow, WeekNow;
+
+/* FUNCTIONS */
+
+INTEGER_FUNCTION Effective(INTEGER latched, INTEGER live, INTEGER param, INTEGER maximum) {
+	INTEGER value;
+
+	If (latched = 1)
+		value = live;
+	Else
+		value = param;
+	If (value > maximum)
+		value = maximum;
+	Return (value);
+}
+
+INTEGER_FUNCTION IsLeap(INTEGER yr) {
+	If ((yr MOD 4) <> 0)
+		Return (0);
+	If ((yr MOD 100) <> 0)
+		Return (1);
+	If ((yr MOD 400) = 0)
+		Return (1);
+	Return (0);
+}
+
+INTEGER_FUNCTION DayOfYear(INTEGER mon, INTEGER dom, INTEGER leap) {
+	INTEGER doy;
+
+	doy = 0;
+	CSWITCH (mon) {
+		CASE (1): {
+			doy = 0;
+			BREAK;
+		}
+		CASE (2): {
+			doy = 31;
+			BREAK;
+		}
+		CASE (3): {
+			doy = 59;
+			BREAK;
+		}
+		CASE (4): {
+			doy = 90;
+			BREAK;
+		}
+		CASE (5): {
+			doy = 120;
+			BREAK;
+		}
+		CASE (6): {
+			doy = 151;
+			BREAK;
+		}
+		CASE (7): {
+			doy = 181;
+			BREAK;
+		}
+		CASE (8): {
+			doy = 212;
+			BREAK;
+		}
+		CASE (9): {
+			doy = 243;
+			BREAK;
+		}
+		CASE (10): {
+			doy = 273;
+			BREAK;
+		}
+		CASE (11): {
+			doy = 304;
+			BREAK;
+		}
+		CASE (12): {
+			doy = 334;
+			BREAK;
+		}
+	}
+	doy = doy + dom;
+	If ((mon > 2) && (leap = 1))
+		doy = doy + 1;
+	Return (doy);
+}
+
+INTEGER_FUNCTION WeekOfYear(INTEGER dow, INTEGER doy) {
+	INTEGER jan1, week;
+
+	If (doy = 0)
+		Return (1);
+	jan1 = dow + 7;
+	jan1 = jan1 - ((doy - 1) MOD 7);
+	jan1 = jan1 MOD 7;
+	week = doy + jan1 - 1;
+	week = week / 7;
+	week = week + 1;
+	Return (week);
+}
+
+FUNCTION ReadClock() {
+	INTEGER leap, doy;
+
+	YearNow = GetYearNum();
+	If (YearNow < 1900)
+		YearNow = YearNow + 1900;
+	MonthNow = GetMonthNum();
+	DayNow = GetDateNum();
+	DowNow = GetDayOfWeekNum();
+	leap = IsLeap(YearNow);
+	doy = DayOfYear(MonthNow, DayNow, leap);
+	WeekNow = WeekOfYear(DowNow, doy);
+}
+
+STRING_FUNCTION WeekdayName(INTEGER dow) {
+	CSWITCH (dow) {
+		CASE (0): {
+			Return ("Sunday");
+		}
+		CASE (1): {
+			Return ("Monday");
+		}
+		CASE (2): {
+			Return ("Tuesday");
+		}
+		CASE (3): {
+			Return ("Wednesday");
+		}
+		CASE (4): {
+			Return ("Thursday");
+		}
+		CASE (5): {
+			Return ("Friday");
+		}
+		CASE (6): {
+			Return ("Saturday");
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION MonthName(INTEGER mon) {
+	CSWITCH (mon) {
+		CASE (1): {
+			Return ("January");
+		}
+		CASE (2): {
+			Return ("February");
+		}
+		CASE (3): {
+			Return ("March");
+		}
+		CASE (4): {
+			Return ("April");
+		}
+		CASE (5): {
+			Return ("May");
+		}
+		CASE (6): {
+			Return ("June");
+		}
+		CASE (7): {
+			Return ("July");
+		}
+		CASE (8): {
+			Return ("August");
+		}
+		CASE (9): {
+			Return ("September");
+		}
+		CASE (10): {
+			Return ("October");
+		}
+		CASE (11): {
+			Return ("November");
+		}
+		CASE (12): {
+			Return ("December");
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION DayWord(INTEGER dom) {
+	CSWITCH (dom) {
+		CASE (1): {
+			Return ("First");
+		}
+		CASE (2): {
+			Return ("Second");
+		}
+		CASE (3): {
+			Return ("Third");
+		}
+		CASE (4): {
+			Return ("Fourth");
+		}
+		CASE (5): {
+			Return ("Fifth");
+		}
+		CASE (6): {
+			Return ("Sixth");
+		}
+		CASE (7): {
+			Return ("Seventh");
+		}
+		CASE (8): {
+			Return ("Eighth");
+		}
+		CASE (9): {
+			Return ("Ninth");
+		}
+		CASE (10): {
+			Return ("Tenth");
+		}
+		CASE (11): {
+			Return ("Eleventh");
+		}
+		CASE (12): {
+			Return ("Twelfth");
+		}
+		CASE (13): {
+			Return ("Thirteenth");
+		}
+		CASE (14): {
+			Return ("Fourteenth");
+		}
+		CASE (15): {
+			Return ("Fifteenth");
+		}
+		CASE (16): {
+			Return ("Sixteenth");
+		}
+		CASE (17): {
+			Return ("Seventeenth");
+		}
+		CASE (18): {
+			Return ("Eighteenth");
+		}
+		CASE (19): {
+			Return ("Nineteenth");
+		}
+		CASE (20): {
+			Return ("Twentieth");
+		}
+		CASE (21): {
+			Return ("Twenty-first");
+		}
+		CASE (22): {
+			Return ("Twenty-second");
+		}
+		CASE (23): {
+			Return ("Twenty-third");
+		}
+		CASE (24): {
+			Return ("Twenty-fourth");
+		}
+		CASE (25): {
+			Return ("Twenty-fifth");
+		}
+		CASE (26): {
+			Return ("Twenty-sixth");
+		}
+		CASE (27): {
+			Return ("Twenty-seventh");
+		}
+		CASE (28): {
+			Return ("Twenty-eighth");
+		}
+		CASE (29): {
+			Return ("Twenty-ninth");
+		}
+		CASE (30): {
+			Return ("Thirtieth");
+		}
+		CASE (31): {
+			Return ("Thirty-first");
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION OrdinalSuffix(INTEGER dom) {
+	INTEGER teen, rem;
+
+	teen = dom MOD 100;
+	If ((teen >= 11) && (teen <= 13))
+		Return ("th");
+	rem = dom MOD 10;
+	CSWITCH (rem) {
+		CASE (1): {
+			Return ("st");
+		}
+		CASE (2): {
+			Return ("nd");
+		}
+		CASE (3): {
+			Return ("rd");
+		}
+	}
+	Return ("th");
+}
+
+STRING_FUNCTION PieceDow(INTEGER mode) {
+	STRING name[16], text[16];
+
+	If (mode = 0)
+		Return ("");
+	name = WeekdayName(DowNow);
+	CSWITCH (mode) {
+		CASE (1): {
+			text = LEFT(name, 1);
+			Return (text);
+		}
+		CASE (2): {
+			text = LEFT(name, 2);
+			Return (text);
+		}
+		CASE (3): {
+			text = LEFT(name, 3);
+			Return (text);
+		}
+		CASE (4): {
+			Return (name);
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION PieceDay(INTEGER mode) {
+	STRING text[24], suffix[4];
+
+	If (mode = 0)
+		Return ("");
+	CSWITCH (mode) {
+		CASE (1): {
+			MAKESTRING(text, "%d", DayNow);
+			Return (text);
+		}
+		CASE (2): {
+			suffix = OrdinalSuffix(DayNow);
+			MAKESTRING(text, "%d%s", DayNow, suffix);
+			Return (text);
+		}
+		CASE (3): {
+			Return (DayWord(DayNow));
+		}
+		CASE (4): {
+			MAKESTRING(text, "%02d", DayNow);
+			Return (text);
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION PieceMonth(INTEGER mode) {
+	STRING name[16], text[16];
+
+	If (mode = 0)
+		Return ("");
+	name = MonthName(MonthNow);
+	CSWITCH (mode) {
+		CASE (1): {
+			text = LEFT(name, 1);
+			Return (text);
+		}
+		CASE (2): {
+			text = LEFT(name, 3);
+			Return (text);
+		}
+		CASE (3): {
+			Return (name);
+		}
+		CASE (4): {
+			MAKESTRING(text, "%d", MonthNow);
+			Return (text);
+		}
+		CASE (5): {
+			MAKESTRING(text, "%02d", MonthNow);
+			Return (text);
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION PieceYear(INTEGER mode) {
+	STRING text[8];
+	INTEGER yy;
+
+	If (mode = 0)
+		Return ("");
+	yy = YearNow MOD 100;
+	CSWITCH (mode) {
+		CASE (1): {
+			MAKESTRING(text, "%02d", yy);
+			Return (text);
+		}
+		CASE (2): {
+			MAKESTRING(text, "'%02d", yy);
+			Return (text);
+		}
+		CASE (3): {
+			MAKESTRING(text, "%d", YearNow);
+			Return (text);
+		}
+	}
+	Return ("");
+}
+
+STRING_FUNCTION PieceWeek(INTEGER mode) {
+	STRING text[12];
+
+	If (mode = 0)
+		Return ("");
+	MAKESTRING(text, "Week %d", WeekNow);
+	Return (text);
+}
+
+STRING_FUNCTION Join(STRING head, STRING tail, STRING sep) {
+	STRING text[160];
+
+	If (LEN(head) = 0)
+		Return (tail);
+	If (LEN(tail) = 0)
+		Return (head);
+	MAKESTRING(text, "%s%s%s", head, sep, tail);
+	Return (text);
+}
+
+STRING_FUNCTION UsDate(STRING dow, STRING mon, STRING dom, STRING yr, INTEGER spaceYear) {
+	STRING monthDay[40], body[80], sep[4];
+
+	monthDay = Join(mon, dom, " ");
+	If (spaceYear = 1)
+		sep = " ";
+	Else
+		sep = ", ";
+	body = Join(monthDay, yr, sep);
+	Return (Join(dow, body, ", "));
+}
+
+STRING_FUNCTION IntlBody(STRING dom, STRING mon, STRING yr, INTEGER dayMode) {
+	STRING dm[48];
+
+	If ((dayMode = DayAsWord) && (LEN(mon) > 0)) {
+		dm = Join(dom, mon, " of ");
+		Return (Join(dm, yr, ", "));
+	}
+	dm = Join(dom, mon, " ");
+	Return (Join(dm, yr, " "));
+}
+
+STRING_FUNCTION Slash3(STRING a, STRING b, STRING c) {
+	STRING text[48];
+
+	text = Join(a, b, "/");
+	Return (Join(text, c, "/"));
+}
+
+STRING_FUNCTION Hyphen3(STRING a, STRING b, STRING c) {
+	STRING text[48];
+
+	text = Join(a, b, "-");
+	Return (Join(text, c, "-"));
+}
+
+STRING_FUNCTION WithParen(STRING core, STRING week) {
+	STRING text[160];
+
+	If (LEN(week) = 0)
+		Return (core);
+	If (LEN(core) = 0)
+		Return (week);
+	MAKESTRING(text, "%s (%s)", core, week);
+	Return (text);
+}
+
+STRING_FUNCTION PlaceWeek(STRING core, STRING week, INTEGER place) {
+	CSWITCH (place) {
+		CASE (1): {
+			Return (Join(week, core, ", "));
+		}
+		CASE (2): {
+			Return (Join(core, week, ", "));
+		}
+		CASE (3): {
+			Return (WithParen(core, week));
+		}
+		CASE (4): {
+			Return (Join(week, core, ": "));
+		}
+	}
+	Return (core);
+}
+
+FUNCTION Publish() {
+	INTEGER dowMode, dayMode, monthMode, yearMode, weekMode, layout;
+	STRING dow[16], dom[24], mon[16], yr[8], week[12], core[80], text[160];
+
+	ReadClock();
+	dowMode = Effective(DowLatch, Dow_Format_Override, Dow_Format, MaxDow);
+	dayMode = Effective(DayLatch, Day_Format_Override, Day_Format, MaxDay);
+	weekMode = Effective(WeekLatch, Week_Format_Override, Week_Format, MaxWeek);
+	monthMode = Effective(MonthLatch, Month_Format_Override, Month_Format, MaxMonth);
+	yearMode = Effective(YearLatch, Year_Format_Override, Year_Format, MaxYear);
+	layout = Effective(FinalLatch, Final_Format_Override, Final_Format, MaxOrder);
+
+	dow = PieceDow(dowMode);
+	dom = PieceDay(dayMode);
+	mon = PieceMonth(monthMode);
+	yr = PieceYear(yearMode);
+	week = PieceWeek(weekMode);
+	core = "";
+
+	CSWITCH (layout) {
+		CASE (0): {
+			core = UsDate(dow, mon, dom, yr, 0);
+			BREAK;
+		}
+		CASE (1): {
+			core = UsDate(dow, mon, dom, yr, 1);
+			BREAK;
+		}
+		CASE (2): {
+			text = IntlBody(dom, mon, yr, dayMode);
+			core = Join(dow, text, ", ");
+			BREAK;
+		}
+		CASE (3): {
+			text = Slash3(mon, dom, yr);
+			core = Join(dow, text, ", ");
+			BREAK;
+		}
+		CASE (4): {
+			text = Slash3(dom, mon, yr);
+			core = Join(dow, text, ", ");
+			BREAK;
+		}
+		CASE (5): {
+			text = Hyphen3(yr, mon, dom);
+			core = Join(dow, text, ", ");
+			BREAK;
+		}
+	}
+	Full_Date = PlaceWeek(core, week, weekMode);
+}
+
+/* EVENT HANDLERS */
+
+PUSH Refresh {
+	Publish();
+}
+
+CHANGE Dow_Format_Override {
+	If (Ready = 1) {
+		DowLatch = 1;
+		Publish();
+	}
+}
+
+CHANGE Day_Format_Override {
+	If (Ready = 1) {
+		DayLatch = 1;
+		Publish();
+	}
+}
+
+CHANGE Week_Format_Override {
+	If (Ready = 1) {
+		WeekLatch = 1;
+		Publish();
+	}
+}
+
+CHANGE Month_Format_Override {
+	If (Ready = 1) {
+		MonthLatch = 1;
+		Publish();
+	}
+}
+
+CHANGE Year_Format_Override {
+	If (Ready = 1) {
+		YearLatch = 1;
+		Publish();
+	}
+}
+
+CHANGE Final_Format_Override {
+	If (Ready = 1) {
+		FinalLatch = 1;
+		Publish();
+	}
+}
+
+/* MAIN */
+
+FUNCTION Main() {
+	WaitForInitializationComplete();
+	Ready = 1;
+	Publish();
+}

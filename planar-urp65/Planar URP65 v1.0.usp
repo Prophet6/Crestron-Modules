@@ -1,0 +1,384 @@
+#HELP_BEGIN
+Planar URP65 / URP65-T RS-232 control.
+Protocol: Planar UltraRes P Series RS232 User Manual 020-1408-02B.
+That manual covers URP65 and URP65-T. This module has not been tried on a live display.
+
+19200 baud, 8 data bits, no parity, 1 stop bit, no flow control.
+Use a straight-through cable to a Crestron COM port.
+Display pin 2 is Tx, pin 3 is Rx, pin 5 is ground.
+RS-232 works in standby only when Power Down Mode is Networked Standby or Fast Startup.
+
+Commands end with a carriage return. The display answers with a colon:
+DISPLAY.POWER=ON
+DISPLAY.POWER:ON
+
+Sources are HDMI.1, HDMI.2, HDMI.3, HDMI.4, DP, DP.2, and VGA.
+There is no USB-C input and no OPS input on this model.
+
+Reset_User_Settings sends RESET(USER). That clears user settings.
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#CATEGORY "24" // TV/Video Projector
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+
+/*
+	Symbol grid. Do not restack.
+	Each source press shares a row with its feedback.
+	Each aspect press shares a row with its feedback.
+	Poll_Interval shares the row with Poll_Enable.
+	Volume, brightness, and contrast levels share a row with their feedback.
+*/
+
+/* INPUTS AND OUTPUTS */
+
+DIGITAL_INPUT	_SKIP_,
+				Poll_Enable,
+				_SKIP_,
+				Power_On, Power_Off,
+				_SKIP_,
+				HDMI_1, HDMI_2, HDMI_3, HDMI_4, DisplayPort, DisplayPort_2, VGA,
+				_SKIP_,
+				Volume_Up, Volume_Down, Mute_On, Mute_Off,
+				_SKIP_,
+				Aspect_Auto, Aspect_16x9, Aspect_4x3, Aspect_Fill, Aspect_Native, Aspect_Letterbox,
+				_SKIP_,
+				Reset_User_Settings,
+				_SKIP_;
+DIGITAL_OUTPUT	_SKIP_,
+				Polling_FB,
+				_SKIP_,
+				Power_On_FB, Power_Off_FB,
+				_SKIP_,
+				HDMI_1_FB, HDMI_2_FB, HDMI_3_FB, HDMI_4_FB, DisplayPort_FB, DisplayPort_2_FB, VGA_FB,
+				_SKIP_,
+				_SKIP_, _SKIP_, Volume_Mute_FB, _SKIP_,
+				_SKIP_,
+				Aspect_Auto_FB, Aspect_16x9_FB, Aspect_4x3_FB, Aspect_Fill_FB, Aspect_Native_FB, Aspect_Letterbox_FB,
+				_SKIP_,
+				_SKIP_,
+				_SKIP_;
+
+ANALOG_INPUT	Volume_Level, Brightness, Contrast, _SKIP_;
+ANALOG_OUTPUT	Volume_Level_FB, Brightness_FB, Contrast_FB, _SKIP_;
+
+BUFFER_INPUT	From_Device[400];
+STRING_OUTPUT	To_Device;
+
+/* PARAMETERS */
+
+INTEGER_PARAMETER	Poll_Interval;
+
+#BEGIN_PARAMETER_PROPERTIES Poll_Interval
+	propValidUnits = unitTime;
+	propDefaultUnit = unitTime;
+	propBounds = 1s, 30s;
+	propDefaultValue = 5s;
+	propShortDescription = "Time between status queries while Poll_Enable is high.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBALS */
+
+INTEGER Ready, Polling, PollStep, LastVolume, LastBrightness, LastContrast;
+STRING Line[200], Name[80], Value[80];
+
+/* FUNCTIONS */
+
+FUNCTION SendLine (STRING body) {
+	STRING packet[120];
+	MAKESTRING (packet, "%s\r", body);
+	To_Device = packet;
+}
+
+FUNCTION ClearSources () {
+	HDMI_1_FB = 0;
+	HDMI_2_FB = 0;
+	HDMI_3_FB = 0;
+	HDMI_4_FB = 0;
+	DisplayPort_FB = 0;
+	DisplayPort_2_FB = 0;
+	VGA_FB = 0;
+}
+
+FUNCTION ClearAspects () {
+	Aspect_Auto_FB = 0;
+	Aspect_16x9_FB = 0;
+	Aspect_4x3_FB = 0;
+	Aspect_Fill_FB = 0;
+	Aspect_Native_FB = 0;
+	Aspect_Letterbox_FB = 0;
+}
+
+STRING_FUNCTION TrimLeft (STRING raw) {
+	STRING out[80];
+	INTEGER guard;
+	out = raw;
+	guard = 0;
+	WHILE ((LEN(out) > 0) && (BYTE(out, 1) = 32) && (guard < 8)) {
+		out = RIGHT(out, LEN(out) - 1);
+		guard = guard + 1;
+	}
+	RETURN (out);
+}
+
+FUNCTION ApplyPower () {
+	IF ((Value = "ON") || (Value = "1")) {
+		Power_On_FB = 1;
+		Power_Off_FB = 0;
+	}
+	else if ((Value = "OFF") || (Value = "0")) {
+		Power_On_FB = 0;
+		Power_Off_FB = 1;
+	}
+}
+
+FUNCTION ApplySource () {
+	ClearSources();
+	IF ((Value = "HDMI.1") || (Value = "1")) {
+		HDMI_1_FB = 1;
+	}
+	else if ((Value = "HDMI.2") || (Value = "2")) {
+		HDMI_2_FB = 1;
+	}
+	else if ((Value = "HDMI.3") || (Value = "3")) {
+		HDMI_3_FB = 1;
+	}
+	else if ((Value = "HDMI.4") || (Value = "4")) {
+		HDMI_4_FB = 1;
+	}
+	else if ((Value = "DP.2") || (Value = "13")) {
+		DisplayPort_2_FB = 1;
+	}
+	else if ((Value = "DP") || (Value = "5")) {
+		DisplayPort_FB = 1;
+	}
+	else if ((Value = "VGA") || (Value = "7")) {
+		VGA_FB = 1;
+	}
+}
+
+FUNCTION ApplyAspect () {
+	ClearAspects();
+	IF ((Value = "AUTO") || (Value = "0")) {
+		Aspect_Auto_FB = 1;
+	}
+	else if ((Value = "16X9") || (Value = "1")) {
+		Aspect_16x9_FB = 1;
+	}
+	else if ((Value = "4X3") || (Value = "2")) {
+		Aspect_4x3_FB = 1;
+	}
+	else if ((Value = "FILL") || (Value = "3")) {
+		Aspect_Fill_FB = 1;
+	}
+	else if ((Value = "NATIVE") || (Value = "4")) {
+		Aspect_Native_FB = 1;
+	}
+	else if ((Value = "LETTERBOX") || (Value = "5")) {
+		Aspect_Letterbox_FB = 1;
+	}
+}
+
+FUNCTION ApplyLevel (INTEGER which, INTEGER level) {
+	IF (level > 100) {
+		RETURN;
+	}
+	IF (which = 1) {
+		LastVolume = level;
+		Volume_Level_FB = level;
+	}
+	else if (which = 2) {
+		LastBrightness = level;
+		Brightness_FB = level;
+	}
+	else if (which = 3) {
+		LastContrast = level;
+		Contrast_FB = level;
+	}
+}
+
+FUNCTION ParseLine (STRING raw) {
+	INTEGER colon, n;
+	STRING text[200];
+	text = raw;
+	n = LEN(text);
+	IF (n = 0) RETURN;
+	IF ((BYTE(text, n) = 13) || (BYTE(text, n) = 10) || (BYTE(text, n) = 59)) {
+		text = LEFT(text, n - 1);
+	}
+	IF (FIND("@ACK", text) > 0) RETURN;
+	IF (FIND("^NAK", text) > 0) RETURN;
+	IF (FIND("!ERR", text) > 0) RETURN;
+	colon = FIND(":", text);
+	IF (colon < 2) RETURN;
+	Name = UPPER(LEFT(text, colon - 1));
+	Value = UPPER(TrimLeft(MID(text, colon + 1, 80)));
+	IF (FIND("ERR", Value) = 1) RETURN;
+	IF (FIND("DISPLAY.POWER", Name) = 1) {
+		ApplyPower();
+	}
+	else if (FIND("SOURCE.SELECT", Name) = 1) {
+		ApplySource();
+	}
+	else if (FIND("AUDIO.VOLUME", Name) = 1) {
+		ApplyLevel(1, ATOI(Value));
+	}
+	else if (FIND("AUDIO.MUTE", Name) = 1) {
+		IF ((Value = "ON") || (Value = "1")) {
+			Volume_Mute_FB = 1;
+		}
+		else if ((Value = "OFF") || (Value = "0")) {
+			Volume_Mute_FB = 0;
+		}
+	}
+	else if (FIND("BRIGHTNESS", Name) = 1) {
+		ApplyLevel(2, ATOI(Value));
+	}
+	else if (FIND("CONTRAST", Name) = 1) {
+		ApplyLevel(3, ATOI(Value));
+	}
+	else if (FIND("ASPECT", Name) = 1) {
+		ApplyAspect();
+	}
+}
+
+FUNCTION Drain () {
+	INTEGER cr, lf, semi, mark;
+	WHILE (1) {
+		cr = FIND("\r", From_Device);
+		lf = FIND("\n", From_Device);
+		semi = FIND(";", From_Device);
+		mark = 0;
+		IF (cr > 0) mark = cr;
+		IF ((lf > 0) && ((mark = 0) || (lf < mark))) mark = lf;
+		IF ((semi > 0) && ((mark = 0) || (semi < mark))) mark = semi;
+		IF (mark = 0) RETURN;
+		IF (mark = cr) {
+			Line = REMOVE("\r", From_Device);
+		}
+		ELSE {
+			IF (mark = lf) {
+				Line = REMOVE("\n", From_Device);
+			}
+			ELSE {
+				Line = REMOVE(";", From_Device);
+			}
+		}
+		ParseLine(Line);
+	}
+}
+
+FUNCTION PollTick () {
+	IF (Poll_Enable = 0) {
+		Polling = 0;
+		Polling_FB = 0;
+		RETURN;
+	}
+	Polling = 1;
+	Polling_FB = 1;
+	PollStep = PollStep + 1;
+	IF (PollStep > 7) PollStep = 1;
+	IF (PollStep = 1) {
+		SendLine("DISPLAY.POWER?");
+	}
+	else if (PollStep = 2) {
+		SendLine("SOURCE.SELECT?");
+	}
+	else if (PollStep = 3) {
+		SendLine("AUDIO.VOLUME?");
+	}
+	else if (PollStep = 4) {
+		SendLine("AUDIO.MUTE?");
+	}
+	else if (PollStep = 5) {
+		SendLine("BRIGHTNESS?");
+	}
+	else if (PollStep = 6) {
+		SendLine("CONTRAST?");
+	}
+	else if (PollStep = 7) {
+		SendLine("ASPECT?");
+	}
+	WAIT (Poll_Interval) PollTick();
+}
+
+FUNCTION SendLevel (STRING opcode, INTEGER level) {
+	STRING body[40];
+	IF (Ready = 0) RETURN;
+	IF (level > 100) RETURN;
+	MAKESTRING (body, "%s=%u", opcode, level);
+	SendLine(body);
+}
+
+/* EVENTS */
+
+CHANGE From_Device {
+	Drain();
+}
+
+CHANGE Poll_Enable {
+	IF ((Poll_Enable = 1) && (Polling = 0)) PollTick();
+}
+
+PUSH Power_On {
+	SendLine("DISPLAY.POWER=ON");
+}
+
+PUSH Power_Off {
+	SendLine("DISPLAY.POWER=OFF");
+}
+
+PUSH HDMI_1 { SendLine("SOURCE.SELECT=HDMI.1"); }
+PUSH HDMI_2 { SendLine("SOURCE.SELECT=HDMI.2"); }
+PUSH HDMI_3 { SendLine("SOURCE.SELECT=HDMI.3"); }
+PUSH HDMI_4 { SendLine("SOURCE.SELECT=HDMI.4"); }
+PUSH DisplayPort { SendLine("SOURCE.SELECT=DP"); }
+PUSH DisplayPort_2 { SendLine("SOURCE.SELECT=DP.2"); }
+PUSH VGA { SendLine("SOURCE.SELECT=VGA"); }
+
+PUSH Volume_Up { SendLine("AUDIO.VOLUME+"); }
+PUSH Volume_Down { SendLine("AUDIO.VOLUME-"); }
+PUSH Mute_On { SendLine("AUDIO.MUTE=ON"); }
+PUSH Mute_Off { SendLine("AUDIO.MUTE=OFF"); }
+
+PUSH Aspect_Auto { SendLine("ASPECT=AUTO"); }
+PUSH Aspect_16x9 { SendLine("ASPECT=16X9"); }
+PUSH Aspect_4x3 { SendLine("ASPECT=4X3"); }
+PUSH Aspect_Fill { SendLine("ASPECT=FILL"); }
+PUSH Aspect_Native { SendLine("ASPECT=NATIVE"); }
+PUSH Aspect_Letterbox { SendLine("ASPECT=LETTERBOX"); }
+
+PUSH Reset_User_Settings {
+	SendLine("RESET(USER)");
+}
+
+CHANGE Volume_Level {
+	IF (Ready = 0) RETURN;
+	IF (Volume_Level = LastVolume) RETURN;
+	LastVolume = Volume_Level;
+	SendLevel("AUDIO.VOLUME", Volume_Level);
+}
+
+CHANGE Brightness {
+	IF (Ready = 0) RETURN;
+	IF (Brightness = LastBrightness) RETURN;
+	LastBrightness = Brightness;
+	SendLevel("BRIGHTNESS", Brightness);
+}
+
+CHANGE Contrast {
+	IF (Ready = 0) RETURN;
+	IF (Contrast = LastContrast) RETURN;
+	LastContrast = Contrast;
+	SendLevel("CONTRAST", Contrast);
+}
+
+FUNCTION Main () {
+	LastVolume = -1;
+	LastBrightness = -1;
+	LastContrast = -1;
+	WaitForInitializationComplete();
+	Ready = 1;
+}

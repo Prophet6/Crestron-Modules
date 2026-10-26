@@ -1,0 +1,406 @@
+#HELP_BEGIN
+Samsung QM Series RS-232 control, including the QM75C.
+Models named by the older wrapper: QM32C, QM43C, QM50C, QM55C, QM65C, QM75C, QM85C, QM98C.
+Protocol: Samsung Multiple Display Control (MDC). Not tried on a live display.
+
+Connection
+9600 baud, 8 data bits, no parity, 1 stop bit, no flow control.
+Display pin 2 is Tx, pin 3 is Rx, pin 5 is ground.
+A Crestron COM port receives on pin 2 and transmits on pin 3, so use a straight-through cable.
+
+Display ID
+Display_Id must match the ID in the display menu. The factory ID is often not 1.
+Set the display to the same number, or set Display_Id to 255 to address every display on the chain.
+
+Packet
+AA command ID length data checksum
+Every byte is hexadecimal. The checksum is the low byte of the sum of every byte except the AA header.
+A set has length 1 and one data byte. A query has length 0 and no data byte.
+Power on, ID 1: AA 11 01 01 01 14
+Power query, ID 1: AA 11 01 00 12
+
+Reply
+AA FF ID length A-or-N command value checksum
+A (hex 41) is success. N (hex 4E) is failure. Nak_FB pulses on failure.
+Last_Status shows the result in words.
+
+Commands on this symbol
+Power          11    00 off, 01 on
+Volume         12    00 through 100
+Mute           13    00 off, 01 on
+Input          14    21 HDMI 1, 23 HDMI 2, 31 HDMI 3, 25 DisplayPort, 20 MagicInfo
+Picture size   15    00 auto, 01 16:9, 04 zoom, 0C wide fit
+Volume step    62    00 up, 01 down
+
+Any other MDC command can be sent with Raw_Command, Raw_Data, Send_Raw_Set, and Send_Raw_Get.
+Send_Raw_Set sends one data byte. Send_Raw_Get sends a query.
+
+Poll_Enable asks for power, volume, mute, input, and picture size, one query each Poll_Interval.
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#CATEGORY "24" // TV/Video Projector
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+
+/*
+	Symbol grid. Do not restack.
+	Poll_Interval shares the row with Poll_Enable.
+	Display_Id shares the row with Nak_FB.
+*/
+
+/* INPUTS AND OUTPUTS */
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, Poll_Enable, _SKIP_,
+				_SKIP_,
+				Power_On, Power_Off,
+				_SKIP_,
+				HDMI_1, HDMI_2, HDMI_3, DisplayPort, MagicInfo,
+				_SKIP_,
+				Volume_Up, Volume_Down, Mute_On, Mute_Off,
+				_SKIP_,
+				Aspect_16x9, Aspect_Auto, Aspect_Zoom, Aspect_Wide,
+				_SKIP_,
+				Send_Raw_Set, Send_Raw_Get,
+				_SKIP_;
+DIGITAL_OUTPUT	_SKIP_,	_SKIP_, Polling_FB, Nak_FB,
+				_SKIP_,
+				Power_On_FB, Power_Off_FB,
+				_SKIP_,
+				HDMI_1_FB, HDMI_2_FB, HDMI_3_FB, DisplayPort_FB, MagicInfo_FB,
+				_SKIP_,
+				_SKIP_, _SKIP_, Volume_Mute_FB, _SKIP_,
+				_SKIP_,
+				Aspect_16x9_FB, Aspect_Auto_FB, Aspect_Zoom_FB, Aspect_Wide_FB,
+				_SKIP_,
+				_SKIP_, _SKIP_,
+				_SKIP_;
+
+ANALOG_INPUT	Volume_Level, _SKIP_, Raw_Command, Raw_Data, _SKIP_;
+ANALOG_OUTPUT	Volume_Level_FB, _SKIP_, _SKIP_;
+
+BUFFER_INPUT	From_Device[255], _SKIP_;
+STRING_OUTPUT	Last_Status, _SKIP_, To_Device;
+
+/* PARAMETERS */
+
+INTEGER_PARAMETER	Display_Id, Poll_Interval;
+
+#BEGIN_PARAMETER_PROPERTIES Poll_Interval
+	propValidUnits = unitTime;
+	propDefaultUnit = unitTime;
+	propBounds = 1s, 30s;
+	propDefaultValue = 5s;
+	propShortDescription = "Time between status queries while Poll_Enable is high.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Display_Id
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propBounds = 0d, 255d;
+	propDefaultValue = 1d;
+	propShortDescription = "Display ID. 255 addresses every display on the chain.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBALS */
+
+INTEGER Ready, Polling, PollStep, LastVolume, PacketLength;
+STRING Hold[400], Packet[16], StatusText[80];
+
+/* FUNCTIONS */
+
+FUNCTION SendPacket (STRING packet) {
+	To_Device = packet;
+}
+
+FUNCTION SendSet (INTEGER cmd, INTEGER data) {
+	INTEGER sum;
+	sum = cmd + Display_Id + 1 + data;
+	sum = sum MOD 256;
+	Packet = CHR(170);
+	Packet = Packet + CHR(cmd);
+	Packet = Packet + CHR(Display_Id);
+	Packet = Packet + CHR(1);
+	Packet = Packet + CHR(data);
+	Packet = Packet + CHR(sum);
+	SendPacket(Packet);
+}
+
+FUNCTION SendGet (INTEGER cmd) {
+	INTEGER sum;
+	sum = cmd + Display_Id;
+	sum = sum MOD 256;
+	Packet = CHR(170);
+	Packet = Packet + CHR(cmd);
+	Packet = Packet + CHR(Display_Id);
+	Packet = Packet + CHR(0);
+	Packet = Packet + CHR(sum);
+	SendPacket(Packet);
+}
+
+FUNCTION SetStatus (STRING text) {
+	StatusText = text;
+	Last_Status = StatusText;
+}
+
+FUNCTION ClearSources () {
+	HDMI_1_FB = 0;
+	HDMI_2_FB = 0;
+	HDMI_3_FB = 0;
+	DisplayPort_FB = 0;
+	MagicInfo_FB = 0;
+}
+
+FUNCTION ClearAspects () {
+	Aspect_16x9_FB = 0;
+	Aspect_Auto_FB = 0;
+	Aspect_Zoom_FB = 0;
+	Aspect_Wide_FB = 0;
+}
+
+FUNCTION ApplyPower (INTEGER data) {
+	IF (data = 1) {
+		Power_On_FB = 1;
+		Power_Off_FB = 0;
+		SetStatus("Power on");
+	}
+	else if (data = 0) {
+		Power_On_FB = 0;
+		Power_Off_FB = 1;
+		SetStatus("Power off");
+	}
+}
+
+FUNCTION ApplySource (INTEGER data) {
+	ClearSources();
+	IF (data = 33) {
+		HDMI_1_FB = 1;
+		SetStatus("HDMI 1");
+	}
+	else if (data = 35) {
+		HDMI_2_FB = 1;
+		SetStatus("HDMI 2");
+	}
+	else if (data = 49) {
+		HDMI_3_FB = 1;
+		SetStatus("HDMI 3");
+	}
+	else if (data = 37) {
+		DisplayPort_FB = 1;
+		SetStatus("DisplayPort");
+	}
+	else if (data = 32) {
+		MagicInfo_FB = 1;
+		SetStatus("MagicInfo");
+	}
+	else {
+		MAKESTRING (StatusText, "Input %u", data);
+		Last_Status = StatusText;
+	}
+}
+
+FUNCTION ApplyAspect (INTEGER data) {
+	ClearAspects();
+	IF (data = 1) {
+		Aspect_16x9_FB = 1;
+		SetStatus("Aspect 16:9");
+	}
+	else if (data = 0) {
+		Aspect_Auto_FB = 1;
+		SetStatus("Aspect auto");
+	}
+	else if (data = 4) {
+		Aspect_Zoom_FB = 1;
+		SetStatus("Aspect zoom");
+	}
+	else if (data = 12) {
+		Aspect_Wide_FB = 1;
+		SetStatus("Aspect wide");
+	}
+	else {
+		MAKESTRING (StatusText, "Aspect %u", data);
+		Last_Status = StatusText;
+	}
+}
+
+FUNCTION ApplyReply (INTEGER ack, INTEGER cmd, INTEGER data) {
+	IF (ack = 78) {
+		PULSE(5, Nak_FB);
+		MAKESTRING (StatusText, "Nak %u", data);
+		Last_Status = StatusText;
+	}
+	else if (ack = 65) {
+		IF (cmd = 17) {
+			ApplyPower(data);
+		}
+		else if (cmd = 18) {
+			IF (data <= 100) {
+				LastVolume = data;
+				Volume_Level_FB = data;
+				MAKESTRING (StatusText, "Volume %u", data);
+				Last_Status = StatusText;
+			}
+		}
+		else if (cmd = 19) {
+			IF (data = 1) {
+				Volume_Mute_FB = 1;
+				SetStatus("Mute on");
+			}
+			else if (data = 0) {
+				Volume_Mute_FB = 0;
+				SetStatus("Mute off");
+			}
+		}
+		else if (cmd = 20) {
+			ApplySource(data);
+		}
+		else if (cmd = 21) {
+			ApplyAspect(data);
+		}
+		else {
+			MAKESTRING (StatusText, "Command %u = %u", cmd, data);
+			Last_Status = StatusText;
+		}
+	}
+}
+
+INTEGER_FUNCTION ChecksumOk (INTEGER total) {
+	INTEGER i, sum, found;
+	sum = 0;
+	FOR (i = 2 to (total - 1)) {
+		sum = sum + BYTE(Hold, i);
+	}
+	found = sum MOD 256;
+	IF (found = BYTE(Hold, total)) {
+		RETURN (1);
+	}
+	RETURN (0);
+}
+
+FUNCTION ParseHold () {
+	INTEGER length, total, ack, cmd, data;
+	WHILE (LEN(Hold) >= 4) {
+		IF (BYTE(Hold, 1) <> 170) {
+			Hold = RIGHT(Hold, LEN(Hold) - 1);
+		}
+		ELSE {
+			length = BYTE(Hold, 4);
+			total = 5 + length;
+			IF (LEN(Hold) < total) {
+				RETURN;
+			}
+			IF (ChecksumOk(total) = 1) {
+				IF ((BYTE(Hold, 2) = 255) && (length >= 3)) {
+					ack = BYTE(Hold, 5);
+					cmd = BYTE(Hold, 6);
+					data = BYTE(Hold, 7);
+					ApplyReply(ack, cmd, data);
+				}
+			}
+			Hold = RIGHT(Hold, LEN(Hold) - total);
+		}
+	}
+}
+
+FUNCTION PollTick () {
+	IF (Poll_Enable = 0) {
+		Polling = 0;
+		Polling_FB = 0;
+		RETURN;
+	}
+	Polling = 1;
+	Polling_FB = 1;
+	PollStep = PollStep + 1;
+	IF (PollStep > 5) {
+		PollStep = 1;
+	}
+	IF (PollStep = 1) {
+		SendGet(17);
+	}
+	else if (PollStep = 2) {
+		SendGet(18);
+	}
+	else if (PollStep = 3) {
+		SendGet(19);
+	}
+	else if (PollStep = 4) {
+		SendGet(20);
+	}
+	else if (PollStep = 5) {
+		SendGet(21);
+	}
+	WAIT (Poll_Interval) PollTick();
+}
+
+/* EVENTS */
+
+CHANGE From_Device {
+	IF (LEN(From_Device) > 0) {
+		Hold = Hold + From_Device;
+		CLEARBUFFER(From_Device);
+		IF (LEN(Hold) > 320) {
+			Hold = RIGHT(Hold, 64);
+		}
+		ParseHold();
+	}
+}
+
+CHANGE Poll_Enable {
+	IF ((Poll_Enable = 1) && (Polling = 0)) {
+		PollTick();
+	}
+}
+
+PUSH Power_On { SendSet(17, 1); }
+PUSH Power_Off { SendSet(17, 0); }
+
+PUSH HDMI_1 { SendSet(20, 33); }
+PUSH HDMI_2 { SendSet(20, 35); }
+PUSH HDMI_3 { SendSet(20, 49); }
+PUSH DisplayPort { SendSet(20, 37); }
+PUSH MagicInfo { SendSet(20, 32); }
+
+PUSH Volume_Up { SendSet(98, 0); }
+PUSH Volume_Down { SendSet(98, 1); }
+PUSH Mute_On { SendSet(19, 1); }
+PUSH Mute_Off { SendSet(19, 0); }
+
+PUSH Aspect_16x9 { SendSet(21, 1); }
+PUSH Aspect_Auto { SendSet(21, 0); }
+PUSH Aspect_Zoom { SendSet(21, 4); }
+PUSH Aspect_Wide { SendSet(21, 12); }
+
+PUSH Send_Raw_Set {
+	IF (Raw_Command <= 255) {
+		IF (Raw_Data <= 255) {
+			SendSet(Raw_Command, Raw_Data);
+		}
+	}
+}
+
+PUSH Send_Raw_Get {
+	IF (Raw_Command <= 255) {
+		SendGet(Raw_Command);
+	}
+}
+
+CHANGE Volume_Level {
+	IF (Ready = 0) {
+		RETURN;
+	}
+	IF (Volume_Level > 100) {
+		RETURN;
+	}
+	IF (Volume_Level = LastVolume) {
+		RETURN;
+	}
+	LastVolume = Volume_Level;
+	SendSet(18, Volume_Level);
+}
+
+FUNCTION Main () {
+	LastVolume = -1;
+	WaitForInitializationComplete();
+	Ready = 1;
+}
