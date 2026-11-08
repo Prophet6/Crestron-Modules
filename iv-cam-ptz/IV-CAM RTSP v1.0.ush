@@ -66,12 +66,12 @@
   Cmn53=beside Port\\  3  Lens_Override beside Lens\\  4  Format_Override||1
   Cmn54=beside Format\\  5  Username_Override beside Username\\  6  Password_Override||1
   Cmn55=beside Password\\  7  Path_Override beside Path\\  8  blank\\  9||1
-  Cmn56=||1IP_Address beside URL\\\\The symbol has not yet been run inside||1
-  Cmn57=a loaded program.\\\\v1.0  2026-11-07\\- RTSP URL for this IV-CAM,||1
-  Cmn58=from the IP address\\- Credentials parameter and digital override||1
-  Cmn59=make the login optional\\- A Path replaces the IV-CAM lens and format||1
-  Cmn60=for another RTSP camera\\- Password and Path default to blank\\-
-  Cmn61=||1IP_Address and URL sit under a blank row
+  Cmn56=||1IP_Address beside URL\\\\Tested in a loaded program on a live IV-
+  Cmn57=CAM-P12. The URL worked.\\\\v1.0  2026-11-07\\- RTSP URL for this||1
+  Cmn58=IV-CAM, from the IP address\\- Credentials parameter and digital||1
+  Cmn59=override make the login optional\\- A Path replaces the IV-CAM lens||1
+  Cmn60=and format for another RTSP camera\\- Password and Path default||1
+  Cmn61=to blank\\- IP_Address and URL sit under a blank row
 [END]
 [BEGIN]
   ObjTp=Symbol

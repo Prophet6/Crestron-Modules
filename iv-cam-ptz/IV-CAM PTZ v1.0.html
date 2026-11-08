@@ -217,8 +217,8 @@
   <h2 id="proven">What was proven</h2>
   <p>The camera listens on TCP port 5500 and speaks raw VISCA. There is no 8-byte Sony header. Address 1 answers with <code>90</code>. The home packet the module sends for address 1 is the packet that camera already accepted.</p>
   <p>Pan, tilt, zoom, stop, and presets use that same frame: address byte, command, <code>FF</code>. The reply parser treats <code>90 4y FF</code> as accepted and <code>90 5y FF</code> as finished. An error packet replaces <span class="sig">Status</span>.</p>
-  <div class="warn">
-    Loading this symbol in a program and pressing Home is still the remaining check. The socket, <span class="sig">Connected_FB</span>, and the button logic have not been exercised on a processor.
+  <div class="ok">
+    IV-CAM PTZ, IV-CAM PTZ Presets, and IV-CAM RTSP were tested in a loaded program on a live IV-CAM-P12. They worked as expected.
   </div>
 
   <h2 id="connection">Connection</h2>

@@ -110,7 +110,7 @@ Rows:
   8  blank
   9  IP_Address beside URL
 
-The symbol has not yet been run inside a loaded program.
+Tested in a loaded program on a live IV-CAM-P12. The URL worked.
 
 v1.0  2026-11-07
 - RTSP URL for this IV-CAM, from the IP address
