@@ -1,62 +1,73 @@
 #HELP_BEGIN
 UDP Census v1.0
 
-One 4-Series symbol that can answer a processor poll, collect the answers
-into a local database, or both.
+4-Series. UdpCensus_v1.clz must sit in this folder. SPlusCC does not
+rebuild that library.
 
-Drop it on every processor. Leave Respond_Mode on and Discover_Mode off for
-a processor that only answers. Turn Discover_Mode on for the processor that
-keeps the list. Turn both on when that collector should also answer polls
-from someone else.
+This socket defaults to UDP 50002.
 
-The collector broadcasts ?POLL to 255.255.255.255. Each responder unicasts
-!HERE,MAC,UID,Data back to the collector. The collector keeps one row per
-UID (or per MAC, or per IP when those are empty), including itself. Rows
-that do not answer the next poll are removed when the window closes.
+SIMPL+ names are case-insensitive. A local with the same name as an input
+is that input. String outputs are write-only. Keep a copy, compare it,
+and assign the output only when the text changes. Digitals and Count can
+be read.
 
-Browse the database with Index. 1 is the first row. Count is the number of
-rows. Answered_FB is high when the row shown in Processor_* replied to the
-poll now in progress, or is still in the list after the window closes.
+Show_Index 0 is row 1 until the analog moves. After that, 0 blanks the
+four Processor outputs and drops Answered_FB. Count does not change.
 
-Leave Respond and Discover unwired to use Respond_Mode and Discover_Mode.
-After a change on either digital, that digital takes over and does not fall
-back to the parameter.
+Notices, and only these, go to the error log:
+  UdpCensus: answered <ip>:<port>
+  UdpCensus: added <uid> <ip>
+  UdpCensus: removed <uid> <ip>
+GenerateUserNotice needs a format string: GenerateUserNotice("%s", NoticeBuf).
 
-Poll_Interval 0s polls only when Poll is pulsed. Any other period also polls
-while Discover is active. A Poll pulse runs one census even when Discover
-is off. Poll_Window is how long answers are accepted. Use 3s or more when
-hundreds of processors can reply. Maximum 512 rows.
+A non-zero Poll_Interval below 1s is raised to 1s. Poll_Window 0 becomes 3s.
+The window is clamped to 0.5s-30s. A port outside 1024-65535 becomes 50002.
 
-Wire format:
-  ?POLL
-  !HERE,00:00:00:00:00:00,uid,data
-
-The listen socket stays open on the LAN adapter. Replies do not retarget it.
+Press F1 for UDP Census v1.0.html. Leave that file next to this module.
 
 -- VERSION HISTORY --
 v1.0  2026-10-20
+- 2026-11-03: UDP_Port default is 50002. An out-of-range port becomes 50002
+- 2026-11-03: F1 opens UDP Census v1.0.html
+- 2026-11-03: Show_Index shares the Count row. A blank row sits above Processor_IP
 - Poll, answer, or both, in one symbol
 - Indexed database of the processors that answered
+- 2026-11-02 Symbol rows: blank around Enable, Discover above Respond, poll times together
+- Count and the database strings were ignored because the callback names matched the signals
+- A discover poll is sent on the Poll path as soon as the socket is open
+- The row selector is Show_Index. 1 displays the first row
+- Answering a poll posts a user notice. A row is noted only when it is added or removed
+- An output is written only when its value changes
 
 #HELP_END
 
 /* COMPILER DIRECTIVES */
 
+#HELP_PDF_FILE "UDP Census v1.0.html"
 #CATEGORY "46" "TCP/IP" // Custom
 #DEFAULT_VOLATILE
 #USER_SIMPLSHARP_LIBRARY "UdpCensus_v1"
 
 /* INPUTS & OUTPUTS */
 
-DIGITAL_INPUT	Enable, Poll, Respond, Discover;
-ANALOG_INPUT	Index;
-STRING_INPUT	_SKIP_, Mac[17], UID[32], Data[128];
+DIGITAL_INPUT	_SKIP_, Enable, _SKIP_, Poll,
+				_SKIP_,
+				_SKIP_,
+				Discover, Respond,
+				_SKIP_;
+ANALOG_INPUT	_SKIP_, Show_Index;
+STRING_INPUT	_SKIP_, _SKIP_, Mac[17], UID[32], Data[128];
 
-DIGITAL_OUTPUT	Enable_FB, Polling_FB, Answered_FB, _SKIP_;
+DIGITAL_OUTPUT	_SKIP_, Enable_FB, _SKIP_, Polling_FB,
+				_SKIP_,
+				_SKIP_, _SKIP_,
+				_SKIP_, _SKIP_,
+				Answered_FB;
 ANALOG_OUTPUT	Count;
-STRING_OUTPUT	Processor_IP, Processor_MAC, Processor_UID, Processor_Data;
+STRING_OUTPUT	_SKIP_, Processor_IP, Processor_MAC, Processor_UID, Processor_Data;
 
-INTEGER_PARAMETER	UDP_Port, Poll_Window, Respond_Mode, Discover_Mode, Poll_Interval;
+INTEGER_PARAMETER	UDP_Port, _SKIP_, _SKIP_, Poll_Window, Poll_Interval,
+					_SKIP_, Discover_Mode, Respond_Mode;
 
 /* PROPERTIES */
 
@@ -64,7 +75,7 @@ INTEGER_PARAMETER	UDP_Port, Poll_Window, Respond_Mode, Discover_Mode, Poll_Inter
 	propValidUnits =		unitDecimal;
 	propDefaultUnit =		unitDecimal;
 	propBounds =			1024d, 65535d;
-	propDefaultValue =		50001d;
+	propDefaultValue =		50002d;
 	propShortDescription =	"UDP port";
 #END_PARAMETER_PROPERTIES
 
@@ -105,40 +116,63 @@ INTEGER_PARAMETER	UDP_Port, Poll_Window, Respond_Mode, Discover_Mode, Poll_Inter
 /* GLOBAL VARIABLES */
 
 INTEGER		RespondHeld, DiscoverHeld;
-STRING		IpBuf[64], MacBuf[17], UidBuf[32], DataBuf[128];
+STRING		IpBuf[64], MacBuf[17], UidBuf[32], DataBuf[128], NoticeBuf[160];
+STRING		LastIp[64], LastMac[17], LastUid[32], LastData[128];
 UdpCensus	Core;
 
 /* FUNCTIONS */
 
 FUNCTION PushSetup() {
-	INTEGER respond, discover;
+	/* SIMPL+ names are case-insensitive. These must not match the Discover or Respond inputs. */
+	INTEGER respondMode, discoverMode;
 
-	respond = Respond_Mode;
-	discover = Discover_Mode;
-	If (RespondHeld = 1) respond = Respond;
-	If (DiscoverHeld = 1) discover = Discover;
-	Core.Configure(respond, discover, UDP_Port, Poll_Interval, Poll_Window);
+	respondMode = Respond_Mode;
+	discoverMode = Discover_Mode;
+	If (RespondHeld = 1) respondMode = Respond;
+	If (DiscoverHeld = 1) discoverMode = Discover;
+	Core.Configure(respondMode, discoverMode, UDP_Port, Poll_Interval, Poll_Window);
 	Core.SetIdentity(Mac, UID, Data);
 }
 
 /* CALLBACKS */
 
-CALLBACK FUNCTION HandleCensus (Integer enabled, Integer polling, Integer count) {
-	Enable_FB = enabled;
-	Polling_FB = polling;
-	Count = count;
+CALLBACK FUNCTION HandleCensus (Integer socketOpen, Integer windowOpen, Integer rowCount) {
+	If (Enable_FB <> socketOpen) Enable_FB = socketOpen;
+	If (Polling_FB <> windowOpen) Polling_FB = windowOpen;
+	If (Count <> rowCount) Count = rowCount;
 }
 
-CALLBACK FUNCTION HandleRecord (String ip, String mac, String uid, String data, Integer answered) {
-	IpBuf = ip;
-	MacBuf = mac;
-	UidBuf = uid;
-	DataBuf = data;
-	Processor_IP = IpBuf;
-	Processor_MAC = MacBuf;
-	Processor_UID = UidBuf;
-	Processor_Data = DataBuf;
-	Answered_FB = answered;
+CALLBACK FUNCTION HandleNotice (String noticeText) {
+	NoticeBuf = noticeText;
+	GenerateUserNotice("%s", NoticeBuf);
+}
+
+CALLBACK FUNCTION HandleRecord (String rowIp, String rowMac, String rowUid, String rowData, Integer rowAnswered) {
+	IpBuf = rowIp;
+	MacBuf = rowMac;
+	UidBuf = rowUid;
+	DataBuf = rowData;
+	If (CompareStrings(LastIp, IpBuf) <> 0)
+	{
+		LastIp = IpBuf;
+		Processor_IP = IpBuf;
+	}
+	If (CompareStrings(LastMac, MacBuf) <> 0)
+	{
+		LastMac = MacBuf;
+		Processor_MAC = MacBuf;
+	}
+	If (CompareStrings(LastUid, UidBuf) <> 0)
+	{
+		LastUid = UidBuf;
+		Processor_UID = UidBuf;
+	}
+	If (CompareStrings(LastData, DataBuf) <> 0)
+	{
+		LastData = DataBuf;
+		Processor_Data = DataBuf;
+	}
+	If (Answered_FB <> rowAnswered) Answered_FB = rowAnswered;
 }
 
 /* EVENT HANDLERS */
@@ -174,8 +208,8 @@ CHANGE Data {
 	Core.SetIdentity(Mac, UID, Data);
 }
 
-CHANGE Index {
-	Core.Select(Index);
+CHANGE Show_Index {
+	Core.Select(Show_Index);
 }
 
 /* MAIN */
@@ -183,11 +217,12 @@ CHANGE Index {
 FUNCTION Main() {
 	RegisterDelegate(Core, OnCensus, HandleCensus);
 	RegisterDelegate(Core, OnRecord, HandleRecord);
+	RegisterDelegate(Core, OnNotice, HandleNotice);
 	WaitForInitializationComplete();
 	If (Respond = 1) RespondHeld = 1;
 	If (Discover = 1) DiscoverHeld = 1;
 	PushSetup();
-	If (Index > 0) Core.Select(Index);
+	If (Show_Index > 0) Core.Select(Show_Index);
 	Else Core.Select(1);
 	If (Enable = 1) Core.Open();
 }

@@ -28,20 +28,27 @@ One symbol does either job, or both.
 | Both | Both modes on. This processor polls, stores the answers, and still answers anyone else's poll. |
 
 ```
-Enable     | UDP_Port       | Enable_FB
+           | UDP_Port       |
+Enable     |                | Enable_FB
+           |                |
 Poll       | Poll_Window    | Polling_FB
-Respond    | Respond_Mode   | Answered_FB
+           | Poll_Interval  |
+           |                |
 Discover   | Discover_Mode  |
-Index      | Poll_Interval  | Count
+Respond    | Respond_Mode   |
+           |                |
+           |                | Answered_FB
+Show_Index |                | Count
+           |                |
            |                | Processor_IP
 Mac        |                | Processor_MAC
 UID        |                | Processor_UID
 Data       |                | Processor_Data
 ```
 
-**Poll** broadcasts `?POLL`. Responders unicast `!HERE,MAC,UID,Data` to the sender. The collector inserts itself, then keeps one row per UID. A row that misses the next poll is removed when **Poll_Window** ends (default 3s). **Index** 1 shows the first row. **Count** is how many rows survived. During `Polling_FB`, **Answered_FB** is high only for a row that has already replied.
+**Poll** broadcasts `?POLL`. Responders unicast `!HERE,MAC,UID,Data` to the sender. The collector inserts itself, then keeps one row per UID. A row that misses the next poll is removed when **Poll_Window** ends (default 3s). **Show_Index** 1 shows the first row. **Count** is how many rows survived. During `Polling_FB`, **Answered_FB** is high only for a row that has already replied.
 
-`Poll_Interval` 0s waits for the **Poll** pulse. Any other period sends the first poll half a second after the socket opens, then repeats. A pulse runs one census even when Discover is off. Leave **Respond** and **Discover** unwired to use the parameters. After either digital changes, that digital stays in charge.
+`Poll_Interval` 0s waits for the **Poll** pulse. Any other period sends a poll as soon as the socket is open and Discover is on, then repeats. A pulse runs one census even when Discover is off. Leave **Respond** and **Discover** unwired to use the parameters. After either digital changes, that digital stays in charge.
 
 The socket binds the LAN adapter and stays open while replies come in. Up to 512 processors.
 

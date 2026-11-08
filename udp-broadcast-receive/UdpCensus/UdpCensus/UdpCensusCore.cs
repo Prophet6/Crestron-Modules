@@ -7,6 +7,7 @@ namespace UdpCensusLib
 {
     public delegate void CensusHandler(ushort enabled, ushort polling, ushort count);
     public delegate void RecordHandler(SimplSharpString ip, SimplSharpString mac, SimplSharpString uid, SimplSharpString data, ushort answered);
+    public delegate void NoticeHandler(SimplSharpString text);
 
     public class UdpCensus
     {
@@ -16,6 +17,8 @@ namespace UdpCensusLib
         private const int MinWindowMs = 500;
         private const int DefaultWindowMs = 3000;
         private const int MaxWindowMs = 30000;
+        private const int RowUnchanged = 0;
+        private const int RowAdded = 2;
 
         private sealed class Peer
         {
@@ -30,11 +33,13 @@ namespace UdpCensusLib
         private readonly object _sync = new object();
         private readonly Peer[] _peers = new Peer[MaxPeers];
         private readonly CTimer _intervalTimer;
+        private bool _intervalArmed;
         private readonly CTimer _windowTimer;
         private readonly CTimer _publishTimer;
 
         private CensusHandler _censusHandlers;
         private RecordHandler _recordHandlers;
+        private NoticeHandler _noticeHandlers;
 
         private UDPServer _udp;
         private bool _open;
@@ -43,7 +48,7 @@ namespace UdpCensusLib
         private bool _discover;
         private bool _polling;
         private bool _publishQueued;
-        private int _port = 50001;
+        private int _port = 50002;
         private int _intervalMs;
         private int _windowMs = DefaultWindowMs;
         private int _count;
@@ -73,6 +78,16 @@ namespace UdpCensusLib
             }
         }
 
+        public NoticeHandler OnNotice
+        {
+            get { return null; }
+            set
+            {
+                if (value != null)
+                    _noticeHandlers = (NoticeHandler)Delegate.Combine(_noticeHandlers, value);
+            }
+        }
+
         public UdpCensus()
         {
             _intervalTimer = new CTimer(OnInterval, null, Timeout.Infinite);
@@ -92,7 +107,7 @@ namespace UdpCensusLib
                 _discover = discover != 0;
                 int nextPort = port;
                 if (nextPort < 1024 || nextPort > 65535)
-                    nextPort = 50001;
+                    nextPort = 50002;
                 if (nextPort != _port)
                 {
                     _port = nextPort;
@@ -111,7 +126,9 @@ namespace UdpCensusLib
             {
                 CloseSocket();
                 OpenSocket();
+                return;
             }
+            PollIfDiscovering();
         }
 
         public void SetIdentity(string mac, string uid, string data)
@@ -143,6 +160,7 @@ namespace UdpCensusLib
             string mac;
             string uid;
             string data;
+            string added = null;
             lock (_sync)
             {
                 if (_stopping || !_open || _udp == null)
@@ -152,12 +170,16 @@ namespace UdpCensusLib
                 uid = _uid;
                 data = _data;
                 BeginWindowLocked();
-                UpsertLocked(KeyFor(uid, mac, localIp), localIp, mac, uid, data, true);
+                if (UpsertLocked(KeyFor(uid, mac, localIp), localIp, mac, uid, data, true) == RowAdded)
+                    added = RowLabel(uid, localIp);
                 socket = _udp;
                 port = _port;
             }
             Send(socket, Encoding.ASCII.GetBytes("?POLL"), "255.255.255.255", port);
+            PublishNow();
             SchedulePublish();
+            if (added != null)
+                PostNotice("UdpCensus: added " + added);
         }
 
         public void Select(ushort index)
@@ -196,6 +218,11 @@ namespace UdpCensusLib
                     Disable(created);
                     created = null;
                 }
+                else
+                {
+                    created.ClearIncomingDataBuffer = true;
+                    AcceptAny(created);
+                }
             }
             catch (Exception ex)
             {
@@ -223,6 +250,7 @@ namespace UdpCensusLib
             if (created != null && !_open)
                 Disable(created);
             PublishNow();
+            PollIfDiscovering();
         }
 
         private void CloseSocket()
@@ -235,7 +263,7 @@ namespace UdpCensusLib
                 _publishQueued = false;
                 socket = _udp;
                 _udp = null;
-                try { _intervalTimer.Stop(); } catch (Exception) { }
+                _intervalArmed = false;
                 try { _windowTimer.Stop(); } catch (Exception) { }
                 try { _publishTimer.Stop(); } catch (Exception) { }
             }
@@ -280,6 +308,9 @@ namespace UdpCensusLib
             string text = Clean(raw, 400);
             if (text.Length == 0)
                 return;
+            int hereAt = text.IndexOf("!HERE,", StringComparison.Ordinal);
+            if (hereAt > 0)
+                text = text.Substring(hereAt);
             if (IsPoll(text))
             {
                 bool respond;
@@ -303,15 +334,25 @@ namespace UdpCensusLib
             string uid;
             string data;
             SplitHere(text, out mac, out uid, out data);
-            bool changed = false;
+            int row = RowUnchanged;
+            bool polling = false;
+            string added = null;
             lock (_sync)
             {
-                if (!_polling)
-                    return;
-                string ip = Clean(from, 45);
-                changed = UpsertLocked(KeyFor(uid, mac, ip), ip, mac, uid, data, true);
+                polling = _polling;
+                if (polling)
+                {
+                    string ip = Clean(from, 45);
+                    row = UpsertLocked(KeyFor(uid, mac, ip), ip, mac, uid, data, true);
+                    if (row == RowAdded)
+                        added = RowLabel(uid, ip);
+                }
             }
-            if (changed)
+            if (!polling)
+                return;
+            if (added != null)
+                PostNotice("UdpCensus: added " + added);
+            if (row != RowUnchanged)
                 SchedulePublish();
         }
 
@@ -331,7 +372,8 @@ namespace UdpCensusLib
             }
             if (to == null || to.Length == 0)
                 return;
-            Send(socket, payload, to, port);
+            if (Send(socket, payload, to, port))
+                PostNotice("UdpCensus: answered " + to + ":" + port);
         }
 
         private void BeginWindowLocked()
@@ -348,24 +390,50 @@ namespace UdpCensusLib
 
         private void OnWindow(object state)
         {
+            string[] removed = null;
+            int gone = 0;
             lock (_sync)
             {
                 if (!_polling)
                     return;
-                CompactLocked();
+                removed = new string[_count];
+                gone = CompactLocked(removed);
                 _polling = false;
             }
             PublishNow();
+            for (int i = 0; i < gone; i++)
+                PostNotice("UdpCensus: removed " + removed[i]);
         }
 
         private void OnInterval(object state)
         {
             bool run;
+            int period;
             lock (_sync)
             {
-                run = _open && _discover && _intervalMs > 0 && !_stopping;
+                run = _intervalArmed && _open && _discover && _intervalMs > 0 && !_stopping;
+                period = _intervalMs;
             }
-            if (run)
+            if (!run)
+                return;
+            PollNow();
+            lock (_sync)
+            {
+                if (!_intervalArmed || !_open || !_discover || _intervalMs <= 0 || _stopping)
+                    return;
+                try { _intervalTimer.Reset(period); }
+                catch (Exception ex) { ErrorLog.Error("UdpCensus: interval timer: {0}", ex.Message); }
+            }
+        }
+
+        private void PollIfDiscovering()
+        {
+            bool poll;
+            lock (_sync)
+            {
+                poll = _open && _discover && _intervalMs > 0 && !_stopping && _udp != null;
+            }
+            if (poll)
                 PollNow();
         }
 
@@ -453,10 +521,10 @@ namespace UdpCensusLib
             catch (Exception ex) { ErrorLog.Error("UdpCensus: OnRecord: {0}", ex.Message); }
         }
 
-        private bool UpsertLocked(string key, string ip, string mac, string uid, string data, bool seen)
+        private int UpsertLocked(string key, string ip, string mac, string uid, string data, bool seen)
         {
             if (key == null || key.Length == 0)
-                return false;
+                return RowUnchanged;
             for (int i = 0; i < _count; i++)
             {
                 Peer row = _peers[i];
@@ -467,11 +535,11 @@ namespace UdpCensusLib
                     row.Uid = uid ?? "";
                     row.Data = data ?? "";
                     row.Seen = seen;
-                    return true;
+                    return 1;
                 }
             }
             if (_count >= MaxPeers)
-                return false;
+                return RowUnchanged;
             Peer created = new Peer();
             created.Key = key;
             created.Ip = ip ?? "";
@@ -481,12 +549,13 @@ namespace UdpCensusLib
             created.Seen = seen;
             _peers[_count] = created;
             _count++;
-            return true;
+            return RowAdded;
         }
 
-        private void CompactLocked()
+        private int CompactLocked(string[] removed)
         {
             int write = 0;
+            int gone = 0;
             for (int i = 0; i < _count; i++)
             {
                 Peer row = _peers[i];
@@ -495,21 +564,45 @@ namespace UdpCensusLib
                     _peers[write] = row;
                     write++;
                 }
+                else if (row != null && removed != null && gone < removed.Length)
+                {
+                    removed[gone] = RowLabel(row.Uid, row.Ip);
+                    gone++;
+                }
             }
             for (int i = write; i < _count; i++)
                 _peers[i] = null;
             _count = write;
+            return gone;
+        }
+
+        private static string RowLabel(string uid, string ip)
+        {
+            string who = uid ?? "";
+            string where = ip ?? "";
+            if (who.Length == 0)
+                return where;
+            if (where.Length == 0)
+                return who;
+            return who + " " + where;
+        }
+
+        private void PostNotice(string message)
+        {
+            NoticeHandler handler;
+            lock (_sync) { handler = _noticeHandlers; }
+            if (handler == null || message == null || message.Length == 0)
+                return;
+            try { handler(new SimplSharpString(message)); }
+            catch (Exception ex) { ErrorLog.Error("UdpCensus: notice: {0}", ex.Message); }
         }
 
         private void ArmIntervalLocked()
         {
-            try
-            {
-                if (_open && _discover && _intervalMs > 0)
-                    _intervalTimer.Reset(500, _intervalMs);
-                else
-                    _intervalTimer.Stop();
-            }
+            _intervalArmed = _open && _discover && _intervalMs > 0 && !_stopping;
+            if (!_intervalArmed)
+                return;
+            try { _intervalTimer.Reset(_intervalMs); }
             catch (Exception ex) { ErrorLog.Error("UdpCensus: interval timer: {0}", ex.Message); }
         }
 
@@ -541,20 +634,32 @@ namespace UdpCensusLib
             catch (Exception ex) { ErrorLog.Error("UdpCensus: rearm: {0}", ex.Message); }
         }
 
-        private static void Send(UDPServer socket, byte[] payload, string address, int port)
+        private static void AcceptAny(UDPServer socket)
+        {
+            if (socket == null)
+                return;
+            try { socket.AddressToAcceptConnectionFrom = "0.0.0.0"; }
+            catch (Exception ex) { ErrorLog.Error("UdpCensus: accept any: {0}", ex.Message); }
+        }
+
+        private static bool Send(UDPServer socket, byte[] payload, string address, int port)
         {
             if (socket == null || payload == null || address == null || address.Length == 0)
-                return;
+                return false;
+            bool sent = false;
             try
             {
                 SocketErrorCodes err = socket.SendData(payload, payload.Length, address, port);
-                if (err != SocketErrorCodes.SOCKET_OK && err != SocketErrorCodes.SOCKET_OPERATION_PENDING)
+                sent = err == SocketErrorCodes.SOCKET_OK || err == SocketErrorCodes.SOCKET_OPERATION_PENDING;
+                if (!sent)
                     ErrorLog.Error("UdpCensus: send to {0}:{1} failed ({2})", address, port, err);
             }
             catch (Exception ex)
             {
                 ErrorLog.Error("UdpCensus: send: {0}", ex.Message);
             }
+            AcceptAny(socket);
+            return sent;
         }
 
         private static void Disable(UDPServer socket)

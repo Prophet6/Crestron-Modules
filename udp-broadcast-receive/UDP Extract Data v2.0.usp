@@ -1,38 +1,26 @@
 #HELP_BEGIN
 UDP Extract Data v2.0
 
-Companion to UDP Broadcast and Receive v2.0. One instance latches IP, MAC, UID,
-and Data from the last inbound packet that matches this instance's filter, and
-drops that latch when the peer goes quiet.
+One instance per peer. Wire Packet_Rx and the four Received_* inputs
+from UDP Broadcast and Receive v2.0. Do not wire Enable_FB.
 
-Wire Received_IP / Received_MAC / Received_UID / Received_Data from the UDP
-module. Wire Packet_Rx to Packet_Rx. Do not wire Enable_FB.
+Match parameters default to [SKIP]. An empty override stays [SKIP]
+and does not fall back to the parameter. Every active field must match.
+A non-match does not clear a peer that is already held.
 
-Packet_Rx evaluates the match immediately. The Received_* change path still
-waits 0.01 s after the last change, so a v1.3 UDP symbol (no Packet_Rx) still
-works.
+Timeout 0s leaves Online_FB high. Any other time clears the peer when
+matching packets stop. A repeat match restarts that time.
 
-Filter: Match_IP, Match_MAC, and Match_UID, each with a serial override.
-Default for every match parameter is [SKIP] (that field is not used).
-Any combination may be active. All active fields must match (AND).
-Exact, case-sensitive compare.
+Peer outputs and Online_FB are written only when the value changes.
+String outputs are write-only.
 
-At startup the locals take the parameters, then any override with length > 0.
-CHANGE on an override sets that local to the override string as-is. An empty
-string means [SKIP] from then on and does not fall back to the parameter.
-
-A non-match does not clear a latch that is already held.
-Timeout is unitTime. 0s keeps the last match and leaves Online_FB high.
-Any other value drops Online_FB and clears the peer outputs when no new match
-arrives within that time. Default 15s, maximum 600s.
-
-Peer_UID is Received_UID from the matching packet.
-Peer_Data is the raw Received_Data from the matching packet.
-
-Drop one copy of this symbol per peer.
+Press F1 for UDP Beacon and Extract v2.0.html. Leave that file next
+to this module.
 
 -- VERSION HISTORY --
 v2.0  2026-10-18
+- 2026-11-03: F1 opens UDP Beacon and Extract v2.0.html, shared with the beacon
+- 2026-11-02: Peer_* and Online_FB update only when the value changes
 - Packet_Rx evaluates the snapshot without the settle delay
 - Online_FB and Timeout. 0s latches until a new match. Any other time clears
   the peer when packets stop.
@@ -44,6 +32,7 @@ v1.0  2026-09-09
 
 /* COMPILER DIRECTIVES */
 
+#HELP_PDF_FILE "UDP Beacon and Extract v2.0.html"
 #CATEGORY "46" "TCP/IP" // Custom
 #DEFAULT_VOLATILE
 #DEFINE_CONSTANT SKIP_TOKEN "[SKIP]"
@@ -98,7 +87,8 @@ STRING_PARAMETER	_SKIP_, Match_IP[16], Match_MAC[17], Match_UID[32];
 
 /* GLOBAL VARIABLES */
 
-STRING	CurIP[16], CurMAC[17], CurUID[32];
+STRING	CurIP[16], CurMAC[17], CurUID[32],
+		LastPeerIP[16], LastPeerMAC[17], LastPeerUID[32], LastPeerData[255];
 INTEGER	Pending, PeerAge;
 
 /* FUNCTIONS */
@@ -108,11 +98,23 @@ FUNCTION ArmSettle() {
 }
 
 FUNCTION DropPeer() {
-	Online_FB = 0;
-	Peer_IP = "";
-	Peer_MAC = "";
-	Peer_UID = "";
-	Peer_Data = "";
+	If (Online_FB <> 0) Online_FB = 0;
+	If (LEN(LastPeerIP) > 0) {
+		LastPeerIP = "";
+		Peer_IP = "";
+	}
+	If (LEN(LastPeerMAC) > 0) {
+		LastPeerMAC = "";
+		Peer_MAC = "";
+	}
+	If (LEN(LastPeerUID) > 0) {
+		LastPeerUID = "";
+		Peer_UID = "";
+	}
+	If (LEN(LastPeerData) > 0) {
+		LastPeerData = "";
+		Peer_Data = "";
+	}
 	PeerAge = 0;
 }
 
@@ -141,12 +143,25 @@ FUNCTION EvaluateMatch() {
 	}
 
 	If (ok = 1) {
-		Peer_IP = Received_IP;
-		Peer_MAC = Received_MAC;
-		Peer_UID = Received_UID;
-		Peer_Data = Received_Data;
+		/* Peer_* are write-only. LastPeer* is the last text written. */
+		If (CompareStrings(LastPeerIP, Received_IP) <> 0) {
+			LastPeerIP = Received_IP;
+			Peer_IP = Received_IP;
+		}
+		If (CompareStrings(LastPeerMAC, Received_MAC) <> 0) {
+			LastPeerMAC = Received_MAC;
+			Peer_MAC = Received_MAC;
+		}
+		If (CompareStrings(LastPeerUID, Received_UID) <> 0) {
+			LastPeerUID = Received_UID;
+			Peer_UID = Received_UID;
+		}
+		If (CompareStrings(LastPeerData, Received_Data) <> 0) {
+			LastPeerData = Received_Data;
+			Peer_Data = Received_Data;
+		}
 		PeerAge = 0;
-		Online_FB = 1;
+		If (Online_FB <> 1) Online_FB = 1;
 	}
 }
 
@@ -207,7 +222,7 @@ FUNCTION Main() {
 	If (LEN(Match_UID_Override) > 0) CurUID = Match_UID_Override;
 	Pending = 0;
 	PeerAge = 0;
-	Online_FB = 0;
+	If (Online_FB <> 0) Online_FB = 0;
 	WHILE (1) {
 		If (Pending = 1) {
 			Pending = 0;

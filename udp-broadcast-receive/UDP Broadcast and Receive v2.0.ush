@@ -11,76 +11,29 @@
 [END]
 [BEGIN]
   ObjTp=Hd
-  Cmn1=UDP Broadcast and Receive v2.0\\\\Discovery beacon for 4-Series.
-  Cmn2=||1Broadcasts MAC,UID,Data to 255.255.255.255\\and receives on the||1
-  Cmn3=same port. Own packets are ignored. Adds a timed announce\\and Packet_Rx||1
-  Cmn4=after the received strings are written. Unicast reply is off\\unless||1
-  Cmn5=enabled, and then answers each sender only once.\\\\Wire format||1
-  Cmn6=(no spaces): MAC,UID,Data\\Example: 00:00:00:00:00:00,123456789,[Type]value\\
-  Cmn7=Maximum datagram 306 bytes (17 + 1 + 32 + 1 + 255).\\\\v1.3 is unchanged.
-  Cmn8=||1This is a new symbol.\\\\\\Signal Descriptions:\\\\  DIGITAL_INPUT||1
-  Cmn9=Enable\\    Latched. High opens the UDP socket on UDP_Port. Low||1
-  Cmn10=closes it.\\\\  DIGITAL_INPUT Retrigger\\    Pulse to send the current||1
-  Cmn11=MAC, UID, and Data now, even when Data is empty.\\    Ignored unless||1
-  Cmn12=the socket is open.\\\\  STRING_INPUT Mac[17]\\    MAC in the outbound||1
-  Cmn13=packet. 12 hex digits, or 17 bytes with : or - separators.\\||4
-  Cmn14=Stored with colon separators. The timed announce waits until this||1
-  Cmn15=looks like a MAC.\\\\  STRING_INPUT UID[32]\\    Unique id in the||1
-  Cmn16=outbound packet. Letters, digits, hyphen, underscore, up to 32 bytes.
-  Cmn17=\\\\  STRING_INPUT Data[255]\\    Payload. A change sends a packet||1
-  Cmn18=when Data is non-empty and the socket is open.\\\\  DIGITAL_OUTPUT||1
-  Cmn19=Enable_FB\\    High while the listen socket is open on the broadcast||1
-  Cmn20=address.\\\\  DIGITAL_OUTPUT Packet_Rx\\    Pulses for 0.05 s after||1
-  Cmn21=an accepted packet has been written to Received_IP,\\    Received_MAC,||1
-  Cmn22=Received_UID, and Received_Data. Wire this to UDP Extract Data v2.
-  Cmn23=0.\\\\  STRING_OUTPUT Received_IP\\    Sender IP of the last accepted||1
-  Cmn24=packet.\\\\  STRING_OUTPUT Received_MAC\\    MAC parsed from the||1
-  Cmn25=last accepted packet, colon-separated when recognized.\\\\  STRING_OUTPUT||1
-  Cmn26=Received_UID\\    UID parsed from the last accepted packet.\\\\||1
-  Cmn27=||1STRING_OUTPUT Received_Data\\    Data parsed from the last accepted||1
-  Cmn28=packet, or the whole payload when the\\    packet is not a structured||1
-  Cmn29=MAC,UID,Data datagram.\\\\  INTEGER_PARAMETER UDP_Port\\    Port||1
-  Cmn30=for broadcast and receive (1024-65535, default 50001).\\\\  INTEGER_PARAMETER||1
-  Cmn31=Enforce_Format\\    0d = No enforcement (default). Clear the received||1
-  Cmn32=outputs, then fill the\\         fields that matched. If nothing||1
-  Cmn33=looks like a MAC or UID, Received_IP\\         and Received_Data||1
-  Cmn34=get the sender IP and the entire payload.\\    1d = Enforce MAC,UID,Data.
-  Cmn35=||1Any other datagram is ignored.\\\\  INTEGER_PARAMETER Announce_Interval\\
-  Cmn36=||4unitTime. While Enable is high, resend the current packet on||1
-  Cmn37=this period.\\    0s = off (Retrigger and a non-empty Data change||1
-  Cmn38=still send). Default 5s.\\    The first announce goes out as soon||1
-  Cmn39=as the socket is open and Mac is valid.\\    Maximum 600s.\\||4
-  Cmn40=Every processor running this module receives every announce. On||1
-  Cmn41=a network\\    of hundreds of processors, use 15s or 30s. 5s from||1
-  Cmn42=200 processors is about\\    40 datagrams a second at each processor.
-  Cmn43=\\\\  INTEGER_PARAMETER Reply\\    0d = Off (default). Leave this||1
-  Cmn44=off when many processors announce. The\\         broadcast already||1
-  Cmn45=tells every peer who you are. A reply to every\\         announce||1
-  Cmn46=would be one packet per pair.\\    1d = Unicast reply. Answer a||1
-  Cmn47=sender once, the first time that IP is seen,\\         then not||1
-  Cmn48=again until that IP has been silent for 60s. At most one\\||6
-  Cmn49=||3reply every 0.5 s. 128 senders are remembered; a sender past||1
-  Cmn50=that\\         gets no unicast and still hears the broadcast.\\||1
-  Cmn51=||8SIMPL+ has one destination per UDP socket, so the listen||1
-  Cmn52=socket is\\         pointed at the sender for that reply and then||1
-  Cmn53=restored to\\         255.255.255.255. A datagram in that gap can||1
-  Cmn54=be missed.\\\\\\Receive parsing (No enforcement) matches v1.3:\\
-  Cmn55=||21. Clear all four received outputs.\\  2. Write Received_IP when||1
-  Cmn56=the sender IP is known.\\  3. Full MAC,UID,Data fills MAC, UID,||1
-  Cmn57=and Data.\\  4. MAC but not UID: fill MAC and treat the remainder||1
-  Cmn58=as Data.\\  5. Otherwise Received_Data is the entire payload.\\\\
-  Cmn59=Own packets (payload equals what this module would send, or MAC||1
-  Cmn60=+ UID match)\\never update the outputs and never get a reply.\\\\
-  Cmn61=MAC shape: 12 hex digits, or 17 bytes as six hex pairs separated||1
-  Cmn62=by : or -.\\UID shape: 1-32 bytes, letters, digits, hyphen, or underscore.
-  Cmn63=\\\\-- VERSION HISTORY --\\v2.0  2026-10-19\\- Announce_Interval||1
-  Cmn64=heartbeat (0s off, default 5s). Use 15s or 30s when\\  hundreds||1
-  Cmn65=of processors share the port\\- Reply off by default. On answers||1
-  Cmn66=each new sender once, then waits through\\  60s of silence, and||1
-  Cmn67=sends at most one reply every 0.5 s\\- Packet_Rx pulses after the||1
-  Cmn68=four received strings are written\\- Re-open the socket if Enable||1
-  Cmn69=is high and the listen socket drops\\\\v1.3  2026-09-09\\- Prior||1
-  Cmn70=symbol, left in the tree unchanged\\
+  Cmn1=UDP Broadcast and Receive v2.0\\\\4-Series. This socket defaults||1
+  Cmn2=to UDP 50001.\\\\A CR or LF ends one received datagram. Two processor||1
+  Cmn3=announces have\\neither, so two of those can still arrive as one||1
+  Cmn4=buffer.\\\\Received strings and Enable_FB are written only when||1
+  Cmn5=the value changes.\\Packet_Rx still pulses for every accepted packet.
+  Cmn6=\\\\Reply uses the one SIMPL+ UDP socket. It is aimed at the sender,||1
+  Cmn7=then\\put back on 255.255.255.255. A datagram in that gap can be||1
+  Cmn8=missed.\\\\A stored MAC whose length is not 12 or 17 is published||1
+  Cmn9=as\\00:00:00:00:00:00. Own packets are dropped and are not answered.
+  Cmn10=\\\\Press F1 for UDP Beacon and Extract v2.0.html. That file is||1
+  Cmn11=also the\\help for UDP Extract Data v2.0. Leave it next to both||1
+  Cmn12=modules.\\\\-- VERSION HISTORY --\\v2.0  2026-10-19\\- 2026-11-03:
+  Cmn13=||1F1 opens UDP Beacon and Extract v2.0.html, shared with Extract\\
+  Cmn14=- 2026-11-02: CR or LF ends one received datagram, so a second copy\\
+  Cmn15=||2concatenated in SocketRxBuf is not stored in Received_Data\\-||1
+  Cmn16=2026-11-02: Received_* and Enable_FB update only when the value||1
+  Cmn17=changes\\- Announce_Interval heartbeat (0s off, default 5s). Use||1
+  Cmn18=15s or 30s when\\  hundreds of processors share the port\\- Reply||1
+  Cmn19=off by default. On answers each new sender once, then waits through\\
+  Cmn20=||260s of silence, and sends at most one reply every 0.5 s\\- Packet_Rx||1
+  Cmn21=pulses after the four received strings are written\\- Re-open the||1
+  Cmn22=socket if Enable is high and the listen socket drops\\\\v1.3  2026-
+  Cmn23=09-09\\- Prior symbol, left in the tree unchanged\\
 [END]
 [BEGIN]
   ObjTp=Symbol
@@ -165,7 +118,7 @@
   SymbolTree=46
   UserSymTreeName=TCP/IP
   Hint=
-  PdfHelp=
+  PdfHelp=UDP Beacon and Extract v2.0.html
   HelpID= 
   Render=4
   Smpl-C=16

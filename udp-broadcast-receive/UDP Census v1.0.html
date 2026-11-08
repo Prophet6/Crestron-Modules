@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UDP Census v1.0</title>
+<style>
+  :root {
+    --ink: #14202b;
+    --muted: #4d6170;
+    --line: #c9d7e2;
+    --paper: #e8f0f5;
+    --card: #f7fbfd;
+    --blue: #1a4f73;
+    --blue-soft: #d5e6f2;
+    --header: #10202c;
+    --ok: #14624c;
+    --warn: #8a4b12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background:
+      radial-gradient(1200px 280px at 10% -40%, rgba(143, 196, 224, 0.35), transparent 60%),
+      var(--header);
+    color: #e7f2f8;
+    padding: 2.6rem 1.5rem 2.1rem;
+  }
+  header.banner .wrap, main, nav.toc, footer { max-width: 54rem; margin: 0 auto; }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #8ec4e0;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.5rem;
+    line-height: 1.12;
+    margin: 0 0 0.7rem;
+  }
+  header.banner p { margin: 0; max-width: 42rem; color: #d5e4ee; }
+  .samples { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.3rem; }
+  .samples span {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(180, 214, 232, 0.35);
+    border-radius: 999px;
+    padding: 0.28rem 0.75rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.82rem;
+    color: #f4fbff;
+  }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #f7fbfd;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  nav.toc a { color: var(--blue); text-decoration: none; font-size: 0.92rem; }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 3rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.3rem 0 0.6rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--blue); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--blue); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8f1; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--blue-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  table.symbol { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.86rem; }
+  table.symbol th { font-family: "Segoe UI", Calibri, sans-serif; }
+  table.symbol td { width: 33%; }
+  table.symbol td.pad { background: #e7eef4; }
+  code, .sig { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.9em; }
+  .sig { color: var(--ink); font-weight: 600; }
+  pre.packet {
+    background: var(--header);
+    color: #e7f2f8;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.28rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  footer { padding: 0 1.5rem 2.6rem; color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · 4-Series · TCP/IP</p>
+    <h1>UDP Census v1.0</h1>
+    <p>One symbol answers a poll, keeps the list of processors that answered, or both. The list is on the symbol. Show_Index picks the row you are looking at.</p>
+    <div class="samples">
+      <span>?POLL</span>
+      <span>!HERE,MAC,UID,Data</span>
+      <span>512 rows</span>
+    </div>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#modes">Modes</a>
+  <a href="#poll">A poll</a>
+  <a href="#symbol">Symbol</a>
+  <a href="#signals">Signals</a>
+  <a href="#rows">Rows</a>
+  <a href="#notices">Notices</a>
+  <a href="#limits">Limits</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead"><span class="sig">UDP Census v1.0</span> is the presence list for 4-Series processors on one subnet. Drop it on every processor. The collector broadcasts <span class="sig">?POLL</span>. Each processor that is set to answer unicasts <span class="sig">!HERE,MAC,UID,Data</span> back. The collector stores one row per processor, including itself.</p>
+  <div class="warn">
+    <p>This symbol listens on UDP port 50002 unless you change the port.</p>
+  </div>
+  <div class="note">
+    <p><span class="sig">UdpCensus_v1.clz</span> has to sit in the same folder as this module. Compiling the SIMPL+ file does not rebuild that library. After a change to the C# source, build the library, copy the <span class="sig">.clz</span> here, then compile the SIMPL program.</p>
+  </div>
+
+  <h2 id="modes">Modes</h2>
+  <p>Respond and Discover can stay unwired. The parameters then decide. The first time either digital changes, that digital takes over and the parameter is no longer used.</p>
+  <div class="grid">
+    <article>
+      <h3>Answer only</h3>
+      <p>Respond_Mode is Answer polls. Discover_Mode is Off. Hold Enable. This processor replies to a poll and does not keep a list.</p>
+    </article>
+    <article>
+      <h3>Database only</h3>
+      <p>Discover_Mode is Keep the database. Respond_Mode is Off. This processor polls and stores the answers. It does not answer anyone else's poll.</p>
+    </article>
+    <article>
+      <h3>Both</h3>
+      <p>Both modes on. This processor polls, stores the answers, and still answers a poll from someone else.</p>
+    </article>
+  </div>
+
+  <h2 id="poll">A poll</h2>
+  <p>With Discover on and a Poll_Interval other than 0s, the first <span class="sig">?POLL</span> goes out as soon as the socket is open. The next one follows the interval. A rising edge on Poll runs one census even when Discover is off. That pulse does not restart the interval clock.</p>
+  <p>The poll window opens when the poll goes out. <span class="sig">Polling_FB</span> is high for that window. Answers that arrive while it is low are ignored. When the window closes, a row that was not seen is removed.</p>
+  <pre class="packet">Collector                          Every other processor
+?POLL  ── broadcast ─────────────►  receives ?POLL
+                                   !HERE,MAC,UID,Data
+         ◄── unicast to collector ─</pre>
+  <pre class="packet">?POLL
+!HERE,C4:42:68:6D:61:D0,room-12,podium</pre>
+  <p>The row key is the UID. When the UID is empty, the key is the MAC. An all-zero MAC is not used as a key. When both are empty, the key is the IP address. UID is kept to 32 bytes and Data to 128. The collector inserts itself as the first row at the start of each poll, already marked seen, so a processor that only talks to itself still has a count of 1.</p>
+
+  <h2 id="symbol">Symbol</h2>
+  <p>The symbol is three columns. A shaded cell is empty on purpose. Do not move a signal onto another row. Related signals share a row.</p>
+  <table class="symbol">
+    <thead><tr><th>Input</th><th>Parameter</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td class="pad"></td><td>UDP_Port</td><td class="pad"></td></tr>
+      <tr><td>Enable</td><td class="pad"></td><td>Enable_FB</td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td>Poll</td><td>Poll_Window</td><td>Polling_FB</td></tr>
+      <tr><td class="pad"></td><td>Poll_Interval</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td>Discover</td><td>Discover_Mode</td><td class="pad"></td></tr>
+      <tr><td>Respond</td><td>Respond_Mode</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td>Answered_FB</td></tr>
+      <tr><td>Show_Index</td><td class="pad"></td><td>Count</td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td>Processor_IP</td></tr>
+      <tr><td>Mac</td><td class="pad"></td><td>Processor_MAC</td></tr>
+      <tr><td>UID</td><td class="pad"></td><td>Processor_UID</td></tr>
+      <tr><td>Data</td><td class="pad"></td><td>Processor_Data</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="signals">Signals</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>Enable</td><td>Latched. High opens the listen socket on the LAN adapter. Low closes it. The socket stays open while replies come in. A send does not retarget it.</td></tr>
+      <tr><td>Enable_FB</td><td>High while the socket is open.</td></tr>
+      <tr><td>Poll</td><td>Rising edge runs one census. Works while Discover is off, as long as the socket is open.</td></tr>
+      <tr><td>Polling_FB</td><td>High from the poll until Poll_Window closes.</td></tr>
+      <tr><td>Discover</td><td>High keeps the database and polls on Poll_Interval. Once this digital changes, it overrides Discover_Mode.</td></tr>
+      <tr><td>Respond</td><td>High answers <span class="sig">?POLL</span>. Once this digital changes, it overrides Respond_Mode.</td></tr>
+      <tr><td>Answered_FB</td><td>High when the row on the Processor outputs was seen in the poll that is open, or is still in the list after the window closes. The rows that remain were seen.</td></tr>
+      <tr><td>Show_Index</td><td>Which saved row is copied to the Processor outputs. 1 is the first row.</td></tr>
+      <tr><td>Count</td><td>How many rows are stored. Maximum 512.</td></tr>
+      <tr><td>Mac, UID, Data</td><td>This processor's identity in the <span class="sig">!HERE</span> it sends, and in its own row. Mac is 17 bytes. UID is 32. Data is 128.</td></tr>
+      <tr><td>Processor_IP, _MAC, _UID, _Data</td><td>The row selected by Show_Index. Each output is written only when its value changes.</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Range</th></tr></thead>
+    <tbody>
+      <tr><td>UDP_Port</td><td>50002</td><td>1024–65535. Anything else becomes 50002.</td></tr>
+      <tr><td>Poll_Window</td><td>3s</td><td>0.5s–30s. How long answers are accepted. Use 3s or more when hundreds of processors can reply. A value of 0 in the library becomes 3s.</td></tr>
+      <tr><td>Poll_Interval</td><td>30s</td><td>0s–600s. 0s polls only on the Poll pulse. Any other period also polls while Discover is active. A non-zero interval below 1s is raised to 1s.</td></tr>
+      <tr><td>Discover_Mode</td><td>Off</td><td>Off, or Keep the database. Used while the Discover digital is unwired.</td></tr>
+      <tr><td>Respond_Mode</td><td>Answer polls</td><td>Off, or Answer polls. Used while the Respond digital is unwired.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="rows">Rows</h2>
+  <p>Show_Index is a list position, not a fixed slot for this processor. This processor is inserted first, so it is row 1 for as long as its UID stays the same. Changing the UID stores it as a new row and can move it off position 1.</p>
+  <p>At startup, an analog value of 0 is read once as row 1. After Show_Index has moved, 0 blanks the four Processor outputs and drops Answered_FB. Count does not change. An index past Count does the same.</p>
+  <p>Count, Enable_FB, Polling_FB, Answered_FB, and the four Processor strings update only when the new value differs from the last one written.</p>
+
+  <h2 id="notices">Notices</h2>
+  <p>The error log stays quiet except for three lines. Socket and send failures still use <span class="sig">ErrorLog.Error</span>. An answer does not move a Debugger signal. The notice is the proof that <span class="sig">!HERE</span> was sent.</p>
+  <table>
+    <thead><tr><th>Notice</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sig">UdpCensus: answered 192.168.1.10:50002</span></td><td>This processor sent <span class="sig">!HERE</span> to that address.</td></tr>
+      <tr><td><span class="sig">UdpCensus: added room-12 192.168.1.20</span></td><td>A row was created. An update of a row that is already stored is silent.</td></tr>
+      <tr><td><span class="sig">UdpCensus: removed room-12 192.168.1.20</span></td><td>A row was dropped because it missed the poll window.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="limits">Limits</h2>
+  <ul>
+    <li>4-Series only. The library is <span class="sig">UdpCensus_v1</span>.</li>
+    <li>512 rows. A row past that is not stored.</li>
+    <li>Answers are accepted only while Polling_FB is high.</li>
+    <li>The listen socket binds the LAN adapter and accepts any sender. After every send it is set back to accept any address.</li>
+    <li>A <span class="sig">!HERE</span> that arrives stuck to the front of a <span class="sig">?POLL</span> is still found.</li>
+    <li>Help requests are not part of this symbol.</li>
+  </ul>
+
+  <h2 id="versions">Versions</h2>
+  <p>v1.0, 2026-10-20. One symbol polls, answers, or both, and keeps an indexed list of the processors that answered. Later edits in the same version: the symbol rows were grouped and left in place, the row selector was named Show_Index, a discover poll is sent as soon as the socket is open, the error log notes an answer and a row only when that row is added or removed, and an output is written only when its value changes. Show_Index shares the Count row. A blank row sits above Processor_IP. UDP_Port defaults to 50002. F1 opens this file.</p>
+  <p>The full version list is in the SIMPL+ help on the symbol.</p>
+</main>
+<footer>
+  <p>UDP Census v1.0. Press F1 on the symbol in SIMPL Windows. Leave this file next to the module.</p>
+</footer>
+</body>
+</html>

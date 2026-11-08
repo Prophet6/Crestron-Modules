@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B7E2C4A1-5F83-4D16-8C90-1A6E3D8B0F52}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IvCamPtz</RootNamespace>
+    <AssemblyName>IvCamPtz_v1</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SimplSharpAutoUpdateInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpAutoUpdateInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpCloudClientInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpCloudClientInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpCryptographyInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpCryptographyInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpCustomAttributesInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpCustomAttributesInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpCWSHelperInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpCWSHelperInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpExchangeWebServices">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpExchangeWebServices.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpHelperInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpHelperInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpNewtonsoft">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpNewtonsoft.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpOnvifInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpOnvifInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpProgrammingInterfaces">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpProgrammingInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpReflectionInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpReflectionInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpSQLHelperInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpSQLHelperInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplSharpTimerEventInterface">
+      <HintPath>..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\lib\net47\SimplSharpTimerEventInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IvCamLink.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\build\Crestron.SimplSharp.SDK.Library.targets" Condition="Exists('..\..\..\dynamic-tcp-client\Dynamic TCP Client\packages\Crestron.SimplSharp.SDK.Library.2.21.274\build\Crestron.SimplSharp.SDK.Library.targets')" />
+</Project>

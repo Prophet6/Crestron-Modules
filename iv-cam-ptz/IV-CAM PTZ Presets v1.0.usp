@@ -1,0 +1,278 @@
+#HELP_BEGIN
+IV-CAM PTZ Presets v1.0
+
+Expandable buttons for the presets on IV-CAM PTZ v1.0.
+
+Press[n] recalls camera preset n. Holding it for Hold_Time stores that preset.
+Press[1] is preset 1. The symbol starts with one button and expands to 32.
+
+One preset runs at a time. A new press cancels the press already in progress.
+Releasing the cancelled button does nothing.
+
+Press_FB[n] follows Press[n]. After a store it drops for Blink_Time, then
+follows the button again. That drop is the store confirmation.
+
+Preset_Trigger recalls preset 0 through 255 when the analog changes.
+The value sitting on it at startup waits for the next change.
+Send a different number before sending the same number again.
+A value above 255 is sent as 255.
+Preset 0 is a camera memory. Home on IV-CAM PTZ is a different command.
+
+Wire this symbol to IV-CAM PTZ v1.0:
+  Store   -> Store_Preset
+  Recall  -> Recall_Preset
+  Preset  -> Preset
+
+Store and Recall pulse on each recall or store. Preset changes to the
+preset number before that pulse.
+
+Hold_Time default is 3s, range 0.5s to 10s.
+Blink_Time default is 0.5s, range 0s to 5s. At 0s, Press_FB stays with
+the button through the store.
+
+Rows:
+  1  Hold_Time
+  2  Blink_Time
+  3  Store
+  4  Recall
+  5  blank
+  6+ Press[n] beside Press_FB[n]
+  blank
+  Preset_Trigger beside Preset
+  Adding a button moves the blank row and Preset_Trigger down.
+  Hold_Time, Blink_Time, Store, and Recall stay on the first rows.
+
+v1.0  2026-11-06
+- Press recalls, hold stores, feedback drops to confirm a store
+- One wait. A new press cancels the press already in progress
+- Preset_Trigger recalls by number
+#HELP_END
+
+#HINT "Press recalls an IV-CAM preset. Hold stores it."
+#CATEGORY "19" // Camera
+#DEFAULT_VOLATILE
+#ENABLE_DYNAMIC
+#ENABLE_STACK_CHECKING
+#DIGITAL_EXPAND InputsWithOutputs
+
+#DEFINE_CONSTANT MaxPresets 32
+#DEFINE_CONSTANT PhaseHold 1
+#DEFINE_CONSTANT PhaseBlink 2
+
+/*
+	Row 1   Hold_Time
+	Row 2   Blink_Time
+	Row 3                             Store
+	Row 4                             Recall
+	Row 5   blank
+	Rows 6+ Press[n]                  Press_FB[n]
+	blank
+	        Preset_Trigger            Preset
+	One wait, PressWait. A new press cancels it and owns the timer.
+	Release during the hold cancels it and recalls. When it expires,
+	the preset is stored and the same wait drops feedback for Blink_Time.
+	Hold_Time and Blink_Time are hundredths, the same unit as Wait.
+*/
+
+DIGITAL_INPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, Press[MaxPresets,1];
+DIGITAL_OUTPUT	_SKIP_, _SKIP_, Store, Recall, _SKIP_, Press_FB[MaxPresets,1];
+
+ANALOG_INPUT	_SKIP_, Preset_Trigger;
+ANALOG_OUTPUT	_SKIP_, Preset;
+
+INTEGER_PARAMETER	Hold_Time, Blink_Time;
+
+#BEGIN_PARAMETER_PROPERTIES Hold_Time
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0.5s, 10.0s;
+	propDefaultValue =		3.0s;
+	propShortDescription =	"Hold this long to store";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		How long Press[n] stays high before that preset is stored.
+		A release before this recalls the preset.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Blink_Time
+	propValidUnits =		unitTime;
+	propDefaultUnit =		unitTime;
+	propBounds =			0.0s, 5.0s;
+	propDefaultValue =		0.5s;
+	propShortDescription =	"How long feedback drops after a store";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		After a store, Press_FB[n] stays low for this long, then follows
+		the button again. 0s keeps the feedback on the button.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+INTEGER Ready, Active, Waiting, NextSpan, Down[MaxPresets];
+
+FUNCTION ShowFb (INTEGER i) {
+	INTEGER level;
+
+	If (IsSignalDefined(Press_FB[i]) = 0)
+		Return;
+	If (Waiting = PhaseBlink) {
+		If (Active = i)
+			level = 0;
+		Else If (Down[i] = 1)
+			level = 1;
+		Else
+			level = 0;
+	}
+	Else If (Down[i] = 1)
+		level = 1;
+	Else
+		level = 0;
+	If (Press_FB[i] <> level)
+		Press_FB[i] = level;
+}
+
+FUNCTION PulseCamera (INTEGER storing) {
+	INTEGER fell;
+
+	fell = 0;
+	If (Store <> 0) {
+		Store = 0;
+		fell = 1;
+	}
+	If (Recall <> 0) {
+		Recall = 0;
+		fell = 1;
+	}
+	If (fell = 1)
+		ProcessLogic();
+	If (storing = 1)
+		Store = 1;
+	Else
+		Recall = 1;
+	ProcessLogic();
+	If (storing = 1)
+		Store = 0;
+	Else
+		Recall = 0;
+}
+
+FUNCTION Drive (INTEGER n, INTEGER storing) {
+	If (n > 255)
+		n = 255;
+	If (Preset <> n)
+		Preset = n;
+	PulseCamera(storing);
+}
+
+FUNCTION OnPressWait () {
+	INTEGER n;
+
+	NextSpan = 0;
+	n = Active;
+	If (Waiting = PhaseHold) {
+		Waiting = 0;
+		Active = 0;
+		If (n < 1)
+			Return;
+		Drive(n, 1);
+		If (Blink_Time = 0) {
+			ShowFb(n);
+			Return;
+		}
+		If (Waiting <> 0)
+			Return;
+		Active = n;
+		Waiting = PhaseBlink;
+		ShowFb(n);
+		NextSpan = Blink_Time;
+	}
+	Else If (Waiting = PhaseBlink) {
+		Waiting = 0;
+		Active = 0;
+		If (n >= 1)
+			ShowFb(n);
+	}
+}
+
+FUNCTION ArmPressWait (INTEGER span) {
+	Wait (span, PressWait) {
+		OnPressWait();
+		If (NextSpan <> 0)
+			ArmPressWait(NextSpan);
+	}
+}
+
+FUNCTION CancelPressWait () {
+	CancelWait(PressWait);
+}
+
+FUNCTION ClearActive () {
+	INTEGER old;
+
+	If (Active = 0)
+		Return;
+	old = Active;
+	CancelPressWait();
+	Active = 0;
+	Waiting = 0;
+	NextSpan = 0;
+	ShowFb(old);
+}
+
+PUSH Press {
+	INTEGER i;
+
+	If (Ready = 0)
+		Return;
+	i = GetLastModifiedArrayIndex();
+	If (i < 1)
+		Return;
+	If (i > MaxPresets)
+		Return;
+	If (Active <> 0)
+		ClearActive();
+	Down[i] = 1;
+	Active = i;
+	Waiting = PhaseHold;
+	ShowFb(i);
+	ArmPressWait(Hold_Time);
+}
+
+RELEASE Press {
+	INTEGER i;
+
+	If (Ready = 0)
+		Return;
+	i = GetLastModifiedArrayIndex();
+	If (i < 1)
+		Return;
+	If (i > MaxPresets)
+		Return;
+	If (Down[i] = 0)
+		Return;
+	Down[i] = 0;
+	If (Active = i) {
+		If (Waiting = PhaseHold) {
+			CancelPressWait();
+			Active = 0;
+			Waiting = 0;
+			NextSpan = 0;
+			Drive(i, 0);
+		}
+	}
+	ShowFb(i);
+}
+
+CHANGE Preset_Trigger {
+	INTEGER n;
+
+	If (Ready = 0)
+		Return;
+	If (Waiting = PhaseHold)
+		ClearActive();
+	n = Preset_Trigger;
+	Drive(n, 0);
+}
+
+FUNCTION Main() {
+	WaitForInitializationComplete();
+	Ready = 1;
+}

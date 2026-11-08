@@ -1,0 +1,832 @@
+#HELP_BEGIN
+IV-CAM PTZ v1.0
+
+Press F1 for IV-CAM PTZ v1.0.html. Leave that file next to this module.
+
+A live IV-CAM-P12 accepted address-1 home on TCP port 5500.
+
+v1.0  2026-11-03
+- Raw VISCA pan, tilt, zoom, and presets
+- Simpl# socket on TCP port 5500
+- IP_Address and IP_Address_Override
+- Enable high connects. Enable low disconnects.
+
+v1.0  2026-11-07
+- Wake is power on, 81 01 04 00 02 FF. Privacy toggles standby and wake.
+- Connect sends a power inquiry. Awake_FB or Privacy_FB follows the reply.
+- A PTZ press in standby sends wake. The move runs only if that button is still held when the camera is awake and one second has passed.
+#HELP_END
+
+/* COMPILER DIRECTIVES */
+
+#HELP_PDF_FILE "IV-CAM PTZ v1.0.html"
+#HINT "1 Beyond VISCA pan, tilt, zoom, and presets"
+#CATEGORY "19" // Camera
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#USER_SIMPLSHARP_LIBRARY "IvCamPtz_v1"
+
+/*
+	Symbol grid. Do not restack.
+	Row 1 is Enable and Connected_FB.
+	Row 2 is Camera_Address.
+	Wake and Privacy share rows with Awake_FB and Privacy_FB.
+	Moving_FB shares the row with Tilt_Up.
+	Zooming_FB shares the row with Zoom_In.
+	Store_Preset and Recall_Preset share rows with their feedback.
+	Pan_Speed, Tilt_Speed, and Zoom_Speed share rows with the overrides and feedback.
+	Command shares the row with Status.
+	IP_Address_Override shares the row with IP_Address.
+*/
+
+/* INPUTS AND OUTPUTS */
+
+DIGITAL_INPUT	Enable, _SKIP_,
+				Wake, Privacy,
+				_SKIP_,
+				Tilt_Up, Tilt_Down, Pan_Left, Pan_Right,
+				Up_Left, Up_Right, Down_Left, Down_Right,
+				_SKIP_,
+				Zoom_In, Zoom_Out,
+				_SKIP_,
+				Home, Stop,
+				_SKIP_,
+				Store_Preset, Recall_Preset,
+				_SKIP_;
+DIGITAL_OUTPUT	Connected_FB, _SKIP_,
+				Awake_FB, Privacy_FB,
+				_SKIP_,
+				Moving_FB, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_, _SKIP_, _SKIP_, _SKIP_,
+				_SKIP_,
+				Zooming_FB, _SKIP_,
+				_SKIP_,
+				_SKIP_, _SKIP_,
+				_SKIP_,
+				Preset_Stored_FB, Preset_Recalled_FB,
+				_SKIP_;
+
+ANALOG_INPUT	Pan_Speed_Override, Tilt_Speed_Override, Zoom_Speed_Override, Preset,
+				_SKIP_;
+ANALOG_OUTPUT	Pan_Speed_FB, Tilt_Speed_FB, Zoom_Speed_FB, Last_Preset,
+				_SKIP_;
+
+STRING_INPUT	Command[200], IP_Address_Override[64];
+STRING_OUTPUT	Status;
+
+/* PARAMETERS */
+
+INTEGER_PARAMETER	_SKIP_,
+					Camera_Address,
+					_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_,
+					_SKIP_,
+					Pan_Speed, Tilt_Speed, Zoom_Speed,
+					_SKIP_, _SKIP_, _SKIP_;
+
+STRING_PARAMETER	IP_Address[64];
+
+#BEGIN_PARAMETER_PROPERTIES IP_Address
+	propValidUnits = unitString;
+	propDefaultUnit = unitString;
+	propDefaultValue = "0.0.0.0";
+	propShortDescription = "Camera IP. 0.0.0.0 does not connect.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Camera_Address
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propDefaultValue = 1d;
+	propList = {1d, "1"},
+				{2d, "2"},
+				{3d, "3"},
+				{4d, "4"},
+				{5d, "5"},
+				{6d, "6"},
+				{7d, "7"};
+	propShortDescription = "VISCA address. Match the camera OSD address.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Pan_Speed
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propBounds = 1d, 24d;
+	propDefaultValue = 12d;
+	propShortDescription = "Pan speed until Pan_Speed_Override arrives. 1 is slow, 24 is fast.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Tilt_Speed
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propBounds = 1d, 20d;
+	propDefaultValue = 10d;
+	propShortDescription = "Tilt speed until Tilt_Speed_Override arrives. 1 is slow, 20 is fast.";
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Zoom_Speed
+	propValidUnits = unitDecimal;
+	propDefaultUnit = unitDecimal;
+	propBounds = 0d, 7d;
+	propDefaultValue = 4d;
+	propShortDescription = "Zoom speed until Zoom_Speed_Override arrives. 0 is slow, 7 is fast.";
+#END_PARAMETER_PROPERTIES
+
+/* GLOBALS */
+
+INTEGER Ready, PanLatch, TiltLatch, ZoomLatch, UsePan, UseTilt, UseZoom,
+		LastPanFb, LastTiltFb, LastZoomFb, MovingNow, ZoomingNow, LastPresetOut,
+		IpLatch, Hooked, PowerAsked, Waking, WakeDone, MinDone;
+STRING Mark[2], PrevStatus[80], Addr[64], RxHold[400];
+IvCamLink Link;
+
+/* FUNCTIONS */
+
+FUNCTION SetStatus (STRING msg) {
+	IF (msg <> PrevStatus) {
+		PrevStatus = msg;
+		Status = msg;
+	}
+}
+
+FUNCTION SetMoving (INTEGER moving) {
+	IF (moving <> MovingNow) {
+		MovingNow = moving;
+		Moving_FB = moving;
+	}
+}
+
+FUNCTION SetZooming (INTEGER zooming) {
+	IF (zooming <> ZoomingNow) {
+		ZoomingNow = zooming;
+		Zooming_FB = zooming;
+	}
+}
+
+FUNCTION ResolveSpeeds () {
+	INTEGER p, t, z;
+	IF (PanLatch = 1) {
+		p = Pan_Speed_Override;
+	}
+	else {
+		p = Pan_Speed;
+	}
+	IF (p < 1) {
+		p = 1;
+	}
+	IF (p > 24) {
+		p = 24;
+	}
+	IF (TiltLatch = 1) {
+		t = Tilt_Speed_Override;
+	}
+	else {
+		t = Tilt_Speed;
+	}
+	IF (t < 1) {
+		t = 1;
+	}
+	IF (t > 20) {
+		t = 20;
+	}
+	IF (ZoomLatch = 1) {
+		z = Zoom_Speed_Override;
+	}
+	else {
+		z = Zoom_Speed;
+	}
+	IF (z > 7) {
+		z = 7;
+	}
+	UsePan = p;
+	UseTilt = t;
+	UseZoom = z;
+	IF (p <> LastPanFb) {
+		LastPanFb = p;
+		Pan_Speed_FB = p;
+	}
+	IF (t <> LastTiltFb) {
+		LastTiltFb = t;
+		Tilt_Speed_FB = t;
+	}
+	IF (z <> LastZoomFb) {
+		LastZoomFb = z;
+		Zoom_Speed_FB = z;
+	}
+}
+
+FUNCTION Transmit (STRING packet) {
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	Link.Send(packet);
+}
+
+FUNCTION SendBody (STRING body) {
+	STRING packet[24];
+	INTEGER a;
+	IF (Ready = 0) {
+		RETURN;
+	}
+	a = Camera_Address;
+	IF ((a < 1) || (a > 7)) {
+		a = 1;
+	}
+	packet = CHR(128 + a);
+	packet = packet + body;
+	packet = packet + CHR(255);
+	Transmit(packet);
+}
+
+FUNCTION SetPower (INTEGER awake) {
+	IF (awake = 1) {
+		IF (Awake_FB <> 1)
+			Awake_FB = 1;
+		IF (Privacy_FB <> 0)
+			Privacy_FB = 0;
+	}
+	else {
+		IF (Awake_FB <> 0)
+			Awake_FB = 0;
+		IF (Privacy_FB <> 1)
+			Privacy_FB = 1;
+	}
+}
+
+FUNCTION AskPower () {
+	STRING body[8];
+	body = CHR(9);
+	body = body + CHR(4);
+	body = body + CHR(0);
+	PowerAsked = 1;
+	SendBody(body);
+}
+
+FUNCTION ApplyPanTilt () {
+	INTEGER heldL, heldR, heldU, heldD, pan, tilt, moving;
+	STRING body[12];
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	ResolveSpeeds();
+	heldL = 0;
+	heldR = 0;
+	heldU = 0;
+	heldD = 0;
+	IF ((Pan_Left = 1) || (Up_Left = 1) || (Down_Left = 1)) {
+		heldL = 1;
+	}
+	IF ((Pan_Right = 1) || (Up_Right = 1) || (Down_Right = 1)) {
+		heldR = 1;
+	}
+	IF ((Tilt_Up = 1) || (Up_Left = 1) || (Up_Right = 1)) {
+		heldU = 1;
+	}
+	IF ((Tilt_Down = 1) || (Down_Left = 1) || (Down_Right = 1)) {
+		heldD = 1;
+	}
+	pan = 3;
+	tilt = 3;
+	IF ((heldL = 1) && (heldR = 0)) {
+		pan = 1;
+	}
+	else if ((heldR = 1) && (heldL = 0)) {
+		pan = 2;
+	}
+	IF ((heldU = 1) && (heldD = 0)) {
+		tilt = 1;
+	}
+	else if ((heldD = 1) && (heldU = 0)) {
+		tilt = 2;
+	}
+	body = CHR(1);
+	body = body + CHR(6);
+	body = body + CHR(1);
+	body = body + CHR(UsePan);
+	body = body + CHR(UseTilt);
+	body = body + CHR(pan);
+	body = body + CHR(tilt);
+	SendBody(body);
+	IF ((pan = 3) && (tilt = 3)) {
+		moving = 0;
+		SetStatus("Stop");
+	}
+	else {
+		moving = 1;
+		IF ((pan = 1) && (tilt = 1)) {
+			SetStatus("Up left");
+		}
+		else if ((pan = 2) && (tilt = 1)) {
+			SetStatus("Up right");
+		}
+		else if ((pan = 1) && (tilt = 2)) {
+			SetStatus("Down left");
+		}
+		else if ((pan = 2) && (tilt = 2)) {
+			SetStatus("Down right");
+		}
+		else if (tilt = 1) {
+			SetStatus("Up");
+		}
+		else if (tilt = 2) {
+			SetStatus("Down");
+		}
+		else if (pan = 1) {
+			SetStatus("Left");
+		}
+		else if (pan = 2) {
+			SetStatus("Right");
+		}
+	}
+	SetMoving(moving);
+}
+
+FUNCTION ApplyZoom () {
+	STRING body[8];
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	ResolveSpeeds();
+	body = CHR(1);
+	body = body + CHR(4);
+	body = body + CHR(7);
+	IF ((Zoom_In = 1) && (Zoom_Out = 0)) {
+		body = body + CHR(32 + UseZoom);
+		SetZooming(1);
+		SetStatus("Zoom in");
+	}
+	else if ((Zoom_Out = 1) && (Zoom_In = 0)) {
+		body = body + CHR(48 + UseZoom);
+		SetZooming(1);
+		SetStatus("Zoom out");
+	}
+	else {
+		body = body + CHR(0);
+		SetZooming(0);
+		SetStatus("Zoom stop");
+	}
+	SendBody(body);
+}
+
+FUNCTION SendManual () {
+	STRING packet[200];
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	IF (LEN(Command) = 0) {
+		RETURN;
+	}
+	packet = Command;
+	Transmit(packet);
+	SetStatus("Command");
+}
+
+FUNCTION SendFixed (STRING body, STRING msg) {
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	SendBody(body);
+	SetStatus(msg);
+}
+
+FUNCTION SendPreset (INTEGER mode) {
+	INTEGER n;
+	STRING body[8], msg[40];
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	n = Preset;
+	IF (n > 255) {
+		n = 255;
+	}
+	body = CHR(1);
+	body = body + CHR(4);
+	body = body + CHR(63);
+	body = body + CHR(mode);
+	body = body + CHR(n);
+	SendBody(body);
+	IF (n <> LastPresetOut) {
+		LastPresetOut = n;
+		Last_Preset = n;
+	}
+	IF (mode = 1) {
+		IF (Preset_Stored_FB <> 1) {
+			Preset_Stored_FB = 1;
+		}
+		IF (Preset_Recalled_FB <> 0) {
+			Preset_Recalled_FB = 0;
+		}
+		MAKESTRING (msg, "Preset %u stored", n);
+	}
+	else {
+		IF (Preset_Recalled_FB <> 1) {
+			Preset_Recalled_FB = 1;
+		}
+		IF (Preset_Stored_FB <> 0) {
+			Preset_Stored_FB = 0;
+		}
+		MAKESTRING (msg, "Preset %u recalled", n);
+	}
+	SetStatus(msg);
+}
+
+FUNCTION SendWake () {
+	STRING body[8];
+	body = CHR(1);
+	body = body + CHR(4);
+	body = body + CHR(0);
+	body = body + CHR(2);
+	SendFixed(body, "Wake");
+}
+
+FUNCTION SendPrivacyCmd () {
+	STRING body[8];
+	body = CHR(1);
+	body = body + CHR(4);
+	body = body + CHR(0);
+	body = body + CHR(3);
+	SendFixed(body, "Privacy");
+}
+
+FUNCTION SendHome () {
+	STRING body[8];
+	body = CHR(1);
+	body = body + CHR(6);
+	body = body + CHR(4);
+	SendFixed(body, "Home");
+}
+
+INTEGER_FUNCTION PanHeld () {
+	IF (Tilt_Up = 1)
+		RETURN (1);
+	IF (Tilt_Down = 1)
+		RETURN (1);
+	IF (Pan_Left = 1)
+		RETURN (1);
+	IF (Pan_Right = 1)
+		RETURN (1);
+	IF (Up_Left = 1)
+		RETURN (1);
+	IF (Up_Right = 1)
+		RETURN (1);
+	IF (Down_Left = 1)
+		RETURN (1);
+	IF (Down_Right = 1)
+		RETURN (1);
+	RETURN (0);
+}
+
+INTEGER_FUNCTION StillHeld () {
+	IF (PanHeld() = 1)
+		RETURN (1);
+	IF ((Zoom_In = 1) || (Zoom_Out = 1))
+		RETURN (1);
+	IF (Home = 1)
+		RETURN (1);
+	IF ((Store_Preset = 1) || (Recall_Preset = 1))
+		RETURN (1);
+	RETURN (0);
+}
+
+FUNCTION TryDeferred () {
+	IF ((Waking = 0) || (WakeDone = 0) || (MinDone = 0))
+		RETURN;
+	Waking = 0;
+	WakeDone = 0;
+	MinDone = 0;
+	IF (PanHeld() = 1)
+		ApplyPanTilt();
+	IF ((Zoom_In = 1) || (Zoom_Out = 1))
+		ApplyZoom();
+	IF (Home = 1)
+		SendHome();
+	IF (Store_Preset = 1)
+		SendPreset(1);
+	IF (Recall_Preset = 1)
+		SendPreset(2);
+}
+
+FUNCTION ArmWakeWait () {
+	Wait (100, WakeHold) {
+		MinDone = 1;
+		IF ((Waking = 1) && (WakeDone = 0))
+			AskPower();
+		TryDeferred();
+	}
+}
+
+FUNCTION CancelWakeWait () {
+	CancelWait(WakeHold);
+}
+
+FUNCTION CancelDeferred () {
+	IF (Waking = 0)
+		RETURN;
+	Waking = 0;
+	WakeDone = 0;
+	MinDone = 0;
+	CancelWakeWait();
+}
+
+INTEGER_FUNCTION DeferMotion () {
+	IF ((Ready = 0) || (Enable = 0))
+		RETURN (1);
+	IF (Waking = 1)
+		RETURN (1);
+	IF (Privacy_FB = 0)
+		RETURN (0);
+	SendWake();
+	Waking = 1;
+	WakeDone = 0;
+	MinDone = 0;
+	ArmWakeWait();
+	RETURN (1);
+}
+
+FUNCTION ParsePacket (STRING pkt) {
+	INTEGER n, kind, err, b2, b3;
+	n = LEN(pkt);
+	IF (n < 3) {
+		RETURN;
+	}
+	b2 = BYTE(pkt, 2);
+	kind = b2 / 16;
+	IF ((n = 4) && (b2 = 80) && ((PowerAsked = 1) || (Waking = 1))) {
+		b3 = BYTE(pkt, 3);
+		IF (b3 = 2) {
+			PowerAsked = 0;
+			SetPower(1);
+			IF (Waking = 1) {
+				WakeDone = 1;
+				TryDeferred();
+			}
+		}
+		else IF (b3 = 3) {
+			PowerAsked = 0;
+			IF (Waking = 0)
+				SetPower(0);
+			else IF ((MinDone = 1) && (StillHeld() = 1))
+				ArmWakeWait();
+			else IF (MinDone = 1)
+				CancelDeferred();
+		}
+		else IF (b3 = 4) {
+			PowerAsked = 0;
+			SetStatus("Power fault");
+			CancelDeferred();
+		}
+	}
+	IF ((Waking = 1) && (WakeDone = 0) && (n = 3) && (kind = 5) && (b2 <> 80))
+		AskPower();
+	IF (kind = 6) {
+		err = BYTE(pkt, 3);
+		IF (err = 2) {
+			SetStatus("Syntax error");
+		}
+		else if (err = 3) {
+			SetStatus("Command buffer full");
+		}
+		else if (err = 4) {
+			SetStatus("Canceled");
+		}
+		else if (err = 5) {
+			SetStatus("No socket");
+		}
+		else if (err = 65) {
+			SetStatus("Not executable");
+		}
+		else {
+			SetStatus("Error");
+		}
+		IF (Waking = 1)
+			CancelDeferred();
+	}
+}
+
+FUNCTION DrainRx () {
+	INTEGER at, n, guard;
+	STRING pkt[32];
+	guard = 0;
+	WHILE (guard < 8) {
+		at = FIND(Mark, RxHold);
+		IF (at = 0) {
+			IF (LEN(RxHold) > 180) {
+				RxHold = "";
+				SetStatus("Reply overflow");
+			}
+			RETURN;
+		}
+		pkt = LEFT(RxHold, at);
+		n = LEN(RxHold);
+		IF (n > at) {
+			RxHold = RIGHT(RxHold, n - at);
+		}
+		else {
+			RxHold = "";
+		}
+		ParsePacket(pkt);
+		guard = guard + 1;
+	}
+}
+
+FUNCTION ResolveAddress () {
+	IF (IpLatch = 1) {
+		Addr = IP_Address_Override;
+	}
+	else {
+		Addr = IP_Address;
+	}
+}
+
+FUNCTION OpenLink () {
+	ResolveAddress();
+	IF ((Enable = 0) || (Addr = "") || (Addr = "0.0.0.0")) {
+		Link.Disconnect();
+	}
+	else {
+		Link.Connect(Addr);
+	}
+}
+
+CALLBACK FUNCTION HandleConnection (INTEGER up, STRING msg) {
+	IF (up = 1) {
+		IF (Connected_FB <> 1) {
+			Connected_FB = 1;
+		}
+		AskPower();
+	}
+	else {
+		PowerAsked = 0;
+		CancelDeferred();
+		IF (Connected_FB <> 0) {
+			Connected_FB = 0;
+		}
+		IF (Awake_FB <> 0) {
+			Awake_FB = 0;
+		}
+		IF (Privacy_FB <> 0) {
+			Privacy_FB = 0;
+		}
+	}
+	SetStatus(msg);
+}
+
+CALLBACK FUNCTION HandleData (STRING chunk) {
+	RxHold = RxHold + chunk;
+	DrainRx();
+}
+
+/* EVENTS */
+
+CHANGE Enable {
+	IF (Ready = 1) {
+		IF (Enable = 0) {
+			SetMoving(0);
+			SetZooming(0);
+			CancelDeferred();
+		}
+		OpenLink();
+	}
+}
+
+CHANGE IP_Address_Override {
+	IF (Ready = 1) {
+		IpLatch = 1;
+		OpenLink();
+	}
+}
+
+PUSH Tilt_Up, Tilt_Down, Pan_Left, Pan_Right, Up_Left, Up_Right, Down_Left, Down_Right {
+	IF (DeferMotion() = 0)
+		ApplyPanTilt();
+}
+
+RELEASE Tilt_Up, Tilt_Down, Pan_Left, Pan_Right, Up_Left, Up_Right, Down_Left, Down_Right {
+	IF (Waking = 0)
+		ApplyPanTilt();
+}
+
+PUSH Zoom_In, Zoom_Out {
+	IF (DeferMotion() = 0)
+		ApplyZoom();
+}
+
+RELEASE Zoom_In, Zoom_Out {
+	IF (Waking = 0)
+		ApplyZoom();
+}
+
+CHANGE Command {
+	SendManual();
+}
+
+CHANGE Pan_Speed_Override {
+	IF (Ready = 1) {
+		PanLatch = 1;
+		ResolveSpeeds();
+		IF (MovingNow = 1) {
+			ApplyPanTilt();
+		}
+	}
+}
+
+CHANGE Tilt_Speed_Override {
+	IF (Ready = 1) {
+		TiltLatch = 1;
+		ResolveSpeeds();
+		IF (MovingNow = 1) {
+			ApplyPanTilt();
+		}
+	}
+}
+
+CHANGE Zoom_Speed_Override {
+	IF (Ready = 1) {
+		ZoomLatch = 1;
+		ResolveSpeeds();
+		IF (ZoomingNow = 1) {
+			ApplyZoom();
+		}
+	}
+}
+
+PUSH Home {
+	IF (DeferMotion() = 0)
+		SendHome();
+}
+
+PUSH Stop {
+	STRING panBody[12], zoomBody[8];
+	CancelDeferred();
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	ResolveSpeeds();
+	panBody = CHR(1);
+	panBody = panBody + CHR(6);
+	panBody = panBody + CHR(1);
+	panBody = panBody + CHR(UsePan);
+	panBody = panBody + CHR(UseTilt);
+	panBody = panBody + CHR(3);
+	panBody = panBody + CHR(3);
+	zoomBody = CHR(1);
+	zoomBody = zoomBody + CHR(4);
+	zoomBody = zoomBody + CHR(7);
+	zoomBody = zoomBody + CHR(0);
+	SendBody(panBody);
+	SendBody(zoomBody);
+	SetMoving(0);
+	SetZooming(0);
+	SetStatus("Stop");
+}
+
+PUSH Store_Preset {
+	IF (DeferMotion() = 0)
+		SendPreset(1);
+}
+
+PUSH Recall_Preset {
+	IF (DeferMotion() = 0)
+		SendPreset(2);
+}
+
+PUSH Wake {
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	SendWake();
+	SetPower(1);
+}
+
+PUSH Privacy {
+	IF ((Ready = 0) || (Enable = 0)) {
+		RETURN;
+	}
+	IF (Privacy_FB = 1) {
+		SendWake();
+		SetPower(1);
+	}
+	else {
+		CancelDeferred();
+		SendPrivacyCmd();
+		SetPower(0);
+	}
+}
+
+FUNCTION Main () {
+	Mark = CHR(255);
+	LastPresetOut = 65535;
+	WaitForInitializationComplete();
+	Ready = 1;
+	IF (Hooked = 0) {
+		RegisterDelegate(Link, OnConnectionChanged, HandleConnection);
+		RegisterDelegate(Link, OnDataReceived, HandleData);
+		Hooked = 1;
+	}
+	IF (LEN(IP_Address_Override) > 0) {
+		IpLatch = 1;
+	}
+	ResolveSpeeds();
+	OpenLink();
+}

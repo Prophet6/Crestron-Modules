@@ -6,9 +6,11 @@ Crestron SIMPL+ / Simpl# **TCP client** for **4-Series** processors (RMC4, CP4, 
 
 | File | Role |
 |------|------|
-| `TCP Client (Dynamic IP).usp` | SIMPL+ symbol |
-| `Dynamic_TCP_Client.clz` | Compiled Simpl# library (required next to the `.usp`) |
-| `Dynamic TCP Client/` | Simpl# source (Visual Studio 2022) |
+| `TCP Client Dynamic IP v1.1.usp` | SIMPL+ symbol (v1.1) |
+| `TCP Client Dynamic IP v1.0.usp` | SIMPL+ symbol (v1.0, unchanged) |
+| `DynamicTcp_v1_1.clz` | Simpl# library for v1.1 |
+| `Dynamic_TCP_Client.clz` | Simpl# library for v1.0. Do not replace this with the v1.1 build. |
+| `Dynamic TCP Client/` | Simpl# source (Visual Studio 2022). Assembly `DynamicTcp_v1_1`. |
 
 This is the outbound counterpart to [TCP Server with Authentication](../tcp-server-with-authentication/). Bench the client from a PC with [Testing-Tools](https://github.com/Prophet6/Testing-Tools) (`start-tcp-server.bat`). This project is not affiliated with Crestron Electronics.
 
@@ -22,18 +24,18 @@ This is the outbound counterpart to [TCP Server with Authentication](../tcp-serv
 
 ## Load
 
-1. Keep `Dynamic_TCP_Client.clz` in this folder.
+1. Keep `DynamicTcp_v1_1.clz` next to `TCP Client Dynamic IP v1.1.usp`. Leave `Dynamic_TCP_Client.clz` in place for v1.0.
 2. Compile SIMPL+ for **4-Series only**:
 
    ```powershell
    & "C:\Program Files (x86)\Crestron\Simpl\SPlusCC.exe" `
-     \rebuild "TCP Client (Dynamic IP).usp" `
+     \rebuild "TCP Client Dynamic IP v1.1.usp" `
      \target series4
    ```
 
    A 3-Series target will fail (`archive does not contain a valid SIMPL# assembly`). That is expected for this NuGet SDK library.
 
-3. In SIMPL Windows, add **TCP Client (Dynamic IP)**.
+3. In SIMPL Windows, add **TCP Client (Dynamic IP) v1.1**. v1.0 stays **TCP Client (Dynamic IP)** and still links `Dynamic_TCP_Client`.
 4. Drive `Address$` with the host (IPv4 or hostname), set **Port** (default 23), hold **Connect** high.
 
 `.usp` files must be saved with **Windows (CRLF)** line endings or SIMPL+ reports Error 1700.
@@ -96,6 +98,8 @@ TX$             |              | RX$
 
 If the remote end drops while Connect is still high, the client waits 100 ms then retries (same idea as the stock client on CUZ 3.029+).
 
+While Connect is held, Status is debounced 1.0s. A dead host retries every 100 ms and would otherwise flicker between 0d and 1d. The output stays on 1d (Waiting) until some other code has sat unchanged for 1.0s. Connected (2d) and a release of Connect update immediately. Connect_FB follows the socket with no debounce.
+
 Each symbol instance has its own socket. Drop as many as you need.
 
 ---
@@ -106,7 +110,7 @@ Each symbol instance has its own socket. Drop as many as you need.
 cd "Dynamic TCP Client"
 nuget restore
 msbuild "Dynamic TCP Client.sln" /p:Configuration=Release
-copy "Dynamic TCP Client\bin\Release\Dynamic_TCP_Client.clz" ..
+copy "Dynamic TCP Client\bin\Release\DynamicTcp_v1_1.clz" ..
 ```
 
 Then recompile the `.usp` file (step 2 above).
@@ -117,6 +121,7 @@ Then recompile the `.usp` file (step 2 above).
 
 | Version | Date | Changes |
 |---------|------|---------|
+| v1.1 | 2026-10-29 | Debounce Status 1.0s while Connect is held so a dead host does not flicker 0d/1d. Connected and disconnect still update immediately. Simpl# library is `DynamicTcp_v1_1`. v1.0 keeps `Dynamic_TCP_Client`. |
 | v1.0 | 2026-09-02 | Initial public module |
 
 ## License / disclaimer

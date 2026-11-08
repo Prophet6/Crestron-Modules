@@ -11,38 +11,29 @@
 [END]
 [BEGIN]
   ObjTp=Hd
-  Cmn1=UDP Extract Data v2.0\\\\Companion to UDP Broadcast and Receive||1
-  Cmn2=v2.0. One instance latches IP, MAC, UID,\\and Data from the last||1
-  Cmn3=inbound packet that matches this instance's filter, and\\drops that||1
-  Cmn4=latch when the peer goes quiet.\\\\Wire Received_IP / Received_MAC||1
-  Cmn5=/ Received_UID / Received_Data from the UDP\\module. Wire Packet_Rx||1
-  Cmn6=to Packet_Rx. Do not wire Enable_FB.\\\\Packet_Rx evaluates the||1
-  Cmn7=match immediately. The Received_* change path still\\waits 0.01||1
-  Cmn8=s after the last change, so a v1.3 UDP symbol (no Packet_Rx) still\\
-  Cmn9=works.\\\\Filter: Match_IP, Match_MAC, and Match_UID, each with||1
-  Cmn10=a serial override.\\Default for every match parameter is [SKIP]||1
-  Cmn11=(that field is not used).\\Any combination may be active. All active||1
-  Cmn12=fields must match (AND).\\Exact, case-sensitive compare.\\\\At startup||1
-  Cmn13=the locals take the parameters, then any override with length >||1
-  Cmn14=0.\\CHANGE on an override sets that local to the override string||1
-  Cmn15=as-is. An empty\\string means [SKIP] from then on and does not fall||1
-  Cmn16=back to the parameter.\\\\A non-match does not clear a latch that||1
-  Cmn17=is already held.\\Timeout is unitTime. 0s keeps the last match and||1
-  Cmn18=leaves Online_FB high.\\Any other value drops Online_FB and clears||1
-  Cmn19=the peer outputs when no new match\\arrives within that time. Default||1
-  Cmn20=15s, maximum 600s.\\\\Peer_UID is Received_UID from the matching||1
-  Cmn21=packet.\\Peer_Data is the raw Received_Data from the matching packet.
-  Cmn22=\\\\Drop one copy of this symbol per peer.\\\\-- VERSION HISTORY||1
-  Cmn23=--\\v2.0  2026-10-18\\- Packet_Rx evaluates the snapshot without||1
-  Cmn24=the settle delay\\- Online_FB and Timeout. 0s latches until a new||1
-  Cmn25=match. Any other time clears\\  the peer when packets stop.\\\\v1.
-  Cmn26=0  2026-09-09\\- Prior symbol, left in the tree unchanged\\
+  Cmn1=UDP Extract Data v2.0\\\\One instance per peer. Wire Packet_Rx and||1
+  Cmn2=the four Received_* inputs\\from UDP Broadcast and Receive v2.0.
+  Cmn3=||1Do not wire Enable_FB.\\\\Match parameters default to [SKIP]. An||1
+  Cmn4=empty override stays [SKIP]\\and does not fall back to the parameter.
+  Cmn5=||1Every active field must match.\\A non-match does not clear a peer||1
+  Cmn6=that is already held.\\\\Timeout 0s leaves Online_FB high. Any other||1
+  Cmn7=time clears the peer when\\matching packets stop. A repeat match||1
+  Cmn8=restarts that time.\\\\Peer outputs and Online_FB are written only||1
+  Cmn9=when the value changes.\\String outputs are write-only.\\\\Press||1
+  Cmn10=F1 for UDP Beacon and Extract v2.0.html. Leave that file next\\to||1
+  Cmn11=this module.\\\\-- VERSION HISTORY --\\v2.0  2026-10-18\\- 2026-
+  Cmn12=11-03: F1 opens UDP Beacon and Extract v2.0.html, shared with the||1
+  Cmn13=beacon\\- 2026-11-02: Peer_* and Online_FB update only when the||1
+  Cmn14=value changes\\- Packet_Rx evaluates the snapshot without the settle||1
+  Cmn15=delay\\- Online_FB and Timeout. 0s latches until a new match. Any||1
+  Cmn16=other time clears\\  the peer when packets stop.\\\\v1.0  2026-09-
+  Cmn17=09\\- Prior symbol, left in the tree unchanged\\
 [END]
 [BEGIN]
   ObjTp=Symbol
-  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,362,378,380,405,407,408,409,478,522,537,554,586,590,611,624,718,756,767,830,841,842,854,883,955,1032,1062,1079,1128,1129,1134,1140,1157,1158,1195,1199,1220,1221,1222,1223,1299,1348,1349,1439,1472,1473,1499,1746,1803,1975,2229,2354,2514,2523,2532,2706,2707,3235,3236,3427,3454,3567,3568,3601,3602,3708,3902,3903,3912,3918,3925,3926,4206,4207,
-  Exclusions_CDS=5
-  Inclusions_CDS=6,7
+  Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,362,378,380,405,407,408,409,478,522,537,554,586,590,611,624,718,756,767,830,841,842,854,883,955,1032,1062,1079,1128,1129,1134,1140,1157,1158,1195,1199,1220,1221,1222,1223,1299,1348,1349,1439,1472,1473,1499,1746,1766,1803,1975,2229,2354,2514,2523,2532,2567,2574,2590,2651,2655,2706,2707,2817,2886,2938,2947,3181,3197,3233,3235,3236,3427,3454,3567,3568,3601,3602,3680,3682,3706,3708,3710,3735,3736,3816,3888,3902,3903,3912,3918,3925,3926,4176,4193,4206,4207,4308,4476,4591,4769,5360,5388,5420,5455,5497,5699,5813,5919,6150,6161,
+  Exclusions_CDS=5,6
+  Inclusions_CDS=7
   Name=UDP Extract Data v2.0
   SmplCName=UDP Extract Data v2.0.usp
   Code=1
@@ -115,7 +106,7 @@
   SymbolTree=46
   UserSymTreeName=TCP/IP
   Hint=
-  PdfHelp=
+  PdfHelp=UDP Beacon and Extract v2.0.html
   HelpID= 
   Render=4
   Smpl-C=16

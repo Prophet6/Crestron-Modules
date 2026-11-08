@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IV-CAM PTZ v1.0</title>
+<style>
+  :root {
+    --ink: #14202b;
+    --muted: #4d6170;
+    --line: #c9d7e2;
+    --paper: #e8f0f5;
+    --card: #f7fbfd;
+    --blue: #1a4f73;
+    --blue-soft: #d5e6f2;
+    --header: #10202c;
+    --ok: #14624c;
+    --warn: #8a4b12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background:
+      radial-gradient(1200px 280px at 10% -40%, rgba(143, 196, 224, 0.35), transparent 60%),
+      var(--header);
+    color: #e7f2f8;
+    padding: 2.6rem 1.5rem 2.1rem;
+  }
+  header.banner .wrap, main, nav.toc, footer {
+    max-width: 54rem;
+    margin: 0 auto;
+  }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #8ec4e0;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.5rem;
+    line-height: 1.12;
+    margin: 0 0 0.7rem;
+  }
+  header.banner p { margin: 0; max-width: 44rem; color: #d5e4ee; }
+  .samples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.3rem;
+  }
+  .samples span {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(180, 214, 232, 0.35);
+    border-radius: 999px;
+    padding: 0.28rem 0.75rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.86rem;
+    color: #f4fbff;
+  }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #f7fbfd;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  nav.toc a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 0.92rem;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 3rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.3rem 0 0.6rem;
+    padding-top: 0.2rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--blue); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn, .ok {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--blue); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8f1; }
+  .ok { border-left: 4px solid var(--ok); background: #f3faf7; }
+  ol.steps { padding-left: 1.2rem; }
+  ol.steps li { margin: 0.45rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--blue-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  code, .sig {
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.9em;
+  }
+  .sig { color: var(--ink); font-weight: 600; }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.28rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  footer {
+    padding: 0 1.5rem 2.6rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · 4-Series · Camera</p>
+    <h1>IV-CAM PTZ v1.0</h1>
+    <p>Pan, tilt, zoom, and presets for a Crestron 1 Beyond PTZ camera. The module opens the VISCA socket itself on TCP port 5500.</p>
+    <div class="samples">
+      <span>81 01 06 04 FF</span>
+      <span>90 41 FF</span>
+      <span>90 51 FF</span>
+    </div>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#start">Start here</a>
+  <a href="#proven">What was proven</a>
+  <a href="#connection">Connection</a>
+  <a href="#symbol">Symbol</a>
+  <a href="#move">Movement</a>
+  <a href="#speed">Speeds</a>
+  <a href="#presets">Presets</a>
+  <a href="#privacy">Privacy</a>
+  <a href="#command">Command</a>
+  <a href="#replies">Replies</a>
+  <a href="#cameras">Cameras</a>
+  <a href="#packets">Packets</a>
+  <a href="#files">Files</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="start">Start here</h2>
+  <p class="lead"><span class="sig">IV-CAM PTZ v1.0</span> drives a Crestron 1 Beyond camera with raw VISCA. It is in the Camera folder. The socket is inside the module. There is no TCP/IP Client to wire.</p>
+  <div class="grid">
+    <article>
+      <h3>Hold Enable</h3>
+      <p><span class="sig">Enable</span> high opens the socket and allows control. Low disconnects and ignores the pad, zoom, presets, and <span class="sig">Command</span>.</p>
+    </article>
+    <article>
+      <h3>Hold to move</h3>
+      <p>Pan, tilt, and zoom run while the input is high. Release sends the VISCA stop for that axis. <span class="sig">Stop</span> stops both axes and the zoom.</p>
+    </article>
+    <article>
+      <h3>F1 is this page</h3>
+      <p>Leave <code>IV-CAM PTZ v1.0.html</code> next to <code>IV-CAM PTZ v1.0.usp</code> and <code>IvCamPtz_v1.clz</code>.</p>
+    </article>
+  </div>
+  <ol class="steps">
+    <li>Add <span class="sig">IV-CAM PTZ v1.0</span> from Camera. This build is 4-Series.</li>
+    <li>Hold <span class="sig">Enable</span> high to connect. Drop it to disconnect.</li>
+    <li>Set <span class="sig">IP_Address</span> to the camera. Leave the port alone. The module uses TCP 5500.</li>
+    <li>Match <span class="sig">Camera_Address</span> to the camera OSD. Factory value is 1.</li>
+    <li>In Camera Manager, leave control on TCP, server mode, port 5500, protocol VISCA.</li>
+    <li>Join the pad, zoom, and presets. On connect the module asks the power state. <span class="sig">Awake_FB</span> or <span class="sig">Privacy_FB</span> follows the answer. <span class="sig">Privacy</span> toggles standby and wake. A pad, zoom, home, or preset press while <span class="sig">Privacy_FB</span> is high sends wake, and runs that command only if the button is still held when the camera is awake and one second has passed.</li>
+    <li>Watch <span class="sig">Connected_FB</span>. It rises when the socket is up.</li>
+  </ol>
+  <div class="ok">
+    A live IV-CAM-P12 accepted address-1 home, <code>81 01 06 04 FF</code>, and answered <code>90 41 FF</code> then <code>90 51 FF</code>. That is ACK, then completion. The test program has driven that camera. Power on is <code>81 01 04 00 02 FF</code>. Standby is <code>81 01 04 00 03 FF</code>.
+  </div>
+
+  <h2 id="proven">What was proven</h2>
+  <p>The camera listens on TCP port 5500 and speaks raw VISCA. There is no 8-byte Sony header. Address 1 answers with <code>90</code>. The home packet the module sends for address 1 is the packet that camera already accepted.</p>
+  <p>Pan, tilt, zoom, stop, and presets use that same frame: address byte, command, <code>FF</code>. The reply parser treats <code>90 4y FF</code> as accepted and <code>90 5y FF</code> as finished. An error packet replaces <span class="sig">Status</span>.</p>
+  <div class="warn">
+    Loading this symbol in a program and pressing Home is still the remaining check. The socket, <span class="sig">Connected_FB</span>, and the button logic have not been exercised on a processor.
+  </div>
+
+  <h2 id="connection">Connection</h2>
+  <p>The Simpl# library <code>IvCamPtz_v1</code> opens the socket. The program does not add a TCP/IP Client.</p>
+  <ul>
+    <li><span class="sig">Enable</span> high connects and allows control. Low disconnects. Commands are ignored while it is low.</li>
+    <li>Port is 5500. It is not a parameter.</li>
+    <li><span class="sig">IP_Address</span> is the commissioned address. <code>0.0.0.0</code> and a blank address do not open a socket.</li>
+    <li><span class="sig">IP_Address_Override</span> is ignored until a string arrives after startup. An unwired empty serial does not count. After the first real string, that serial is the address, even if you later clear it.</li>
+    <li>A non-empty override that is already present at startup is used.</li>
+    <li><span class="sig">Connected_FB</span> is high only while the socket is up.</li>
+    <li>A dropped link retries every 2 seconds while an address is set.</li>
+    <li><span class="sig">Status</span> shows <code>Waiting</code>, <code>Connected</code>, <code>Not connected</code>, or <code>Connection failed</code> as the link changes. A later button press replaces that text with the command name.</li>
+  </ul>
+  <div class="note">
+    Camera Manager should stay on TCP, server mode, port 5500. The OSD protocol must be VISCA. Changing that port breaks this module.
+  </div>
+
+  <h2 id="symbol">Symbol</h2>
+  <p>Rows run top to bottom. A speed override shares its row with the speed it replaces. <span class="sig">Command</span> shares its row with <span class="sig">Status</span>. <span class="sig">IP_Address_Override</span> shares its row with <span class="sig">IP_Address</span>.</p>
+  <table>
+    <thead>
+      <tr><th>Row</th><th>Input</th><th>Parameter</th><th>Output</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="sig">Enable</span></td><td></td><td><span class="sig">Connected_FB</span></td></tr>
+      <tr><td>2</td><td></td><td><span class="sig">Camera_Address</span></td><td></td></tr>
+      <tr><td>3</td><td><span class="sig">Wake</span></td><td></td><td><span class="sig">Awake_FB</span></td></tr>
+      <tr><td>4</td><td><span class="sig">Privacy</span></td><td></td><td><span class="sig">Privacy_FB</span></td></tr>
+      <tr><td>5</td><td></td><td></td><td></td></tr>
+      <tr><td>6</td><td><span class="sig">Tilt_Up</span></td><td></td><td><span class="sig">Moving_FB</span></td></tr>
+      <tr><td>7</td><td><span class="sig">Tilt_Down</span></td><td></td><td></td></tr>
+      <tr><td>8</td><td><span class="sig">Pan_Left</span></td><td></td><td></td></tr>
+      <tr><td>9</td><td><span class="sig">Pan_Right</span></td><td></td><td></td></tr>
+      <tr><td>10</td><td><span class="sig">Up_Left</span></td><td></td><td></td></tr>
+      <tr><td>11</td><td><span class="sig">Up_Right</span></td><td></td><td></td></tr>
+      <tr><td>12</td><td><span class="sig">Down_Left</span></td><td></td><td></td></tr>
+      <tr><td>13</td><td><span class="sig">Down_Right</span></td><td></td><td></td></tr>
+      <tr><td>14</td><td></td><td></td><td></td></tr>
+      <tr><td>15</td><td><span class="sig">Zoom_In</span></td><td></td><td><span class="sig">Zooming_FB</span></td></tr>
+      <tr><td>16</td><td><span class="sig">Zoom_Out</span></td><td></td><td></td></tr>
+      <tr><td>17</td><td></td><td></td><td></td></tr>
+      <tr><td>18</td><td><span class="sig">Home</span></td><td></td><td></td></tr>
+      <tr><td>19</td><td><span class="sig">Stop</span></td><td></td><td></td></tr>
+      <tr><td>20</td><td></td><td></td><td></td></tr>
+      <tr><td>21</td><td><span class="sig">Store_Preset</span></td><td></td><td><span class="sig">Preset_Stored_FB</span></td></tr>
+      <tr><td>22</td><td><span class="sig">Recall_Preset</span></td><td></td><td><span class="sig">Preset_Recalled_FB</span></td></tr>
+      <tr><td>23</td><td></td><td></td><td></td></tr>
+      <tr><td>24</td><td><span class="sig">Pan_Speed_Override</span></td><td><span class="sig">Pan_Speed</span></td><td><span class="sig">Pan_Speed_FB</span></td></tr>
+      <tr><td>25</td><td><span class="sig">Tilt_Speed_Override</span></td><td><span class="sig">Tilt_Speed</span></td><td><span class="sig">Tilt_Speed_FB</span></td></tr>
+      <tr><td>26</td><td><span class="sig">Zoom_Speed_Override</span></td><td><span class="sig">Zoom_Speed</span></td><td><span class="sig">Zoom_Speed_FB</span></td></tr>
+      <tr><td>27</td><td><span class="sig">Preset</span></td><td></td><td><span class="sig">Last_Preset</span></td></tr>
+      <tr><td>28</td><td></td><td></td><td></td></tr>
+      <tr><td>29</td><td><span class="sig">Command</span></td><td></td><td><span class="sig">Status</span></td></tr>
+      <tr><td>30</td><td><span class="sig">IP_Address_Override</span></td><td><span class="sig">IP_Address</span></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="move">Movement</h2>
+  <p>Each direction and each zoom is level-sensitive. The press sends a drive packet. The release sends stop, unless another direction in that group is still held. Two held directions combine into a diagonal. Opposite directions on one axis cancel that axis.</p>
+  <ul>
+    <li><span class="sig">Tilt_Up</span>, <span class="sig">Tilt_Down</span>, <span class="sig">Pan_Left</span>, <span class="sig">Pan_Right</span>, and the four diagonals share one pan/tilt drive.</li>
+    <li><span class="sig">Zoom_In</span> and <span class="sig">Zoom_Out</span> share one zoom drive. Both high is a zoom stop.</li>
+    <li><span class="sig">Moving_FB</span> is high while a pan or tilt drive is running.</li>
+    <li><span class="sig">Zooming_FB</span> is high while a zoom drive is running.</li>
+    <li><span class="sig">Stop</span> sends a pan/tilt stop and a zoom stop even if a button is still high. The camera stays stopped until that button is released and pressed again.</li>
+    <li><span class="sig">Home</span> sends the VISCA home command. It is not preset 0.</li>
+  </ul>
+  <div class="warn">
+    A pan or tilt command keeps moving until a stop packet arrives. Wire the joins as press-and-hold. A pulse with no matching low will drive the head to the end of travel.
+  </div>
+
+  <h2 id="speed">Speeds</h2>
+  <p><span class="sig">Pan_Speed</span> is 1 to 24. The default is 12. <span class="sig">Tilt_Speed</span> is 1 to 20. The default is 10. <span class="sig">Zoom_Speed</span> is 0 to 7. The default is 4. Zoom 0 is the slowest variable zoom, and it is legal.</p>
+  <p>Each speed uses its parameter until a value arrives on the matching override after startup. The 0 on an unwired analog does not count. After the first real value, that analog stays in charge, including 0. Pan and tilt have no speed 0, so an override of 0 is sent as 1. A value above the top of the range is clamped.</p>
+  <p>The <span class="sig">_FB</span> outputs show the speed that will be sent. Changing a speed while that axis is already moving sends a new drive packet at the new speed.</p>
+
+  <h2 id="presets">Presets</h2>
+  <p><span class="sig">Preset</span> is 0 through 255. A higher analog is sent as 255. <span class="sig">Store_Preset</span> writes the current shot into that number. <span class="sig">Recall_Preset</span> moves to it. <span class="sig">Last_Preset</span> follows the last number this module stored or recalled. It stays 0 until the first one, which is also preset 0, so read it together with the stored and recalled feedback.</p>
+  <p><span class="sig">Preset_Stored_FB</span> and <span class="sig">Preset_Recalled_FB</span> show which of those two actions happened last.</p>
+  <p>On the intelligent cameras, recalling preset 80 starts tracking and preset 81 stops it. This module will recall whatever number you give it. Do not store over 80 or 81 on a tracking camera. Preset 0 is often the home shot in the OSD. The <span class="sig">Home</span> input is still a separate VISCA command.</p>
+
+  <h2 id="privacy">Privacy</h2>
+  <p><span class="sig">Wake</span> sends power on and leaves standby. <span class="sig">Privacy</span> is a toggle. While <span class="sig">Awake_FB</span> is high it sends standby. While <span class="sig">Privacy_FB</span> is high it sends power on. Standby stops every stream from that camera. The control socket can stay open, and the camera can still accept power on.</p>
+  <p>When the socket connects, the module sends the power inquiry <code>81 09 04 00 FF</code>. <code>90 50 02 FF</code> raises <span class="sig">Awake_FB</span>. <code>90 50 03 FF</code> raises <span class="sig">Privacy_FB</span>. One of those two is high after the reply. Both drop when the socket drops.</p>
+  <p>Pan, tilt, zoom, home, store, and recall are held back while <span class="sig">Privacy_FB</span> is high. The press sends power on. The module then waits until the camera reports awake and until one second has passed, whichever is later. If that button is still held, the module sends it. If it was released, the camera stays awake and no move is sent. <span class="sig">Stop</span> cancels a move that is waiting on wake.</p>
+  <div class="note">
+    These are the Crestron CAM_Power bytes. Address 1 power on is <code>81 01 04 00 02 FF</code>. Standby is <code>81 01 04 00 03 FF</code>.
+  </div>
+
+  <h2 id="command">Command</h2>
+  <p><span class="sig">Command</span> sends the bytes on that input as one packet, unchanged. Include the address byte and the <code>FF</code> terminator. An empty string does not send. The same string sent twice does not send twice. Change the serial to send again.</p>
+  <p>Address 1 home is <code>81 01 06 04 FF</code>. For another address, replace <code>81</code> with <code>80</code> plus the address: address 2 is <code>82</code>.</p>
+
+  <h2 id="replies">Replies</h2>
+  <p><span class="sig">Status</span> keeps the name of the last command. ACK and completion do not replace it. An error does.</p>
+  <table>
+    <thead><tr><th>Reply</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><code>90 4y FF</code></td><td>Accepted. Status stays on the command name.</td></tr>
+      <tr><td><code>90 5y FF</code></td><td>Complete. Status stays on the command name.</td></tr>
+      <tr><td><code>90 60 02 FF</code></td><td>Syntax error</td></tr>
+      <tr><td><code>90 60 03 FF</code></td><td>Command buffer full</td></tr>
+      <tr><td><code>90 60 04 FF</code></td><td>Canceled</td></tr>
+      <tr><td><code>90 60 05 FF</code></td><td>No socket</td></tr>
+      <tr><td><code>90 60 41 FF</code></td><td>Not executable. Often standby, or a command the camera will not run in its current mode.</td></tr>
+    </tbody>
+  </table>
+  <p>The <code>9</code> in <code>90</code> is address 1. Address 2 answers with <code>A0</code>.</p>
+
+  <h2 id="cameras">Cameras</h2>
+  <p>The same raw VISCA on TCP port 5500 is what Crestron documents for the IV-CAM-P12, P20, I12, and I20, and for the older 1 Beyond PTZ heads that were left on that port. OSD protocol VISCA, address 1 through 7.</p>
+  <div class="warn">
+    Sony SRG and BRC-X IP modules are a different dialect. They wrap every packet in an 8-byte header and use port 52381. Do not point this module at that port, and do not point a Sony IP module at port 5500.
+  </div>
+  <p>PTZOptics and the same OEM family use these command bytes on TCP port 5678. This module will not retarget that port.</p>
+
+  <h2 id="packets">Packets</h2>
+  <p>These are address 1. <code>VV</code> is pan speed <code>01</code>–<code>18</code>. <code>WW</code> is tilt speed <code>01</code>–<code>14</code>. <code>p</code> is zoom speed <code>0</code>–<code>7</code>. <code>pp</code> is the preset, <code>00</code>–<code>FF</code>.</p>
+  <table>
+    <thead><tr><th>Action</th><th>Packet</th></tr></thead>
+    <tbody>
+      <tr><td>Wake</td><td><code>81 01 04 00 02 FF</code></td></tr>
+      <tr><td>Privacy</td><td><code>81 01 04 00 03 FF</code></td></tr>
+      <tr><td>Power inquiry</td><td><code>81 09 04 00 FF</code></td></tr>
+      <tr><td>Tilt up / down</td><td><code>81 01 06 01 VV WW 03 01 FF</code> / <code>03 02 FF</code></td></tr>
+      <tr><td>Pan left / right</td><td><code>81 01 06 01 VV WW 01 03 FF</code> / <code>02 03 FF</code></td></tr>
+      <tr><td>Up left / up right</td><td><code>81 01 06 01 VV WW 01 01 FF</code> / <code>02 01 FF</code></td></tr>
+      <tr><td>Down left / down right</td><td><code>81 01 06 01 VV WW 01 02 FF</code> / <code>02 02 FF</code></td></tr>
+      <tr><td>Pan/tilt stop</td><td><code>81 01 06 01 VV WW 03 03 FF</code></td></tr>
+      <tr><td>Zoom in / out</td><td><code>81 01 04 07 2p FF</code> / <code>3p FF</code></td></tr>
+      <tr><td>Zoom stop</td><td><code>81 01 04 07 00 FF</code></td></tr>
+      <tr><td>Home</td><td><code>81 01 06 04 FF</code></td></tr>
+      <tr><td>Store / recall</td><td><code>81 01 04 3F 01 pp FF</code> / <code>02 pp FF</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="files">Files</h2>
+  <p>Keep these four files together. SIMPL Windows loads them from User SPlus.</p>
+  <ul>
+    <li><code>IV-CAM PTZ v1.0.usp</code></li>
+    <li><code>IV-CAM PTZ v1.0.ush</code></li>
+    <li><code>IV-CAM PTZ v1.0.html</code></li>
+    <li><code>IvCamPtz_v1.clz</code></li>
+  </ul>
+  <p>Close SIMPL Windows and open it again after a copy, so the Camera folder picks up the symbol. Press F1 on the symbol to open this page.</p>
+
+  <h2 id="versions">Versions</h2>
+  <p>v1.0, 2026-11-03. Raw VISCA pan, tilt, zoom, and presets. Simpl# socket on TCP port 5500. <span class="sig">Enable</span> high connects. Low disconnects. <span class="sig">IP_Address</span> and <span class="sig">IP_Address_Override</span>.</p>
+</main>
+<footer>
+  <p>IV-CAM PTZ v1.0. 4-Series. Press F1 on the symbol in SIMPL Windows.</p>
+</footer>
+</body>
+</html>

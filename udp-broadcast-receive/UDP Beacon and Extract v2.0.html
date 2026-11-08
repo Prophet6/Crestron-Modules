@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UDP Beacon and Extract v2.0</title>
+<style>
+  :root {
+    --ink: #14202b;
+    --muted: #4d6170;
+    --line: #c9d7e2;
+    --paper: #e8f0f5;
+    --card: #f7fbfd;
+    --blue: #1a4f73;
+    --blue-soft: #d5e6f2;
+    --header: #10202c;
+    --ok: #14624c;
+    --warn: #8a4b12;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 17px/1.55 "Segoe UI", Calibri, sans-serif;
+  }
+  header.banner {
+    background:
+      radial-gradient(1200px 280px at 10% -40%, rgba(143, 196, 224, 0.35), transparent 60%),
+      var(--header);
+    color: #e7f2f8;
+    padding: 2.6rem 1.5rem 2.1rem;
+  }
+  header.banner .wrap, main, nav.toc, footer { max-width: 54rem; margin: 0 auto; }
+  .kicker {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: #8ec4e0;
+    margin: 0 0 0.6rem;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 2.45rem;
+    line-height: 1.12;
+    margin: 0 0 0.7rem;
+  }
+  header.banner p { margin: 0; max-width: 44rem; color: #d5e4ee; }
+  .samples { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.3rem; }
+  .samples span {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(180, 214, 232, 0.35);
+    border-radius: 999px;
+    padding: 0.28rem 0.75rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.82rem;
+    color: #f4fbff;
+  }
+  nav.toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1.5rem;
+    background: #f7fbfd;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  nav.toc a { color: var(--blue); text-decoration: none; font-size: 0.92rem; }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 1.6rem 1.5rem 3rem; }
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-weight: normal;
+    font-size: 1.7rem;
+    margin: 2.3rem 0 0.6rem;
+  }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 0.4rem; }
+  p { margin: 0.55rem 0; }
+  a { color: var(--blue); }
+  .lead { font-size: 1.08rem; }
+  .card, .note, .warn {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+  }
+  .note { border-left: 4px solid var(--blue); }
+  .warn { border-left: 4px solid var(--warn); background: #fff8f1; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    margin: 0.8rem 0 1.2rem;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    background: var(--blue-soft);
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  table.symbol { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.86rem; }
+  table.symbol th { font-family: "Segoe UI", Calibri, sans-serif; }
+  table.symbol td { width: 33%; }
+  table.symbol td.pad { background: #e7eef4; }
+  code, .sig { font-family: Consolas, "Cascadia Mono", monospace; font-size: 0.9em; }
+  .sig { color: var(--ink); font-weight: 600; }
+  pre.packet {
+    background: var(--header);
+    color: #e7f2f8;
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+  ul { margin: 0.4rem 0 0.8rem; padding-left: 1.2rem; }
+  li { margin: 0.28rem 0; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+  .grid article {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+  .grid h3 { margin-top: 0; }
+  .grid p { margin: 0; color: var(--muted); }
+  footer { padding: 0 1.5rem 2.6rem; color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<header class="banner">
+  <div class="wrap">
+    <p class="kicker">Crestron SIMPL+ · 4-Series · TCP/IP</p>
+    <h1>UDP Beacon and Extract v2.0</h1>
+    <p>Two symbols, one conversation. Every processor broadcasts who it is. Extract watches that stream and holds the one peer this program acts on.</p>
+    <div class="samples">
+      <span>MAC,UID,Data</span>
+      <span>Packet_Rx</span>
+      <span>one Extract per peer</span>
+    </div>
+  </div>
+</header>
+<nav class="toc">
+  <a href="#together">Together</a>
+  <a href="#beacon">Beacon symbol</a>
+  <a href="#beacon-signals">Beacon signals</a>
+  <a href="#announce">Announce</a>
+  <a href="#reply">Reply</a>
+  <a href="#receive">Receive</a>
+  <a href="#extract">Extract symbol</a>
+  <a href="#match">Match and timeout</a>
+  <a href="#versions">Versions</a>
+</nav>
+<main>
+  <h2 id="together">Together</h2>
+  <p class="lead"><span class="sig">UDP Broadcast and Receive v2.0</span> is the socket. It sends <span class="sig">MAC,UID,Data</span> to <span class="sig">255.255.255.255</span> and receives every other processor's line on the same port. <span class="sig">UDP Extract Data v2.0</span> has no socket. It reads the beacon's outputs and latches one match.</p>
+  <pre class="packet">Other processors
+MAC,UID,Data  ── broadcast ──►  UDP Broadcast and Receive
+                                   Received_IP
+                                   Received_MAC
+                                   Received_UID
+                                   Received_Data
+                                   Packet_Rx
+                                        │
+                                        ▼
+                                UDP Extract Data
+                                   Match_UID = that peer
+                                   Peer_IP  Peer_MAC  Peer_UID  Peer_Data
+                                   Online_FB</pre>
+  <div class="grid">
+    <article>
+      <h3>One beacon</h3>
+      <p>Hold Enable high. Put a real MAC on Mac. The timed announce waits until Mac looks like a MAC.</p>
+    </article>
+    <article>
+      <h3>One Extract per peer</h3>
+      <p>Add a copy for each peer this program acts on, not one per processor on the network. Wire Packet_Rx and the four Received strings across. Leave Enable_FB unwired.</p>
+    </article>
+  </div>
+  <pre class="packet">C4:42:68:6D:61:D0,room-12,podium</pre>
+  <p>No spaces around the commas. Maximum datagram 306 bytes: 17 for the MAC, 32 for the UID, 255 for Data, and the two commas. A processor announce has no carriage return and no line feed.</p>
+
+  <h2 id="beacon">Beacon symbol</h2>
+  <p>Shaded cells are empty on purpose. Do not move a signal onto another row.</p>
+  <table class="symbol">
+    <thead><tr><th>Input</th><th>Parameter</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td class="pad"></td><td>UDP_Port</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td>Enforce_Format</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td>Announce_Interval</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td>Reply</td><td class="pad"></td></tr>
+      <tr><td>Enable</td><td class="pad"></td><td>Enable_FB</td></tr>
+      <tr><td>Retrigger</td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td>Packet_Rx</td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td>Received_IP</td></tr>
+      <tr><td>Mac</td><td class="pad"></td><td>Received_MAC</td></tr>
+      <tr><td>UID</td><td class="pad"></td><td>Received_UID</td></tr>
+      <tr><td>Data</td><td class="pad"></td><td>Received_Data</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="beacon-signals">Beacon signals</h2>
+  <table>
+    <thead><tr><th>Signal</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>Enable</td><td>Latched. High opens the UDP socket. Low closes it. If the socket drops while Enable is high, it is opened again.</td></tr>
+      <tr><td>Enable_FB</td><td>High while the listen socket is open on the broadcast address. Written only when that state changes.</td></tr>
+      <tr><td>Retrigger</td><td>Pulse to send the current MAC, UID, and Data now, even when Data is empty. Ignored while the socket is closed.</td></tr>
+      <tr><td>Mac</td><td>Outbound MAC. 12 hex digits, or 17 bytes with <span class="sig">:</span> or <span class="sig">-</span>. Stored with colons.</td></tr>
+      <tr><td>UID</td><td>Outbound id. Letters, digits, hyphen, underscore. Up to 32 bytes.</td></tr>
+      <tr><td>Data</td><td>Outbound payload, up to 255 bytes. A change sends a packet when Data is non-empty and the socket is open.</td></tr>
+      <tr><td>Packet_Rx</td><td>Pulses for 0.05 s after an accepted packet has been written. Wire this to Extract. It still pulses when the four strings did not change, so a repeat can refresh a timeout.</td></tr>
+      <tr><td>Received_IP</td><td>Sender IP of the last accepted packet.</td></tr>
+      <tr><td>Received_MAC</td><td>MAC from that packet, with colons when it was recognized.</td></tr>
+      <tr><td>Received_UID</td><td>UID from that packet.</td></tr>
+      <tr><td>Received_Data</td><td>Everything after the second comma, or the whole payload when the packet is not a MAC and a UID.</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Range</th></tr></thead>
+    <tbody>
+      <tr><td>UDP_Port</td><td>50001</td><td>1024–65535.</td></tr>
+      <tr><td>Enforce_Format</td><td>No enforcement</td><td>No enforcement, or Enforce MAC,UID,Data.</td></tr>
+      <tr><td>Announce_Interval</td><td>5s</td><td>0s–600s. 0s sends only on Retrigger or a non-empty Data change.</td></tr>
+      <tr><td>Reply</td><td>Off</td><td>Off, or Once per new sender.</td></tr>
+    </tbody>
+  </table>
+  <p>Each received string is written only when its text changes. A field this packet does not contain is cleared when that output was holding text.</p>
+
+  <h2 id="announce">Announce</h2>
+  <p>While Enable is high and Announce_Interval is not 0s, the module sends the current packet on that period, including when Data is empty. The first announce goes out as soon as the socket is open and Mac looks like a MAC. Retrigger, and a non-empty change of Data, send immediately and do not wait for the period.</p>
+  <p>Every processor running this module receives every announce. Two hundred processors at 5 seconds is about 40 datagrams a second at each one, and each datagram is parsed. Use 15 or 30 seconds when hundreds of processors share the port. Leave Reply off on that network. The broadcast is how peers learn each other. A unicast answer to every announce would be one packet for every pair.</p>
+
+  <h2 id="reply">Reply</h2>
+  <p>Reply answers a sender once, the first time that IP is seen, then not again until that IP has been silent for 60 seconds. At most one reply is sent every 0.5 seconds. 128 senders are remembered. A sender past that still hears the broadcast and gets no unicast. The reply is this processor's own <span class="sig">MAC,UID,Data</span>, sent to that IP. It is not a copy of the packet that just arrived.</p>
+  <div class="warn">
+    <p>SIMPL+ keeps one destination on a UDP socket. For the reply, the listen socket is pointed at the sender and then put back on <span class="sig">255.255.255.255</span>. A datagram that arrives in that gap can be missed. That is why Reply stays off when many processors announce.</p>
+  </div>
+
+  <h2 id="receive">Receive</h2>
+  <p>Own packets are dropped. A payload equal to what this module would send, or a MAC and UID that match this module, never updates the outputs and never gets a reply.</p>
+  <p>With enforcement off, a full <span class="sig">MAC,UID,Data</span> fills all three fields. A MAC that is not followed by a UID puts the remainder in Received_Data. Anything else is stored as Received_Data, with the sender IP when it is known. Packet_Rx still pulses.</p>
+  <p>With Enforce MAC,UID,Data, only a full packet updates the outputs. A line with no third field, a UID where the MAC should be, or plain text leaves the last good values in place and does not pulse Packet_Rx.</p>
+  <div class="note">
+    <p>A carriage return or a line feed ends one datagram. A test tool that appends a CR can deliver two copies in one receive. They are parsed one at a time, and Data stops at that CR. Two processor announces have no CR and no LF, so two of those can still arrive as one buffer. The last accepted piece is the one that is published.</p>
+    <p>A MAC whose stored length is not 12 or 17 characters is published as <span class="sig">00:00:00:00:00:00</span>.</p>
+  </div>
+  <p>MAC shape: 12 hex digits, or 17 bytes as six hex pairs separated by <span class="sig">:</span> or <span class="sig">-</span>. UID shape: 1–32 bytes, letters, digits, hyphen, or underscore.</p>
+
+  <h2 id="extract">Extract symbol</h2>
+  <p>Same rule for the shaded cells. One copy of this symbol per peer.</p>
+  <table class="symbol">
+    <thead><tr><th>Input</th><th>Parameter</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>Packet_Rx</td><td>Timeout</td><td>Online_FB</td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td>Match_IP_Override</td><td>Match_IP</td><td class="pad"></td></tr>
+      <tr><td>Match_MAC_Override</td><td>Match_MAC</td><td class="pad"></td></tr>
+      <tr><td>Match_UID_Override</td><td>Match_UID</td><td class="pad"></td></tr>
+      <tr><td class="pad"></td><td class="pad"></td><td class="pad"></td></tr>
+      <tr><td>Received_IP</td><td class="pad"></td><td>Peer_IP</td></tr>
+      <tr><td>Received_MAC</td><td class="pad"></td><td>Peer_MAC</td></tr>
+      <tr><td>Received_UID</td><td class="pad"></td><td>Peer_UID</td></tr>
+      <tr><td>Received_Data</td><td class="pad"></td><td>Peer_Data</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="match">Match and timeout</h2>
+  <p>Match_IP, Match_MAC, and Match_UID each default to <span class="sig">[SKIP]</span>, which means that field is not used. Any combination may be active. Every active field has to match. The compare is exact and case-sensitive. If every field is skipped, the symbol never sets Online_FB.</p>
+  <p>At startup the locals take the parameters, then any override whose length is greater than 0. A change on an override stores that string as it arrives. An empty override means <span class="sig">[SKIP]</span> from then on. It does not fall back to the parameter.</p>
+  <p>Packet_Rx evaluates the match immediately, after the beacon has finished writing the four strings. A change on a Received input still waits 0.01 s, so this Extract can also sit on the archived v1.3 beacon, which has no Packet_Rx.</p>
+  <p>A match copies the four received strings to the four peer outputs and raises Online_FB. Those outputs are written only when the value changes. A packet that does not match leaves a held peer where it is. Peer_UID is the Received_UID of the matching packet. Peer_Data is the raw Received_Data.</p>
+  <table>
+    <thead><tr><th>Timeout</th><th>What silence does</th></tr></thead>
+    <tbody>
+      <tr><td>0s</td><td>Keeps the last match and leaves Online_FB high until a newer match replaces it.</td></tr>
+      <tr><td>15s</td><td>Default. Online_FB drops and the four peer strings clear when no new match arrives in that time. A repeat match restarts the time.</td></tr>
+      <tr><td>up to 600s</td><td>Same as any non-zero time. The peer clears when the quiet stretch reaches the parameter.</td></tr>
+    </tbody>
+  </table>
+  <p>A non-matching packet does not restart the timeout. The clock runs from the last packet that matched.</p>
+
+  <h2 id="versions">Versions</h2>
+  <h3>UDP Broadcast and Receive v2.0</h3>
+  <p>2026-10-19. Timed announce, Packet_Rx, and an optional once-per-sender reply. v1.3 remains in the archive and sends only on Retrigger or a non-empty Data change. Later edits in v2.0: a CR or LF ends one received datagram, and the received strings and Enable_FB update only when the value changes. F1 on this symbol opens this file.</p>
+  <h3>UDP Extract Data v2.0</h3>
+  <p>2026-10-18. Packet_Rx matches immediately. Online_FB and Timeout were added. 0s keeps the last match. Any other time clears the peer when packets stop. Peer outputs update only when the value changes. v1.0 remains in the archive. It has no Online_FB and holds a peer until a newer match replaces it.</p>
+  <p>The full version list is in the SIMPL+ help on each symbol.</p>
+</main>
+<footer>
+  <p>UDP Beacon and Extract v2.0. Press F1 on either symbol in SIMPL Windows. Leave this file next to both modules.</p>
+</footer>
+</body>
+</html>

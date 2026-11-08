@@ -1,103 +1,29 @@
 #HELP_BEGIN
 UDP Broadcast and Receive v2.0
 
-Discovery beacon for 4-Series. Broadcasts MAC,UID,Data to 255.255.255.255
-and receives on the same port. Own packets are ignored. Adds a timed announce
-and Packet_Rx after the received strings are written. Unicast reply is off
-unless enabled, and then answers each sender only once.
+4-Series. This socket defaults to UDP 50001.
 
-Wire format (no spaces): MAC,UID,Data
-Example: 00:00:00:00:00:00,123456789,[Type]value
-Maximum datagram 306 bytes (17 + 1 + 32 + 1 + 255).
+A CR or LF ends one received datagram. Two processor announces have
+neither, so two of those can still arrive as one buffer.
 
-v1.3 is unchanged. This is a new symbol.
+Received strings and Enable_FB are written only when the value changes.
+Packet_Rx still pulses for every accepted packet.
 
+Reply uses the one SIMPL+ UDP socket. It is aimed at the sender, then
+put back on 255.255.255.255. A datagram in that gap can be missed.
 
-Signal Descriptions:
+A stored MAC whose length is not 12 or 17 is published as
+00:00:00:00:00:00. Own packets are dropped and are not answered.
 
-  DIGITAL_INPUT Enable
-    Latched. High opens the UDP socket on UDP_Port. Low closes it.
-
-  DIGITAL_INPUT Retrigger
-    Pulse to send the current MAC, UID, and Data now, even when Data is empty.
-    Ignored unless the socket is open.
-
-  STRING_INPUT Mac[17]
-    MAC in the outbound packet. 12 hex digits, or 17 bytes with : or - separators.
-    Stored with colon separators. The timed announce waits until this looks like a MAC.
-
-  STRING_INPUT UID[32]
-    Unique id in the outbound packet. Letters, digits, hyphen, underscore, up to 32 bytes.
-
-  STRING_INPUT Data[255]
-    Payload. A change sends a packet when Data is non-empty and the socket is open.
-
-  DIGITAL_OUTPUT Enable_FB
-    High while the listen socket is open on the broadcast address.
-
-  DIGITAL_OUTPUT Packet_Rx
-    Pulses for 0.05 s after an accepted packet has been written to Received_IP,
-    Received_MAC, Received_UID, and Received_Data. Wire this to UDP Extract Data v2.0.
-
-  STRING_OUTPUT Received_IP
-    Sender IP of the last accepted packet.
-
-  STRING_OUTPUT Received_MAC
-    MAC parsed from the last accepted packet, colon-separated when recognized.
-
-  STRING_OUTPUT Received_UID
-    UID parsed from the last accepted packet.
-
-  STRING_OUTPUT Received_Data
-    Data parsed from the last accepted packet, or the whole payload when the
-    packet is not a structured MAC,UID,Data datagram.
-
-  INTEGER_PARAMETER UDP_Port
-    Port for broadcast and receive (1024-65535, default 50001).
-
-  INTEGER_PARAMETER Enforce_Format
-    0d = No enforcement (default). Clear the received outputs, then fill the
-         fields that matched. If nothing looks like a MAC or UID, Received_IP
-         and Received_Data get the sender IP and the entire payload.
-    1d = Enforce MAC,UID,Data. Any other datagram is ignored.
-
-  INTEGER_PARAMETER Announce_Interval
-    unitTime. While Enable is high, resend the current packet on this period.
-    0s = off (Retrigger and a non-empty Data change still send). Default 5s.
-    The first announce goes out as soon as the socket is open and Mac is valid.
-    Maximum 600s.
-    Every processor running this module receives every announce. On a network
-    of hundreds of processors, use 15s or 30s. 5s from 200 processors is about
-    40 datagrams a second at each processor.
-
-  INTEGER_PARAMETER Reply
-    0d = Off (default). Leave this off when many processors announce. The
-         broadcast already tells every peer who you are. A reply to every
-         announce would be one packet per pair.
-    1d = Unicast reply. Answer a sender once, the first time that IP is seen,
-         then not again until that IP has been silent for 60s. At most one
-         reply every 0.5 s. 128 senders are remembered; a sender past that
-         gets no unicast and still hears the broadcast.
-         SIMPL+ has one destination per UDP socket, so the listen socket is
-         pointed at the sender for that reply and then restored to
-         255.255.255.255. A datagram in that gap can be missed.
-
-
-Receive parsing (No enforcement) matches v1.3:
-  1. Clear all four received outputs.
-  2. Write Received_IP when the sender IP is known.
-  3. Full MAC,UID,Data fills MAC, UID, and Data.
-  4. MAC but not UID: fill MAC and treat the remainder as Data.
-  5. Otherwise Received_Data is the entire payload.
-
-Own packets (payload equals what this module would send, or MAC + UID match)
-never update the outputs and never get a reply.
-
-MAC shape: 12 hex digits, or 17 bytes as six hex pairs separated by : or -.
-UID shape: 1-32 bytes, letters, digits, hyphen, or underscore.
+Press F1 for UDP Beacon and Extract v2.0.html. That file is also the
+help for UDP Extract Data v2.0. Leave it next to both modules.
 
 -- VERSION HISTORY --
 v2.0  2026-10-19
+- 2026-11-03: F1 opens UDP Beacon and Extract v2.0.html, shared with Extract
+- 2026-11-02: CR or LF ends one received datagram, so a second copy
+  concatenated in SocketRxBuf is not stored in Received_Data
+- 2026-11-02: Received_* and Enable_FB update only when the value changes
 - Announce_Interval heartbeat (0s off, default 5s). Use 15s or 30s when
   hundreds of processors share the port
 - Reply off by default. On answers each new sender once, then waits through
@@ -112,6 +38,7 @@ v1.3  2026-09-09
 
 /* COMPILER DIRECTIVES */
 
+#HELP_PDF_FILE "UDP Beacon and Extract v2.0.html"
 #CATEGORY "46" "TCP/IP" // Custom
 #DEFAULT_VOLATILE
 #DEFINE_CONSTANT BROADCAST_IP "255.255.255.255"
@@ -171,9 +98,11 @@ INTEGER_PARAMETER	UDP_Port, Enforce_Format, Announce_Interval, Reply;
 
 UDP_SOCKET	UDPSocket[306];
 INTEGER		SocketOpen, SocketBusy, NeedPulse, ReplyCount, AnnounceLeft, ReopenLeft,
-			ReplyWait, HoldAge[128];
+			ReplyWait, HavePacket, GotMAC, GotUID, AccRaw, HoldAge[128];
 /* ReplyQ and HoldIP: first bracket is the count, second is the length. */
-STRING		RxBuf[306], TxPacket[306], ReplyQ[8][16], HoldIP[128][16];
+STRING		RxBuf[306], TxPacket[306], AccMAC[17], AccUID[32], AccData[306],
+			LastIP[15], LastMAC[17], LastUID[32], LastData[306],
+			ReplyQ[8][16], HoldIP[128][16];
 
 /* FUNCTIONS */
 
@@ -285,6 +214,10 @@ FUNCTION BuildPacket() {
 	MakeString(TxPacket, "%s,%s,%s", FormatMAC(Mac), UID, Data);
 }
 
+FUNCTION SetEnableFB(INTEGER fbLevel) {
+	If (Enable_FB <> fbLevel) Enable_FB = fbLevel;
+}
+
 FUNCTION OpenSocket() {
 	SIGNED_INTEGER status;
 
@@ -293,18 +226,18 @@ FUNCTION OpenSocket() {
 	If (SocketOpen = 1) {
 		SocketUDP_Disable(UDPSocket);
 		SocketOpen = 0;
-		Enable_FB = 0;
+		SetEnableFB(0);
 	}
 
 	status = SocketUDP_Enable(UDPSocket, BROADCAST_IP, UDP_Port);
 	If (status < 0) {
 		SocketOpen = 0;
-		Enable_FB = 0;
+		SetEnableFB(0);
 		TRACE("[UDP]: Failed to open UDP socket (error %d)", status);
 	}
 	Else {
 		SocketOpen = 1;
-		Enable_FB = 1;
+		SetEnableFB(1);
 		AnnounceLeft = 0;
 		TRACE("[UDP]: Opened UDP Socket successfully");
 	}
@@ -321,7 +254,7 @@ FUNCTION CloseSocket() {
 		Else TRACE("[UDP]: Closed UDP Socket");
 	}
 	SocketOpen = 0;
-	Enable_FB = 0;
+	SetEnableFB(0);
 }
 
 INTEGER_FUNCTION SendBroadcast(INTEGER allowEmptyData) {
@@ -440,12 +373,12 @@ FUNCTION SendUnicast(STRING destIP) {
 	status = SocketUDP_Enable(UDPSocket, BROADCAST_IP, UDP_Port);
 	If (status < 0) {
 		SocketOpen = 0;
-		Enable_FB = 0;
+		SetEnableFB(0);
 		TRACE("[UDP]: Failed to restore broadcast socket (error %d)", status);
 	}
 	Else {
 		SocketOpen = 1;
-		Enable_FB = 1;
+		SetEnableFB(1);
 	}
 	SocketBusy = 0;
 }
@@ -466,11 +399,153 @@ FUNCTION DrainOneReply() {
 	ReplyWait = REPLY_GAP;
 }
 
-FUNCTION ClearReceived() {
-	Received_IP = "";
-	Received_MAC = "";
-	Received_UID = "";
-	Received_Data = "";
+/*
+ * One datagram. A self or rejected chunk returns without touching the
+ * outputs, so a later chunk in the same buffer can still be stored.
+ * The last accepted chunk wins. PublishPacket writes it once.
+ */
+FUNCTION StorePacket(STRING piece) {
+	INTEGER pos1, pos2, macOk, uidOk, packetOk;
+	STRING field1[306], field2[306], field3[306], srcMAC[17], srcUID[32], srcData[306];
+
+	If (LEN(piece) = 0) Return;
+
+	RxBuf = piece;
+	macOk = 0;
+	uidOk = 0;
+	packetOk = 0;
+	srcMAC = "";
+	srcUID = "";
+	srcData = "";
+
+	pos1 = FIND(",", piece);
+	pos2 = 0;
+	If (pos1 > 0) pos2 = FIND(",", piece, pos1 + 1);
+
+	If ((pos1 > 0) && (pos2 > 0)) {
+		field1 = LEFT(piece, pos1 - 1);
+		field2 = MID(piece, pos1 + 1, pos2 - (pos1 + 1));
+		field3 = MID(piece, pos2 + 1, LEN(piece));
+
+		If (LooksLikeMAC(field1) = 1) {
+			macOk = 1;
+			srcMAC = field1;
+			If (LooksLikeUID(field2) = 1) {
+				uidOk = 1;
+				srcUID = field2;
+				srcData = field3;
+				packetOk = 1;
+			}
+			Else {
+				srcData = MID(piece, pos1 + 1, LEN(piece));
+			}
+		}
+		Else {
+			srcData = piece;
+		}
+	}
+	Else If (pos1 > 0) {
+		field1 = LEFT(piece, pos1 - 1);
+		field2 = MID(piece, pos1 + 1, LEN(piece));
+
+		If (LooksLikeMAC(field1) = 1) {
+			macOk = 1;
+			srcMAC = field1;
+			If (LooksLikeUID(field2) = 1) {
+				uidOk = 1;
+				srcUID = field2;
+			}
+			Else {
+				srcData = field2;
+			}
+		}
+		Else {
+			srcData = piece;
+		}
+	}
+	Else {
+		If (LooksLikeMAC(piece) = 1) {
+			macOk = 1;
+			srcMAC = piece;
+		}
+		Else If (LooksLikeUID(piece) = 1) {
+			uidOk = 1;
+			srcUID = piece;
+		}
+		Else {
+			srcData = piece;
+		}
+	}
+
+	If (PacketIsSelf(srcMAC, srcUID) = 1) {
+		TRACE("[UDP]: Ignored own packet");
+		Return;
+	}
+
+	If ((Enforce_Format = 1) && (packetOk = 0)) {
+		TRACE("[UDP]: Dropped non-conforming packet (Enforce MAC,UID,Data)");
+		Return;
+	}
+
+	HavePacket = 1;
+	GotMAC = macOk;
+	GotUID = uidOk;
+	AccRaw = 0;
+	AccMAC = srcMAC;
+	AccUID = srcUID;
+	AccData = srcData;
+	If ((LEN(srcData) = 0) && (macOk = 0) && (uidOk = 0) && (LEN(piece) > 0)) {
+		AccData = piece;
+		AccRaw = 1;
+	}
+}
+
+FUNCTION PublishPacket(STRING senderIP) {
+	STRING nextIP[15], nextMAC[17], nextUID[32], nextData[306];
+
+	If (HavePacket = 0) Return;
+
+	nextIP = "";
+	nextMAC = "";
+	nextUID = "";
+	nextData = "";
+
+	If (LEN(senderIP) > 0) nextIP = senderIP;
+
+	If (GotMAC = 1) {
+		nextMAC = FormatMAC(AccMAC);
+		TRACE("[UDP]: Parsed Mac: %s", nextMAC);
+	}
+	If (GotUID = 1) {
+		nextUID = AccUID;
+		TRACE("[UDP]: Parsed UID: %s", AccUID);
+	}
+	If (LEN(AccData) > 0) {
+		nextData = AccData;
+		If (AccRaw = 1) TRACE("[UDP]: Unstructured payload as Data: %s", AccData);
+		Else TRACE("[UDP]: Parsed Data: %s", AccData);
+	}
+
+	/* String outputs cannot be read. Last* is the last text written. */
+	If (CompareStrings(LastIP, nextIP) <> 0) {
+		LastIP = nextIP;
+		Received_IP = nextIP;
+	}
+	If (CompareStrings(LastMAC, nextMAC) <> 0) {
+		LastMAC = nextMAC;
+		Received_MAC = nextMAC;
+	}
+	If (CompareStrings(LastUID, nextUID) <> 0) {
+		LastUID = nextUID;
+		Received_UID = nextUID;
+	}
+	If (CompareStrings(LastData, nextData) <> 0) {
+		LastData = nextData;
+		Received_Data = nextData;
+	}
+
+	QueueReply(senderIP);
+	NeedPulse = 1;
 }
 
 /* EVENT HANDLERS */
@@ -489,124 +564,51 @@ CHANGE Data {
 }
 
 SOCKETRECEIVE UDPSocket {
-	INTEGER pos1, pos2, gotMAC, gotUID, fullPacket;
 	SIGNED_INTEGER status;
-	STRING buffer[306], srcIP[15], srcMAC[17], srcUID[32], srcData[306];
-	STRING field1[306], field2[306], field3[306], formattedMAC[17];
+	INTEGER i, n, start, ch;
+	STRING raw[306], senderIP[15], piece[306];
 
-	buffer = UDPSocket.SocketRxBuf;
+	raw = UDPSocket.SocketRxBuf;
 	ClearBuffer(UDPSocket.SocketRxBuf);
-	RxBuf = buffer;
 
-	TRACE("[UDP]: Socket received raw: %s", buffer);
+	TRACE("[UDP]: Socket received raw: %s", raw);
 
-	srcIP = "";
-	srcMAC = "";
-	srcUID = "";
-	srcData = "";
-	gotMAC = 0;
-	gotUID = 0;
-	fullPacket = 0;
+	HavePacket = 0;
+	GotMAC = 0;
+	GotUID = 0;
+	AccRaw = 0;
+	AccMAC = "";
+	AccUID = "";
+	AccData = "";
+	senderIP = "";
 
-	status = SocketGetSenderIPAddress(UDPSocket, srcIP);
+	status = SocketGetSenderIPAddress(UDPSocket, senderIP);
 	If (status <> 0) {
-		srcIP = "";
+		senderIP = "";
 		TRACE("[UDP]: Failed to retrieve sender's IP (error: %d)", status);
 	}
 
-	pos1 = FIND(",", buffer);
-	pos2 = 0;
-	If (pos1 > 0) pos2 = FIND(",", buffer, pos1 + 1);
-
-	If ((pos1 > 0) && (pos2 > 0)) {
-		field1 = LEFT(buffer, pos1 - 1);
-		field2 = MID(buffer, pos1 + 1, pos2 - (pos1 + 1));
-		field3 = MID(buffer, pos2 + 1, LEN(buffer));
-
-		If (LooksLikeMAC(field1) = 1) {
-			gotMAC = 1;
-			srcMAC = field1;
-			If (LooksLikeUID(field2) = 1) {
-				gotUID = 1;
-				srcUID = field2;
-				srcData = field3;
-				fullPacket = 1;
+	/* SIMPL+ concatenates datagrams that arrive before this event. CR or LF splits them. */
+	n = LEN(raw);
+	start = 1;
+	i = 1;
+	WHILE (i <= n) {
+		ch = BYTE(raw, i);
+		If ((ch = 13) || (ch = 10)) {
+			If (i > start) {
+				piece = MID(raw, start, i - start);
+				StorePacket(piece);
 			}
-			Else {
-				srcData = MID(buffer, pos1 + 1, LEN(buffer));
-			}
+			start = i + 1;
 		}
-		Else {
-			srcData = buffer;
-		}
+		i = i + 1;
 	}
-	Else If (pos1 > 0) {
-		field1 = LEFT(buffer, pos1 - 1);
-		field2 = MID(buffer, pos1 + 1, LEN(buffer));
-
-		If (LooksLikeMAC(field1) = 1) {
-			gotMAC = 1;
-			srcMAC = field1;
-			If (LooksLikeUID(field2) = 1) {
-				gotUID = 1;
-				srcUID = field2;
-			}
-			Else {
-				srcData = field2;
-			}
-		}
-		Else {
-			srcData = buffer;
-		}
-	}
-	Else {
-		If (LooksLikeMAC(buffer) = 1) {
-			gotMAC = 1;
-			srcMAC = buffer;
-		}
-		Else If (LooksLikeUID(buffer) = 1) {
-			gotUID = 1;
-			srcUID = buffer;
-		}
-		Else {
-			srcData = buffer;
-		}
+	If (start <= n) {
+		piece = MID(raw, start, n - start + 1);
+		StorePacket(piece);
 	}
 
-	If (PacketIsSelf(srcMAC, srcUID) = 1) {
-		TRACE("[UDP]: Ignored own packet");
-		TerminateEvent;
-	}
-
-	If ((Enforce_Format = 1) && (fullPacket = 0)) {
-		TRACE("[UDP]: Dropped non-conforming packet (Enforce MAC,UID,Data)");
-		TerminateEvent;
-	}
-
-	ClearReceived();
-
-	If (LEN(srcIP) > 0) Received_IP = srcIP;
-
-	If (gotMAC = 1) {
-		formattedMAC = FormatMAC(srcMAC);
-		Received_MAC = formattedMAC;
-		TRACE("[UDP]: Parsed Mac: %s", formattedMAC);
-	}
-	If (gotUID = 1) {
-		Received_UID = srcUID;
-		TRACE("[UDP]: Parsed UID: %s", srcUID);
-	}
-	If (LEN(srcData) > 0) {
-		Received_Data = srcData;
-		TRACE("[UDP]: Parsed Data: %s", srcData);
-	}
-	Else If ((gotMAC = 0) && (gotUID = 0) && (LEN(buffer) > 0)) {
-		Received_Data = buffer;
-		TRACE("[UDP]: Unstructured payload as Data: %s", buffer);
-	}
-
-	QueueReply(srcIP);
-	NeedPulse = 1;
+	PublishPacket(senderIP);
 }
 
 /* MAIN */
@@ -621,7 +623,7 @@ FUNCTION Main() {
 	AnnounceLeft = 0;
 	ReopenLeft = 0;
 	ReplyWait = 0;
-	Enable_FB = 0;
+	SetEnableFB(0);
 	For (i = 1 to QUEUE_SLOTS) ReplyQ[i] = "";
 	For (i = 1 to HOLD_SLOTS) {
 		HoldIP[i] = "";

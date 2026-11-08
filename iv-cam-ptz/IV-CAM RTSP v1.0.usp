@@ -1,0 +1,463 @@
+#HELP_BEGIN
+IV-CAM RTSP v1.0
+
+Builds an RTSP URL from the camera IP address.
+It does not open the stream.
+
+With the defaults, URL is:
+
+  rtsp://<ip>:554/2.h264
+
+Credentials Yes, with a password, writes:
+
+  rtsp://username:password@<ip>:554/2.h264
+
+The colon stays between the username and the password.
+An empty password leaves the username off.
+URL changes only when the text changes. It is at most 255 characters.
+An empty IP_Address clears URL.
+
+A serial override is ignored until text arrives. Text already present
+at startup is used. After that, the serial is kept, even when empty.
+An analog or digital override is ignored until it changes. The value
+present at startup waits for the next change. After that, the value
+is kept, including 0.
+
+Credentials_Override
+  Digital input beside Credentials.
+  After it changes, high includes the login and low leaves the login off.
+
+Credentials
+  No leaves the login off. Yes writes username:password@ when Password
+  is set. Default is No.
+
+Port_Override
+  Analog input beside Port.
+  After it changes, this port is written. 0 leaves the port off.
+
+Port
+  RTSP port until Port_Override changes. Default is 554.
+  This camera accepts 554 and 3479 through 7999.
+  Ports 1 through 65535 are still written.
+
+Lens_Override
+  Analog input beside Lens.
+  After it changes, this picture number is used while Path is empty.
+  1, 2, and 3 are written. Any other value is written as 2.
+
+Lens
+  Picture number until Lens_Override changes, while Path is empty.
+  1 is the PTZ picture on this camera. 2 is the fixed reference camera.
+  Default is 2.
+  On an IV-CAM-I12D-B, 1 is PTZ 1, 2 is PTZ 2, and 3 is the reference.
+
+Format_Override
+  Analog input beside Format.
+  After it changes, 2 writes h265. Any other value writes h264.
+  Ignored while Path is set.
+
+Format
+  Encoding until Format_Override changes, while Path is empty.
+  H.264 writes h264. H.265 writes h265. Default is H.264.
+
+Username_Override
+  Serial input beside Username.
+  After text arrives, this user is kept, even when the text is empty.
+  Used only when the login is included.
+
+Username
+  Camera Manager user until Username_Override arrives. Default is admin.
+  Reserved characters are percent-encoded. @ becomes %40 and : becomes %3A.
+
+Password_Override
+  Serial input beside Password.
+  After text arrives, this password is kept, even when the text is empty.
+  An empty password leaves the username off the URL.
+
+Password
+  Camera Manager password until Password_Override arrives.
+  Default is blank. An empty password leaves the username off the URL.
+  The password is percent-encoded.
+
+Path_Override
+  Serial input beside Path.
+  After text arrives, this path is kept, even when the text is empty.
+  An empty path returns the URL to the lens and the format.
+
+Path
+  The text after the address and port. Default is blank.
+  Blank uses /<lens>.<format>, which is /2.h264 with the defaults.
+  Any other text replaces Lens and Format. A missing leading slash
+  is added. The text is copied as entered.
+  1.h264 is the PTZ picture. Streaming/Channels/101 fits another camera.
+
+IP_Address
+  Serial input beside URL. The camera address.
+  An address with two or more colons, and no brackets, is wrapped in []
+  so an IPv6 address is legal. Put the port on Port.
+
+URL
+  Serial output. The assembled RTSP address.
+
+Rows:
+  1  Credentials_Override beside Credentials
+  2  Port_Override beside Port
+  3  Lens_Override beside Lens
+  4  Format_Override beside Format
+  5  Username_Override beside Username
+  6  Password_Override beside Password
+  7  Path_Override beside Path
+  8  blank
+  9  IP_Address beside URL
+
+The symbol has not yet been run inside a loaded program.
+
+v1.0  2026-11-07
+- RTSP URL for this IV-CAM, from the IP address
+- Credentials parameter and digital override make the login optional
+- A Path replaces the IV-CAM lens and format for another RTSP camera
+- Password and Path default to blank
+- IP_Address and URL sit under a blank row
+#HELP_END
+
+#HINT "Build an IV-CAM RTSP URL from the IP address"
+#CATEGORY "19" // Camera
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+
+/*
+	Row 1   Credentials_Override Credentials
+	Row 2   Port_Override        Port
+	Row 3   Lens_Override        Lens
+	Row 4   Format_Override      Format
+	Row 5   Username_Override    Username
+	Row 6   Password_Override    Password
+	Row 7   Path_Override        Path
+	Row 8   blank
+	Row 9   IP_Address                             URL
+	Analog inputs sit above serial inputs.
+	An empty Path uses /<lens>.h264 or /<lens>.h265.
+*/
+
+/* INPUTS AND OUTPUTS */
+
+DIGITAL_INPUT	Credentials_Override;
+ANALOG_INPUT	Port_Override, Lens_Override, Format_Override;
+STRING_INPUT	Username_Override[32], Password_Override[32], Path_Override[128],
+				_SKIP_, IP_Address[64];
+STRING_OUTPUT	_SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, _SKIP_, URL;
+
+/* PARAMETERS */
+
+INTEGER_PARAMETER	Credentials, Port, Lens, Format;
+STRING_PARAMETER	Username[32], Password[32], Path[128];
+
+#BEGIN_PARAMETER_PROPERTIES Credentials
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		0d;
+	propList =				{0d, "No"},
+							{1d, "Yes"};
+	propShortDescription =	"Yes writes username:password@ in front of the address.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		No leaves the login off the URL.
+		Yes writes username:password@ when Password is set.
+		An empty password leaves the username off.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Port
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propBounds =			1d, 65535d;
+	propDefaultValue =		554d;
+	propShortDescription =	"RTSP port. This camera uses 554 or 3479-7999.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		Written after the address, including 554.
+		This camera accepts 554 and 3479 through 7999.
+		Other ports are still written.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Lens
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		2d;
+	propList =				{1d, "1  Main PTZ"},
+							{2d, "2  Reference"},
+							{3d, "3  I12D-B reference"};
+	propShortDescription =	"IV-CAM picture. Default is 2.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		1 is the PTZ picture. 2 is the fixed reference camera.
+		On an IV-CAM-I12D-B, 1 and 2 are the PTZ lenses and 3 is the reference.
+		Ignored when Path is set.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Format
+	propValidUnits =		unitDecimal;
+	propDefaultUnit =		unitDecimal;
+	propDefaultValue =		1d;
+	propList =				{1d, "H.264"},
+							{2d, "H.265"};
+	propShortDescription =	"H.264 writes h264. H.265 writes h265.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		Selects the encoding token in the IV-CAM path.
+		Ignored when Path is set.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Username
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"admin";
+	propShortDescription =	"Camera Manager user. Default is admin.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		Used when Credentials is Yes and Password is set.
+		An empty password leaves this off the URL.
+		@ : and other reserved characters are percent-encoded.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Password
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"";
+	propShortDescription =	"Camera Manager password. Encoded into the URL.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		Used when Credentials is Yes.
+		An empty password leaves the username off the URL.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+#BEGIN_PARAMETER_PROPERTIES Path
+	propValidUnits =		unitString;
+	propDefaultUnit =		unitString;
+	propDefaultValue =		"";
+	propShortDescription =	"Replaces lens and format. Blank uses 2.h264.";
+	#BEGIN_PROP_FULL_DESCRIPTION
+		Leave empty for the IV-CAM path, /<lens>.<format>.
+		Any other text is the path of the URL. A missing leading slash is added.
+		The text is not percent-encoded.
+	#END_PROP_FULL_DESCRIPTION
+#END_PARAMETER_PROPERTIES
+
+/* GLOBALS */
+
+INTEGER Ready, CredLatch, UserLatch, PassLatch, PortLatch, LensLatch, FormatLatch, PathLatch;
+STRING PrevUrl[255];
+
+/* FUNCTIONS */
+
+INTEGER_FUNCTION IsUnreserved (INTEGER b) {
+	If ((b >= 48) && (b <= 57))
+		Return (1);
+	If ((b >= 65) && (b <= 90))
+		Return (1);
+	If ((b >= 97) && (b <= 122))
+		Return (1);
+	If ((b = 45) || (b = 46) || (b = 95) || (b = 126))
+		Return (1);
+	Return (0);
+}
+
+INTEGER_FUNCTION HexDigit (INTEGER n) {
+	INTEGER c;
+
+	c = 55 + n;
+	If (n < 10)
+		c = 48 + n;
+	Return (c);
+}
+
+STRING_FUNCTION Encode (STRING src) {
+	INTEGER i, n, b, hi, lo;
+	STRING out[100];
+
+	n = LEN(src);
+	For (i = 1 to n) {
+		b = BYTE(src, i);
+		If (IsUnreserved(b) = 1)
+			out = out + CHR(b);
+		Else {
+			hi = b / 16;
+			lo = b MOD 16;
+			out = out + "%";
+			out = out + CHR(HexDigit(hi));
+			out = out + CHR(HexDigit(lo));
+		}
+	}
+	Return (out);
+}
+
+INTEGER_FUNCTION SameText (STRING a, STRING b) {
+	INTEGER i, n;
+
+	n = LEN(a);
+	If (n <> LEN(b))
+		Return (0);
+	For (i = 1 to n) {
+		If (BYTE(a, i) <> BYTE(b, i))
+			Return (0);
+	}
+	Return (1);
+}
+
+FUNCTION Publish (STRING next) {
+	If (SameText(next, PrevUrl) = 0) {
+		PrevUrl = next;
+		URL = next;
+	}
+}
+
+FUNCTION Build () {
+	INTEGER usePort, useLens, useFormat, useLogin, colonAt;
+	STRING host[70], user[32], pass[32], route[160], coded[100], portText[8],
+			lensText[4], built[255];
+
+	If (Ready = 0)
+		Return;
+	If (LEN(IP_Address) = 0) {
+		Publish("");
+		Return;
+	}
+
+	host = IP_Address;
+	colonAt = FIND(":", host);
+	If (colonAt > 0) {
+		If (FIND(":", host, colonAt + 1) > 0) {
+			If (BYTE(host, 1) <> 91)
+				host = "[" + host + "]";
+		}
+	}
+
+	If (UserLatch = 1)
+		user = Username_Override;
+	Else
+		user = Username;
+	If (PassLatch = 1)
+		pass = Password_Override;
+	Else
+		pass = Password;
+
+	If (PathLatch = 1)
+		route = Path_Override;
+	Else
+		route = Path;
+
+	If (LEN(route) = 0) {
+		If (LensLatch = 1)
+			useLens = Lens_Override;
+		Else
+			useLens = Lens;
+		If ((useLens < 1) || (useLens > 3))
+			useLens = 2;
+		If (FormatLatch = 1)
+			useFormat = Format_Override;
+		Else
+			useFormat = Format;
+		MAKESTRING (lensText, "%u", useLens);
+		route = lensText + ".h264";
+		If (useFormat = 2)
+			route = lensText + ".h265";
+	}
+
+	If (BYTE(route, 1) <> 47)
+		route = "/" + route;
+
+	If (CredLatch = 1)
+		useLogin = Credentials_Override;
+	Else
+		useLogin = Credentials;
+
+	built = "rtsp://";
+	If ((useLogin = 1) && (LEN(pass) > 0)) {
+		coded = Encode(user);
+		built = built + coded;
+		built = built + ":";
+		coded = Encode(pass);
+		built = built + coded;
+		built = built + "@";
+	}
+	built = built + host;
+
+	If (PortLatch = 1)
+		usePort = Port_Override;
+	Else
+		usePort = Port;
+	If ((usePort >= 1) && (usePort <= 65535)) {
+		MAKESTRING (portText, "%u", usePort);
+		built = built + ":";
+		built = built + portText;
+	}
+	built = built + route;
+	Publish(built);
+}
+
+/* EVENTS */
+
+CHANGE Credentials_Override {
+	If (Ready = 1) {
+		CredLatch = 1;
+		Build();
+	}
+}
+
+CHANGE IP_Address {
+	If (Ready = 1)
+		Build();
+}
+
+CHANGE Username_Override {
+	If (Ready = 1) {
+		UserLatch = 1;
+		Build();
+	}
+}
+
+CHANGE Password_Override {
+	If (Ready = 1) {
+		PassLatch = 1;
+		Build();
+	}
+}
+
+CHANGE Path_Override {
+	If (Ready = 1) {
+		PathLatch = 1;
+		Build();
+	}
+}
+
+CHANGE Port_Override {
+	If (Ready = 1) {
+		PortLatch = 1;
+		Build();
+	}
+}
+
+CHANGE Lens_Override {
+	If (Ready = 1) {
+		LensLatch = 1;
+		Build();
+	}
+}
+
+CHANGE Format_Override {
+	If (Ready = 1) {
+		FormatLatch = 1;
+		Build();
+	}
+}
+
+FUNCTION Main () {
+	WaitForInitializationComplete();
+	Ready = 1;
+	If (LEN(Username_Override) > 0)
+		UserLatch = 1;
+	If (LEN(Password_Override) > 0)
+		PassLatch = 1;
+	If (LEN(Path_Override) > 0)
+		PathLatch = 1;
+	Build();
+}
