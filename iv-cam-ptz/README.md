@@ -4,7 +4,7 @@ Part of **[Crestron Modules](https://github.com/Prophet6/Crestron-Modules)**.
 
 Pan, tilt, zoom, and preset store/recall for a Crestron 1 Beyond PTZ camera. The command set is raw VISCA from the [IV-CAM Series manual](https://docs.crestron.com/en-us/9440/Content/Topics/NextGenCameras/Configuration/VISCA-Commands.htm). It covers the IV-CAM-P12, P20, I12, and I20, and older 1 Beyond heads that take the same packets on TCP port 5500.
 
-This module has not been tried on a live camera.
+This module has been tested on a live camera and works.
 
 This project is not affiliated with Crestron Electronics.
 
@@ -71,4 +71,4 @@ This camera accepts RTSP ports 554 and 3479 through 7999. Ports 1 through 65535 
 
 `Credentials` is the first row. Port, lens, format, username, password, and path follow, each beside its override. A blank row sits under `Path`. `IP_Address` is beside `URL` on the last row. `Password` and `Path` default to blank.
 
-The symbol has not been tried in a loaded program.
+The symbol has been tested in a loaded program and works.
