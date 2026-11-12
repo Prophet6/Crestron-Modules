@@ -14,7 +14,7 @@
   Cmn1=Samsung QM Series RS-232 control, including the QM75C.\\Models named||1
   Cmn2=by the older wrapper: QM32C, QM43C, QM50C, QM55C, QM65C, QM75C,||1
   Cmn3=QM85C, QM98C.\\Protocol: Samsung Multiple Display Control (MDC).
-  Cmn4=||1Not tried on a live display.\\\\Connection\\9600 baud, 8 data bits,||1
+  Cmn4=||1Tested on live displays and working.\\\\Connection\\9600 baud, 8 data bits,||1
   Cmn5=no parity, 1 stop bit, no flow control.\\Display pin 2 is Tx, pin||1
   Cmn6=3 is Rx, pin 5 is ground.\\A Crestron COM port receives on pin 2||1
   Cmn7=and transmits on pin 3, so use a straight-through cable.\\\\Display||1

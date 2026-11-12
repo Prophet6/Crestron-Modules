@@ -2,7 +2,7 @@
 
 Part of **[Crestron Modules](https://github.com/Prophet6/Crestron-Modules)**.
 
-RS-232 control for a Samsung QM*C commercial display, including the **QM75C**. The command set is Samsung Multiple Display Control (MDC). This module has not been tried on a live display.
+RS-232 control for a Samsung QM*C commercial display, including the **QM75C**. The command set is Samsung Multiple Display Control (MDC). This module has been tested on live displays and works.
 
 `Samsung QM Series Serial Control v0.1.umc` only paced strings through a COM port. This symbol builds the packets.
 

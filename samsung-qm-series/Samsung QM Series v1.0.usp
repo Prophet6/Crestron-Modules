@@ -1,7 +1,7 @@
 #HELP_BEGIN
 Samsung QM Series RS-232 control, including the QM75C.
 Models named by the older wrapper: QM32C, QM43C, QM50C, QM55C, QM65C, QM75C, QM85C, QM98C.
-Protocol: Samsung Multiple Display Control (MDC). Not tried on a live display.
+Protocol: Samsung Multiple Display Control (MDC). Tested on live displays and working.
 
 Connection
 9600 baud, 8 data bits, no parity, 1 stop bit, no flow control.
